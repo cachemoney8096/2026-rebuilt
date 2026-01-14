@@ -15,37 +15,39 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotMap;
 
 public class Shooter extends SubsystemBase {
-
     private final TalonFX hoodMotor = new TalonFX(RobotMap.SHOOTER_HOOD_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
-    private double hoodDesiredPosition = (ShooterCal.HOOD_DEFAULT_POSITION_DEGREES / 360.0); 
+    private double hoodDesiredPosition = (ShooterCal.HOOD_HOME_DEGREES / 360.0); 
 
     private final TrapezoidProfile hoodTrapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(
         ShooterCal.HOOD_MAX_VELOCITY_RPS, 
         ShooterCal.HOOD_MAX_ACCELERATION_RPS_SQUARED));
 
-    private final TalonFX rollerMotor = new TalonFX(RobotMap.SHOOTER_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX leftRollerMotor = new TalonFX(RobotMap.SHOOTER_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX rightRollerMotor = new TalonFX(RobotMap.SHOOTER_RIGHT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
 
     public Shooter() {
-        
         initTalons();
         zeroHood();
     }
 
     private void initTalons() {
-        /* Init roller */
-        TalonFXConfiguration rollerToApply = new TalonFXConfiguration();
-        rollerToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        rollerToApply.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        rollerToApply.CurrentLimits.SupplyCurrentLimit = ShooterCal.ROLLER_SUPPLY_CURRENT_LIMIT_AMPS;
-        rollerToApply.CurrentLimits.StatorCurrentLimit = ShooterCal.ROLLER_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
-        rollerToApply.CurrentLimits.StatorCurrentLimitEnable = true;
-        rollerToApply.Slot0.kP = ShooterCal.ROLLER_P;
-        rollerToApply.Slot0.kI = ShooterCal.ROLLER_I;
-        rollerToApply.Slot0.kD = ShooterCal.ROLLER_D;
-        rollerToApply.Slot0.kV = ShooterCal.ROLLER_FF;
+        /* Init rollerss */
+        TalonFXConfiguration rollersToApply = new TalonFXConfiguration();
+        rollersToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        rollersToApply.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        rollersToApply.CurrentLimits.SupplyCurrentLimit = ShooterCal.ROLLERS_SUPPLY_CURRENT_LIMIT_AMPS;
+        rollersToApply.CurrentLimits.StatorCurrentLimit = ShooterCal.ROLLERS_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
+        rollersToApply.CurrentLimits.StatorCurrentLimitEnable = true;
+        rollersToApply.Slot0.kP = ShooterCal.ROLLERS_P;
+        rollersToApply.Slot0.kI = ShooterCal.ROLLERS_I;
+        rollersToApply.Slot0.kD = ShooterCal.ROLLERS_D;
+        rollersToApply.Slot0.kV = ShooterCal.ROLLERS_FF;
 
-        TalonFXConfigurator leftRollerConfig = rollerMotor.getConfigurator();
-        leftRollerConfig.apply(rollerToApply);
+        TalonFXConfigurator leftRollersConfig = leftRollerMotor.getConfigurator();
+        leftRollersConfig.apply(rollersToApply);
+
+        Follower master = new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue.Aligned);
+        rightRollerMotor.setControl(master);
 
         /* Init hood */
         TalonFXConfiguration hoodToApply = new TalonFXConfiguration();
@@ -65,29 +67,29 @@ public class Shooter extends SubsystemBase {
 
     public void zeroHood() {
         hoodMotor.setPosition(
-            (ShooterCal.HOOD_DEFAULT_POSITION_DEGREES / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO);
+            (ShooterCal.HOOD_HOME_DEGREES / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO);
     }
 
     public void setDesiredHoodPosition(double newPositionDegrees) {
         hoodDesiredPosition = (newPositionDegrees / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO;
     }
+
     public void stopHoodMotor() {
         hoodMotor.setVoltage(0.0);
         hoodDesiredPosition = hoodMotor.getPosition().getValueAsDouble();
         
     }
 
-    public void runRoller() {
-        rollerMotor.setVoltage(ShooterCal.ROLLER_VOLTAGE);
+    public void runRollers() {
+        leftRollerMotor.setVoltage(ShooterCal.ROLLERS_RUNNING_VOLTAGE);
     }
 
-    public void stopRoller() {
-        rollerMotor.setVoltage(0.0);
+    public void stopRollers() {
+        leftRollerMotor.setVoltage(0.0);
     }
 
-    public boolean atDesiredPosition() {
+    public boolean atDesiredHoodPosition() {
         return Math.abs(hoodMotor.getPosition().getValueAsDouble() - hoodDesiredPosition) < ShooterCal.HOOD_POSITION_MARGIN;
-
     }
 
     private void controlHoodPosition() {
@@ -113,12 +115,19 @@ public class Shooter extends SubsystemBase {
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
 
+        /* Hood */
         builder.addDoubleProperty("Hood Actual Position (deg.)", () -> hoodMotor.getPosition().getValueAsDouble() * 360, null);
         builder.addDoubleProperty("Hood Desired Position (deg.)", () -> hoodDesiredPosition, null);
 
-        builder.addDoubleProperty("Roller current speed (percent)", () -> rollerMotor.get(), null);
-        builder.addDoubleProperty("Roller Amps", () -> rollerMotor.getMotorVoltage().getValueAsDouble(), null);
-        builder.addDoubleProperty("Hood Amps", () -> hoodMotor.getTorqueCurrent().getValueAsDouble(), null);
-        builder.addDoubleProperty("Hood commanded voltage (volts)", () -> hoodMotor.getMotorVoltage().getValueAsDouble(), null);
+        builder.addBooleanProperty("Hood at Desired Position", this::atDesiredHoodPosition, null);
+
+        builder.addDoubleProperty("Hood Amperage (amps)", () -> hoodMotor.getTorqueCurrent().getValueAsDouble(), null);
+        builder.addDoubleProperty("Hood Commanded Voltage (volts)", () -> hoodMotor.getMotorVoltage().getValueAsDouble(), null);
+
+        /* Rollers */
+        builder.addDoubleProperty("Rollers Speed (percent)", () -> leftRollerMotor.get(), null);
+        
+        builder.addDoubleProperty("Left Roller Amperage (amps)", () -> leftRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
+        builder.addDoubleProperty("Right Roller Amperage (amps)", () -> rightRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
     }
 }
