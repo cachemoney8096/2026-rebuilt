@@ -16,7 +16,7 @@ import frc.robot.RobotMap;
 
 public class Shooter extends SubsystemBase {
     private final TalonFX hoodMotor = new TalonFX(RobotMap.SHOOTER_HOOD_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
-    private double hoodDesiredPosition = (ShooterCal.HOOD_HOME_DEGREES / 360.0); 
+    private double hoodDesiredPositionDeg = ShooterCal.HOOD_HOME_DEGREES; 
 
     private final TrapezoidProfile hoodTrapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(
         ShooterCal.HOOD_MAX_VELOCITY_RPS, 
@@ -31,10 +31,10 @@ public class Shooter extends SubsystemBase {
     }
 
     private void initTalons() {
-        /* Init rollerss */
+        /* Init rollers */
         TalonFXConfiguration rollersToApply = new TalonFXConfiguration();
         rollersToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        rollersToApply.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        rollersToApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         rollersToApply.CurrentLimits.SupplyCurrentLimit = ShooterCal.ROLLERS_SUPPLY_CURRENT_LIMIT_AMPS;
         rollersToApply.CurrentLimits.StatorCurrentLimit = ShooterCal.ROLLERS_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
         rollersToApply.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -46,7 +46,7 @@ public class Shooter extends SubsystemBase {
         TalonFXConfigurator leftRollersConfig = leftRollerMotor.getConfigurator();
         leftRollersConfig.apply(rollersToApply);
 
-        Follower master = new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue.Aligned);
+        Follower master = new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed);
         rightRollerMotor.setControl(master);
 
         /* Init hood */
@@ -71,13 +71,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void setDesiredHoodPosition(double newPositionDegrees) {
-        hoodDesiredPosition = (newPositionDegrees / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO;
-    }
-
-    public void stopHoodMotor() {
-        hoodMotor.setVoltage(0.0);
-        hoodDesiredPosition = hoodMotor.getPosition().getValueAsDouble();
-        
+        hoodDesiredPositionDeg = newPositionDegrees;
     }
 
     public void runRollers() {
@@ -89,20 +83,25 @@ public class Shooter extends SubsystemBase {
     }
 
     public boolean atDesiredHoodPosition() {
-        return Math.abs(hoodMotor.getPosition().getValueAsDouble() - hoodDesiredPosition) < ShooterCal.HOOD_POSITION_MARGIN;
+        return Math.abs(hoodMotor.getPosition().getValueAsDouble() - hoodPositionToMotorPosition(hoodDesiredPositionDeg)) < ShooterCal.HOOD_POSITION_MARGIN;
+    }
+
+    private double hoodPositionToMotorPosition(double hoodPositionDeg)  {
+        return (hoodPositionDeg / 360.0) / ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO;
     }
 
     private void controlHoodPosition() {
-
-        TrapezoidProfile.State goal = new TrapezoidProfile.State(hoodDesiredPosition, 0.0);
-        TrapezoidProfile.State start = 
-            new TrapezoidProfile.State(hoodMotor.getPosition().getValueAsDouble(), hoodMotor.getVelocity().getValueAsDouble());
+        TrapezoidProfile.State goal = new TrapezoidProfile.State(
+            hoodPositionToMotorPosition(hoodDesiredPositionDeg), 0.0);
+        TrapezoidProfile.State start = new TrapezoidProfile.State(
+            hoodMotor.getPosition().getValueAsDouble(), hoodMotor.getVelocity().getValueAsDouble());
         
         PositionVoltage request = new PositionVoltage(0.0).withSlot(0);
-
         TrapezoidProfile.State setpoint = hoodTrapezoidProfile.calculate(0.020, start, goal);
+        
         request.Position = setpoint.position;
         request.Velocity = setpoint.velocity;
+        
         hoodMotor.setControl(request);
     }
 
@@ -117,7 +116,7 @@ public class Shooter extends SubsystemBase {
 
         /* Hood */
         builder.addDoubleProperty("Hood Actual Position (deg.)", () -> hoodMotor.getPosition().getValueAsDouble() * 360, null);
-        builder.addDoubleProperty("Hood Desired Position (deg.)", () -> hoodDesiredPosition, null);
+        builder.addDoubleProperty("Hood Desired Position (deg.)", () -> hoodDesiredPositionDeg, null);
 
         builder.addBooleanProperty("Hood at Desired Position", this::atDesiredHoodPosition, null);
 
