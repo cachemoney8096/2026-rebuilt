@@ -71,7 +71,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void setDesiredHoodPosition(double newPositionDegrees) {
-        hoodDesiredPositionDeg = newPositionDegrees;
+        hoodDesiredPositionDeg = Math.max(ShooterCal.HOOD_MIN_DEGREES, Math.min(ShooterCal.HOOD_MAX_DEGREES, newPositionDegrees));
     }
 
     public void runRollers() {

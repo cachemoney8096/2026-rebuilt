@@ -27,6 +27,8 @@ public class ShooterCal {
     public static final double HOOD_MAX_ACCELERATION_RPS_SQUARED = Constants.PLACEHOLDER_DOUBLE;
 
     public static final double HOOD_HOME_DEGREES = Constants.PLACEHOLDER_DOUBLE;
+    public static final double HOOD_MAX_DEGREES = Constants.PLACEHOLDER_DOUBLE;
+    public static final double HOOD_MIN_DEGREES = Constants.PLACEHOLDER_DOUBLE;
 
     public static final double HOOD_MOTOR_TO_HOOD_RATIO = Constants.PLACEHOLDER_DOUBLE; 
     
