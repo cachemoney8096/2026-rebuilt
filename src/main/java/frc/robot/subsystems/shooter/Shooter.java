@@ -115,7 +115,7 @@ public class Shooter extends SubsystemBase {
         super.initSendable(builder);
 
         /* Hood */
-        builder.addDoubleProperty("Hood Actual Position (deg.)", () -> hoodMotor.getPosition().getValueAsDouble() * 360, null);
+        builder.addDoubleProperty("Hood Actual Position (deg.)", () -> (hoodMotor.getPosition().getValueAsDouble() / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO, null);
         builder.addDoubleProperty("Hood Desired Position (deg.)", () -> hoodDesiredPositionDeg, null);
 
         builder.addBooleanProperty("Hood at Desired Position", this::atDesiredHoodPosition, null);
