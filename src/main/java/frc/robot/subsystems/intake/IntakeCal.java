@@ -25,14 +25,13 @@ public class IntakeCal {
     public static final double SLAPDOWN_D = Constants.PLACEHOLDER_DOUBLE;
 
     public static final double SLAPDOWN_HOME_DEGREES = Constants.PLACEHOLDER_DOUBLE;
-    public static final double SLAPDOWN_MOTOR_TO_Slapdown_RATIO = Constants.PLACEHOLDER_DOUBLE;
+    public static final double SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO = Constants.PLACEHOLDER_DOUBLE;
 
-    public static final int Slapdown_MIN_DEGREES = Constants.PLACEHOLDER_INT;
-    public static final double Slapdown_MAX_DEGREES = Constants.PLACEHOLDER_DOUBLE;
+    public static final int SLAPDOWN_MIN_DEGREES = Constants.PLACEHOLDER_INT;
+    public static final double SLAPDOWN_MAX_DEGREES = Constants.PLACEHOLDER_DOUBLE;
 
     public static final double ROLLER_RUNNING_VOLTAGE = Constants.PLACEHOLDER_DOUBLE;
-    public static final double Slapdown_POSITION_MARGIN = Constants.PLACEHOLDER_DOUBLE;
-    public static final double Slapdown_MOTOR_TO_Slapdown_RATIO = Constants.PLACEHOLDER_DOUBLE;
+    public static final double SLAPDOWN_POSITION_MARGIN = Constants.PLACEHOLDER_DOUBLE;
 
     
 }
