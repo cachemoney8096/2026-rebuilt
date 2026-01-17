@@ -1,9 +1,11 @@
 package frc.robot.subsystems.intake;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -19,7 +21,8 @@ public class Intake extends SubsystemBase{
         IntakeCal.SLAPDOWN_MAX_VELOCITY_RPS, 
         IntakeCal.SLAPDOWN_MAX_ACCELERATION_RPS_SQUARED));
 
-    private final TalonFX rollerMotor = new TalonFX(RobotMap.INTAKE_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX leftRollerMotor = new TalonFX(RobotMap.INTAKE_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX rightRollerMotor = new TalonFX(RobotMap.INTAKE_RIGHT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
 
     public Intake(){
         initTalons();
@@ -28,19 +31,22 @@ public class Intake extends SubsystemBase{
 
     private void initTalons(){
         /* Init roller */
-        TalonFXConfiguration rollerToApply = new TalonFXConfiguration();
-        rollerToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        rollerToApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        rollerToApply.CurrentLimits.SupplyCurrentLimit = IntakeCal.ROLLER_SUPPLY_CURRENT_LIMIT_AMPS;
-        rollerToApply.CurrentLimits.StatorCurrentLimit = IntakeCal.ROLLER_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
-        rollerToApply.CurrentLimits.StatorCurrentLimitEnable = true;
-        rollerToApply.Slot0.kP = IntakeCal.ROLLER_P;
-        rollerToApply.Slot0.kI = IntakeCal.ROLLER_I;
-        rollerToApply.Slot0.kD = IntakeCal.ROLLER_D;
-        rollerToApply.Slot0.kV = IntakeCal.ROLLER_FF;
+        TalonFXConfiguration rollersToApply = new TalonFXConfiguration();
+        rollersToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        rollersToApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        rollersToApply.CurrentLimits.SupplyCurrentLimit = IntakeCal.ROLLERS_SUPPLY_CURRENT_LIMIT_AMPS;
+        rollersToApply.CurrentLimits.StatorCurrentLimit = IntakeCal.ROLLERS_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
+        rollersToApply.CurrentLimits.StatorCurrentLimitEnable = true;
+        rollersToApply.Slot0.kP = IntakeCal.ROLLERS_P;
+        rollersToApply.Slot0.kI = IntakeCal.ROLLERS_I;
+        rollersToApply.Slot0.kD = IntakeCal.ROLLERS_D;
+        rollersToApply.Slot0.kV = IntakeCal.ROLLERS_FF;
 
-        TalonFXConfigurator rollerConfig = rollerMotor.getConfigurator();
-        rollerConfig.apply(rollerToApply);
+        TalonFXConfigurator leftRollerConfig = leftRollerMotor.getConfigurator();
+        leftRollerConfig.apply(rollersToApply);
+
+        Follower master = new Follower(leftRollerMotor.getDeviceID(), null); //TODO motor allignment direction
+        rightRollerMotor.setControl(master);
 
         /* Init slapdown */
         TalonFXConfiguration slapdownToApply = new TalonFXConfiguration();
@@ -67,25 +73,25 @@ public class Intake extends SubsystemBase{
         slapdownDesiredPositionDeg = Math.max(IntakeCal.SLAPDOWN_MIN_DEGREES, Math.min(IntakeCal.SLAPDOWN_MAX_DEGREES, newPositionDegrees));
     }
 
-    public void runRoller() {
-        rollerMotor.setVoltage(IntakeCal.ROLLER_RUNNING_VOLTAGE);
+    public void runRollers() {
+        leftRollerMotor.set(IntakeCal.ROLLERS_RUNNING_SPEED);
     }
 
-    public void stopRoller() {
-        rollerMotor.setVoltage(0.0);
+    public void stopRollers() {
+        leftRollerMotor.set(0.0);
     }
 
     public boolean atDesiredSlapdownPosition() {
-        return Math.abs(slapdownMotor.getPosition().getValueAsDouble() - SlapdownPositionToMotorPosition(slapdownDesiredPositionDeg)) < IntakeCal.SLAPDOWN_POSITION_MARGIN;
+        return Math.abs(slapdownMotor.getPosition().getValueAsDouble() - slapdownPositionToMotorPosition(slapdownDesiredPositionDeg)) < IntakeCal.SLAPDOWN_POSITION_MARGIN;
     }
 
-    private double SlapdownPositionToMotorPosition(double SlapdownPositionDeg)  {
-        return (SlapdownPositionDeg / 360.0) / IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO;
+    private double slapdownPositionToMotorPosition(double SlapdownPositionDeg)  {
+        return (SlapdownPositionDeg / 360.0) * IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO;
     }
 
     private void controlSlapdownPosition() {
         TrapezoidProfile.State goal = new TrapezoidProfile.State(
-            SlapdownPositionToMotorPosition(slapdownDesiredPositionDeg), 0.0);
+            slapdownPositionToMotorPosition(slapdownDesiredPositionDeg), 0.0);
         TrapezoidProfile.State start = new TrapezoidProfile.State(
             slapdownMotor.getPosition().getValueAsDouble(), slapdownMotor.getVelocity().getValueAsDouble());
         
@@ -117,9 +123,10 @@ public class Intake extends SubsystemBase{
         builder.addDoubleProperty("Slapdown Commanded Voltage (volts)", () -> slapdownMotor.getMotorVoltage().getValueAsDouble(), null);
 
         /* Roller */
-        builder.addDoubleProperty("Roller Speed (percent)", () -> rollerMotor.get(), null);
+        builder.addDoubleProperty("Rollers Speed (percent)", () -> leftRollerMotor.get(), null);
         
-        builder.addDoubleProperty("Roller Amperage (amps)", () -> rollerMotor.getTorqueCurrent().getValueAsDouble(), null);
+        builder.addDoubleProperty("Left roller Amperage (amps)", () -> leftRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
+        builder.addDoubleProperty("Right roller Amperage (amps)", () -> rightRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
     }
 
 }
