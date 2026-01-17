@@ -43,13 +43,11 @@ public class Lights {
 
     lightOptionsMap = new TreeMap<LightCode, RGBWColor>();
     lightOptionsMap.put(LightCode.OFF, new RGBWColor(0, 0, 0));
-    lightOptionsMap.put(LightCode.DISABLED, new RGBWColor(0, 0, 0));
-    lightOptionsMap.put(LightCode.INTAKING, new RGBWColor(0, 0, 0));
-    lightOptionsMap.put(LightCode.AUTO_LOCKED, new RGBWColor(0, 0, 0));
-    lightOptionsMap.put(LightCode.READY_TO_CLIMB, new RGBWColor(0, 0, 0));
-    lightOptionsMap.put(LightCode.CLIMBING, new RGBWColor(0, 0, 0));
-    lightOptionsMap.put(LightCode.PARTY_MODE, new RGBWColor(0, 0, 0));
-    lightOptionsMap.put(LightCode.HOME, new RGBWColor(0, 0, 0));
+    lightOptionsMap.put(LightCode.DISABLED, new RGBWColor(255, 128, 0));
+    lightOptionsMap.put(LightCode.INTAKING, new RGBWColor(255, 0, 0));
+    lightOptionsMap.put(LightCode.AUTO_LOCKED, new RGBWColor(0, 255, 0));
+    lightOptionsMap.put(LightCode.CLIMBING, new RGBWColor(0, 0, 255));
+    lightOptionsMap.put(LightCode.HOME, new RGBWColor(255, 0, 0));
 
   }
 
@@ -59,7 +57,7 @@ public class Lights {
   }
 
   private void setLEDs() {
-    if (currentLightStatus == LightCode.PARTY_MODE
+    if (currentLightStatus == LightCode.PARTY_MODE 
         || currentLightStatus == LightCode.READY_TO_CLIMB) {
       setRainbow();
     } else if (currentLightStatus == LightCode.CLIMBING) {
