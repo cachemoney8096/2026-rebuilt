@@ -14,7 +14,8 @@ import frc.robot.RobotMap;
 
 public class Indexer extends SubsystemBase {
 
-    private final TalonFX motor = new TalonFX(RobotMap.INDEXER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX rotatorMotor = new TalonFX(RobotMap.INDEXER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX kickerMotor = new TalonFX(RobotMap.KICKER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
 
     
     public Indexer() {
@@ -22,40 +23,57 @@ public class Indexer extends SubsystemBase {
     }
 
     private void initTalons() {
+        TalonFXConfiguration toApply = new TalonFXConfiguration();
 
-        /* Init rollers */
-        TalonFXConfiguration rollersToApply = new TalonFXConfiguration();
+        // adjust direction if needed
+        toApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        toApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        toApply.CurrentLimits.SupplyCurrentLimit = IndexerCal.INDEXER_SUPPLY_CURRENT_LIMIT_AMPS;
+        toApply.CurrentLimits.StatorCurrentLimit = IndexerCal.INDEXER_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
+        toApply.CurrentLimits.StatorCurrentLimitEnable = true;
+        toApply.Slot0.kP = IndexerCal.INDEXER_P;
+        toApply.Slot0.kI = IndexerCal.INDEXER_I;
+        toApply.Slot0.kD = IndexerCal.INDEXER_D;
+        toApply.Slot0.kV = IndexerCal.INDEXER_FF;
 
-        //TODO investigate Clockwise
-        rollersToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        rollersToApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-        rollersToApply.CurrentLimits.SupplyCurrentLimit = IndexerCal.INDEXER_SUPPLY_CURRENT_LIMIT_AMPS;
-        rollersToApply.CurrentLimits.StatorCurrentLimit = IndexerCal.INDEXER_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
-        rollersToApply.CurrentLimits.StatorCurrentLimitEnable = true;
-        rollersToApply.Slot0.kP = IndexerCal.INDEXER_P;
-        rollersToApply.Slot0.kI = IndexerCal.INDEXER_I;
-        rollersToApply.Slot0.kD = IndexerCal.INDEXER_D;
-        rollersToApply.Slot0.kV = IndexerCal.INDEXER_FF;
+        TalonFXConfigurator indexerConfigurator = rotatorMotor.getConfigurator();
+        indexerConfigurator.apply(toApply);
 
-        TalonFXConfigurator indexerConfigurator = motor.getConfigurator();
-        indexerConfigurator.apply(rollersToApply);
+        TalonFXConfigurator kickerConfigurator = kickerMotor.getConfigurator();
+        // adjust direction if needed
+        toApply.Slot0.kP = IndexerCal.KICKER_P;
+        toApply.Slot0.kI = IndexerCal.KICKER_I;
+        toApply.Slot0.kD = IndexerCal.KICKER_D;
+        toApply.Slot0.kV = IndexerCal.KICKER_FF;
+        toApply.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        kickerConfigurator.apply(toApply);
 
     }
 
     public void runIndexer() {
-        motor.set(IndexerCal.INDEXER_SPEED);
+        rotatorMotor.set(IndexerCal.INDEXER_SPEED);
     }
 
     public void stopIndexer() {
-        motor.set(0.0);
+        rotatorMotor.set(0.0);
+    }
+
+    public void runKicker(){
+        kickerMotor.set(IndexerCal.KICKER_SPEED);
+    }
+
+    public void stopKicker(){
+        kickerMotor.set(0.0);
     }
 
     @Override
     public void initSendable(SendableBuilder builder) {
 
         super.initSendable(builder);
-        builder.addDoubleProperty("Indexer Speed (percent)", () -> motor.get(), null);
-        builder.addDoubleProperty("Indexer Amperage (amps)", () -> motor.getTorqueCurrent().getValueAsDouble(), null);
+        builder.addDoubleProperty("Indexer Speed (percent)", () -> rotatorMotor.get(), null);
+        builder.addDoubleProperty("Indexer Amperage (amps)", () -> rotatorMotor.getTorqueCurrent().getValueAsDouble(), null);
+        builder.addDoubleProperty("Kicker Speed (percent)", () -> kickerMotor.get(), null);
+        builder.addDoubleProperty("Kicker Amperage (amps)", () -> kickerMotor.getTorqueCurrent().getValueAsDouble(), null);
     }
 
     
