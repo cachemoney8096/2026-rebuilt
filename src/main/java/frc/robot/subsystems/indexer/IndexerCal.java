@@ -12,7 +12,7 @@ public class IndexerCal {
     public static final double INDEXER_I = Constants.PLACEHOLDER_DOUBLE;
     public static final double INDEXER_D = Constants.PLACEHOLDER_DOUBLE;
     public static final double INDEXER_FF = Constants.PLACEHOLDER_DOUBLE;
-    public static final double ROLLERS_RUNNING_VOLTAGE = Constants.PLACEHOLDER_DOUBLE;
+    public static final double INDEXER_SPEED = Constants.PLACEHOLDER_DOUBLE;
 
 
 }

@@ -43,7 +43,7 @@ public class Indexer extends SubsystemBase {
     }
 
     public void runIndexer() {
-        motor.setVoltage(IndexerCal.ROLLERS_RUNNING_VOLTAGE);
+        motor.set(IndexerCal.INDEXER_SPEED);
     }
 
     public void stopIndexer() {
