@@ -45,7 +45,7 @@ public class Intake extends SubsystemBase{
         TalonFXConfigurator leftRollerConfig = leftRollerMotor.getConfigurator();
         leftRollerConfig.apply(rollersToApply);
 
-        Follower master = new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue); //TODO motor allignment direction
+        Follower master = new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue.Aligned);
         rightRollerMotor.setControl(master);
 
         /* Init slapdown */
