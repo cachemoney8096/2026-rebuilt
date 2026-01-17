@@ -47,8 +47,9 @@ public class Indexer extends SubsystemBase {
     }
 
     public void stopIndexer() {
-        motor.setVoltage(0.0);
+        motor.set(0.0);
     }
+
     @Override
     public void initSendable(SendableBuilder builder) {
 
