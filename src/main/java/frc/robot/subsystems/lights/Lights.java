@@ -26,12 +26,12 @@ public class Lights {
   public enum LightCode {
     OFF, // BLACK
     DISABLED, // ORANGE
-    INTAKING, // BLINK RED
+    INTAKING, // BLUE
     AUTO_LOCKED, // GREEN
+    AUTO_LOCKING, // BLINK RED
     READY_TO_CLIMB, // RAINBOW
     CLIMBING, // BLINK BLUE
-    PARTY_MODE, // RAINBOW ANIMATION
-    HOME // RED
+    PARTY_MODE // RAINBOW ANIMATION
   }
 
   public Lights() {
@@ -44,10 +44,10 @@ public class Lights {
     lightOptionsMap = new TreeMap<LightCode, RGBWColor>();
     lightOptionsMap.put(LightCode.OFF, new RGBWColor(0, 0, 0));
     lightOptionsMap.put(LightCode.DISABLED, new RGBWColor(255, 128, 0));
-    lightOptionsMap.put(LightCode.INTAKING, new RGBWColor(255, 0, 0));
+    lightOptionsMap.put(LightCode.INTAKING, new RGBWColor(0, 0, 255));
     lightOptionsMap.put(LightCode.AUTO_LOCKED, new RGBWColor(0, 255, 0));
+    lightOptionsMap.put(LightCode.AUTO_LOCKING, new RGBWColor(255, 0, 0));
     lightOptionsMap.put(LightCode.CLIMBING, new RGBWColor(0, 0, 255));
-    lightOptionsMap.put(LightCode.HOME, new RGBWColor(255, 0, 0));
 
   }
 
