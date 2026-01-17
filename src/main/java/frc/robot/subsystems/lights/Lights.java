@@ -7,7 +7,6 @@ import com.ctre.phoenix6.controls.StrobeAnimation;
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.RGBWColor;
 import com.ctre.phoenix6.signals.StripTypeValue;
-import com.ctre.phoenix.led.CANdle.LEDStripType;
 
 import frc.robot.RobotMap;
 
@@ -20,19 +19,15 @@ public class Lights {
    */
   private TreeMap<LightCode, RGBWColor> lightOptionsMap;
 
-  private CANdle candle = new CANdle(RobotMap.CANDLE_CAN_ID, "rio");
+  private CANdle candle = new CANdle(RobotMap.CANDLE_CAN_ID, RobotMap.RIO_CAN_BUS);
   private CANdleConfiguration config = new CANdleConfiguration();
   private LightCode currentLightStatus = LightCode.OFF;
 
   public enum LightCode {
     OFF, // BLACK
     DISABLED, // ORANGE
-    READY_TO_INTAKE, // BLINK RED
-    HAS_CORAL, // GREEN
-    SCORE_PREP, // BLUE
-    READY_TO_SCORE, // RAINBOW
-    CLIMB_PREP_SHALLOW, // PURPLE
-    CLIMB_PREP_DEEP, // BLINK PURPLE
+    INTAKING, // BLINK RED
+    AUTO_LOCKED, // GREEN
     READY_TO_CLIMB, // RAINBOW
     CLIMBING, // BLINK BLUE
     PARTY_MODE, // RAINBOW ANIMATION
@@ -43,11 +38,18 @@ public class Lights {
     
     config.LED.StripType = StripTypeValue.RGB;
     config.LED.BrightnessScalar = 1.0;
-    // Check this line
+
     candle.getConfigurator().apply(config);
 
     lightOptionsMap = new TreeMap<LightCode, RGBWColor>();
     lightOptionsMap.put(LightCode.OFF, new RGBWColor(0, 0, 0));
+    lightOptionsMap.put(LightCode.DISABLED, new RGBWColor(0, 0, 0));
+    lightOptionsMap.put(LightCode.INTAKING, new RGBWColor(0, 0, 0));
+    lightOptionsMap.put(LightCode.AUTO_LOCKED, new RGBWColor(0, 0, 0));
+    lightOptionsMap.put(LightCode.READY_TO_CLIMB, new RGBWColor(0, 0, 0));
+    lightOptionsMap.put(LightCode.CLIMBING, new RGBWColor(0, 0, 0));
+    lightOptionsMap.put(LightCode.PARTY_MODE, new RGBWColor(0, 0, 0));
+    lightOptionsMap.put(LightCode.HOME, new RGBWColor(0, 0, 0));
 
   }
 
@@ -58,12 +60,9 @@ public class Lights {
 
   private void setLEDs() {
     if (currentLightStatus == LightCode.PARTY_MODE
-        || currentLightStatus == LightCode.READY_TO_CLIMB
-        || currentLightStatus == LightCode.READY_TO_SCORE) {
+        || currentLightStatus == LightCode.READY_TO_CLIMB) {
       setRainbow();
-    } else if (currentLightStatus == LightCode.CLIMBING
-        || currentLightStatus == LightCode.CLIMB_PREP_DEEP
-        || currentLightStatus == LightCode.READY_TO_INTAKE) {
+    } else if (currentLightStatus == LightCode.CLIMBING) {
       setBlink(currentLightStatus);
     } else {
       setSolid(currentLightStatus);
@@ -75,17 +74,27 @@ public class Lights {
         new SolidColor(0, LightsCal.NUM_CANDLE_LEDS);
 
     color.withColor(lightOptionsMap.get(code));
+
+    candle.setControl(color);
   }
 
-  private void setBlink(LightCode light) {
+  private void setBlink(LightCode code) {
     StrobeAnimation twinkle =
         new StrobeAnimation(0, LightsCal.NUM_CANDLE_LEDS);
+
+    twinkle.withColor(lightOptionsMap.get(code));
+    twinkle.withFrameRate(LightsCal.LIGHT_FRAMERATE);
+
     candle.setControl(twinkle);
   }
 
   private void setRainbow() {
-    RainbowAnimation rainbowAnim =
+    RainbowAnimation rainbow =
         new RainbowAnimation(0, LightsCal.NUM_CANDLE_LEDS);
-    candle.setControl(rainbowAnim);
+
+    rainbow.withBrightness(LightsCal.LIGHT_BRIGHTNESS);
+    rainbow.withFrameRate(LightsCal.LIGHT_FRAMERATE);
+
+    candle.setControl(rainbow);
   }
 }
