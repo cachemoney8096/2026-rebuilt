@@ -12,7 +12,7 @@ public class ShooterCal {
     public static final double ROLLERS_D = Constants.PLACEHOLDER_DOUBLE;
     public static final double ROLLERS_FF = Constants.PLACEHOLDER_DOUBLE;
 
-    public static final double ROLLERS_RUNNING_VOLTAGE = Constants.PLACEHOLDER_DOUBLE;
+    public static final double ROLLERS_MAX_RPM = Constants.PLACEHOLDER_DOUBLE;
 
     /* Hood */
     public static final double HOOD_SUPPLY_CURRENT_LIMIT_AMPS = Constants.PLACEHOLDER_DOUBLE;
