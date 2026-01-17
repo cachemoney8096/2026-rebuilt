@@ -87,7 +87,7 @@ public class Shooter extends SubsystemBase {
     }
 
     private double hoodPositionToMotorPosition(double hoodPositionDeg)  {
-        return (hoodPositionDeg / 360.0) / ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO;
+        return (hoodPositionDeg / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO;
     }
 
     private void controlHoodPosition() {
