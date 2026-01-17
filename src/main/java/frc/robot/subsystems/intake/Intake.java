@@ -30,7 +30,7 @@ public class Intake extends SubsystemBase{
     }
 
     private void initTalons(){
-        /* Init roller */
+        /* Init rollers */
         TalonFXConfiguration rollersToApply = new TalonFXConfiguration();
         rollersToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         rollersToApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -45,7 +45,7 @@ public class Intake extends SubsystemBase{
         TalonFXConfigurator leftRollerConfig = leftRollerMotor.getConfigurator();
         leftRollerConfig.apply(rollersToApply);
 
-        Follower master = new Follower(leftRollerMotor.getDeviceID(), null); //TODO motor allignment direction
+        Follower master = new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue); //TODO motor allignment direction
         rightRollerMotor.setControl(master);
 
         /* Init slapdown */
@@ -122,7 +122,7 @@ public class Intake extends SubsystemBase{
         builder.addDoubleProperty("Slapdown Amperage (amps)", () -> slapdownMotor.getTorqueCurrent().getValueAsDouble(), null);
         builder.addDoubleProperty("Slapdown Commanded Voltage (volts)", () -> slapdownMotor.getMotorVoltage().getValueAsDouble(), null);
 
-        /* Roller */
+        /* Rollers */
         builder.addDoubleProperty("Rollers Speed (percent)", () -> leftRollerMotor.get(), null);
         
         builder.addDoubleProperty("Left roller Amperage (amps)", () -> leftRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
