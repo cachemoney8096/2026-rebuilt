@@ -1,5 +1,7 @@
 package frc.robot;
 
+import com.ctre.phoenix6.CANBus;
+
 public class RobotMap {
 
   public static final int LEFT_CLIMB_MOTOR_CAN_ID = 0;
