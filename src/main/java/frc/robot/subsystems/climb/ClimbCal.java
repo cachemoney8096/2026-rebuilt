@@ -13,8 +13,8 @@ public class ClimbCal {
     public static final double CLIMB_SCORE_I = Constants.PLACEHOLDER_DOUBLE;
     public static final double CLIMB_SCORE_D = Constants.PLACEHOLDER_DOUBLE;
     public static final double CLIMB_SCORE_FF = Constants.PLACEHOLDER_DOUBLE;
-    public static final double DRUM_CIRCUMFERENCE = Constants.PLACEHOLDER_DOUBLE;
-    public static final double MOTOR_TO_DRUM_RATIO = Constants.PLACEHOLDER_DOUBLE;
+    public static final double GEAR_CIRCUMFERENCE = Constants.PLACEHOLDER_DOUBLE;
+    public static final double MOTOR_TO_GEAR_RATIO = Constants.PLACEHOLDER_DOUBLE;
     public static final double CLIMB_MARGIN_INCHES = Constants.PLACEHOLDER_DOUBLE;
     
 }

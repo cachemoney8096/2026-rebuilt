@@ -32,7 +32,6 @@ public class Climb extends SubsystemBase{
 
     private TalonFX leftMotor = new TalonFX(RobotMap.LEFT_CLIMB_MOTOR_CAN_ID, "rio");
     private TalonFX rightMotor = new TalonFX(RobotMap.RIGHT_CLIMB_MOTOR_CAN_ID, "rio");
-      private CANrange canrange = new CANrange(RobotMap.CLIMB_CANRANGE, "rio");
 
     private boolean allowClimbMovement = true; 
 
@@ -71,7 +70,7 @@ public class Climb extends SubsystemBase{
   }
 
   public void zeroClimbToHome() {
-    leftMotor.setPosition(0.0);
+    leftMotor.setPosition(climbPositions.get(ClimbHeight.HOME));
   }
 
   public void setDesiredPosition(ClimbHeight height) {
@@ -82,8 +81,8 @@ public class Climb extends SubsystemBase{
     // final PositionVoltage m_request = new PositionVoltage(0.0).withSlot(currentSlotValue);
     double inches =
         inputRotations
-            / ClimbCal.MOTOR_TO_DRUM_RATIO
-            * ClimbCal.DRUM_CIRCUMFERENCE;
+            / ClimbCal.MOTOR_TO_GEAR_RATIO
+            * ClimbCal.GEAR_CIRCUMFERENCE;
 
     final TrapezoidProfile trapezoidProfile =
         new TrapezoidProfile(new TrapezoidProfile.Constraints(1000, 2000));
@@ -116,8 +115,8 @@ public class Climb extends SubsystemBase{
     return leftMotor 
     .getPosition()
     .getValueAsDouble()
-    * ClimbCal.DRUM_CIRCUMFERENCE
-    / ClimbCal.MOTOR_TO_DRUM_RATIO;
+    * ClimbCal.GEAR_CIRCUMFERENCE
+    / ClimbCal.MOTOR_TO_GEAR_RATIO;
   }
 
   public void periodic() {
@@ -164,10 +163,6 @@ public class Climb extends SubsystemBase{
     builder.addBooleanProperty("Elevator Limit Switch Switch TOP", () -> getLimitSwitchTop(), null);*/
 
     builder.addBooleanProperty("Allow Climb Movement", () -> allowClimbMovement, null);
-    builder.addDoubleProperty(
-        "Canrange distance INCHES",
-        () -> Units.metersToInches(canrange.getDistance().getValueAsDouble()),
-        null);
     builder.addDoubleProperty(
         "Climb voltage commanded", () -> leftMotor.getMotorVoltage().getValueAsDouble(), null);
   }
