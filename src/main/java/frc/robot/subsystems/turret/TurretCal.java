@@ -1,5 +1,3 @@
 package frc.robot.subsystems.turret;
 
-public class TurretCal {
-    
-}
+public class TurretCal {}
