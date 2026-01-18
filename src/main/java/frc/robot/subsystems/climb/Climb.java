@@ -1,18 +1,19 @@
 package frc.robot.subsystems.climb;
 
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotMap;
 
 import java.util.TreeMap;
 
-import com.ctre.phoenix6.configs.CANrangeConfiguration;
-import com.ctre.phoenix6.configs.FovParamsConfigs;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
@@ -28,8 +29,10 @@ public class Climb extends SubsystemBase{
     private TreeMap<ClimbHeight, Double> climbPositions = new TreeMap<ClimbHeight, Double>();
 
     private ClimbHeight desiredPosition = ClimbHeight.HOME;
+
     private TalonFX leftMotor = new TalonFX(RobotMap.LEFT_CLIMB_MOTOR_CAN_ID, "rio");
     private TalonFX rightMotor = new TalonFX(RobotMap.RIGHT_CLIMB_MOTOR_CAN_ID, "rio");
+      private CANrange canrange = new CANrange(RobotMap.CLIMB_CANRANGE, "rio");
 
     private boolean allowClimbMovement = true; 
 
@@ -75,16 +78,16 @@ public class Climb extends SubsystemBase{
     desiredPosition = height;
   }
 
-  private void controlPosition(double inputPositionInch) {
+  private void controlPosition(double inputRotations) {
     // final PositionVoltage m_request = new PositionVoltage(0.0).withSlot(currentSlotValue);
-    double rotations =
-        inputPositionInch
-            / ClimbCal.DRUM_CIRCUMFERENCE
-            * ClimbCal.MOTOR_TO_DRUM_RATIO;
+    double inches =
+        inputRotations
+            / ClimbCal.MOTOR_TO_DRUM_RATIO
+            * ClimbCal.DRUM_CIRCUMFERENCE;
 
     final TrapezoidProfile trapezoidProfile =
         new TrapezoidProfile(new TrapezoidProfile.Constraints(1000, 2000));
-    TrapezoidProfile.State tGoal = new TrapezoidProfile.State(rotations, 0.0);
+    TrapezoidProfile.State tGoal = new TrapezoidProfile.State(inches, 0.0);
     TrapezoidProfile.State setpoint =
         new TrapezoidProfile.State(
             leftMotor.getPosition().getValueAsDouble(), leftMotor.getVelocity().getValueAsDouble());
@@ -135,47 +138,38 @@ public class Climb extends SubsystemBase{
   public void initSendable(SendableBuilder builder) {
     super.initSendable(builder);
 
-    builder.addStringProperty("Elevator DESIRED Pos", () -> desiredPosition.toString(), null);
+    builder.addStringProperty("Climb DESIRED Pos", () -> desiredPosition.toString(), null);
     builder.addDoubleProperty(
-        "Elevator DESIRED Pos (in)", () -> climbPositions.get(desiredPosition), null);
-    builder.addBooleanProperty("Elevator at desired", () -> atDesiredPosition(), null);
+        "Climb DESIRED Pos (in)", () -> climbPositions.get(desiredPosition), null);
+    builder.addBooleanProperty("Climb at desired", () -> atDesiredPosition(), null);
 
     builder.addDoubleProperty(
-        "Elevator Left Motor RELATIVE (deg)",
+        "Climb Left Motor RELATIVE (deg)",
         () -> leftMotor.getPosition().getValueAsDouble() * 360.0,
         null);
     builder.addDoubleProperty(
-        "Elevator Right Motor RELATIVE (deg)",
+        "Climb Right Motor RELATIVE (deg)",
         () -> rightMotor.getPosition().getValueAsDouble() * 360.0,
         null);
 
     builder.addDoubleProperty(
         "Elevator CURRENT Pos (in)",
         () ->
-            (leftMotor.getPosition().getValueAsDouble()
-                * climbCal.DRUM_CIRCUMFERENCE
-                / ElevatorConstants.MOTOR_TO_DRUM_RATIO),
+            (getClimbHeight()),
         null);
 
-    builder.addStringProperty(
-        "Elevator PID Slot",
-        () -> {
-          return currentSlotValue == 0 ? "SCORING" : "CLIMBING";
-        },
-        null);
     /*builder.addBooleanProperty("Elevator Limit Switch HOME ", () -> getLimitSwitchHome(), null);
     builder.addBooleanProperty(
         "Elevator Limit Switch BELOW HOME", () -> getLimitSwitchBelowHome(), null);
     builder.addBooleanProperty("Elevator Limit Switch Switch TOP", () -> getLimitSwitchTop(), null);*/
 
-    builder.addBooleanProperty("Allow Elevator Movement", () -> allowElevatorMovement, null);
+    builder.addBooleanProperty("Allow Climb Movement", () -> allowClimbMovement, null);
     builder.addDoubleProperty(
         "Canrange distance INCHES",
         () -> Units.metersToInches(canrange.getDistance().getValueAsDouble()),
         null);
     builder.addDoubleProperty(
-        "Elevator voltage commanded", () -> leftMotor.getMotorVoltage().getValueAsDouble(), null);
-    builder.addBooleanProperty("arm movement allowed", this::armMovementAllowed, null);
+        "Climb voltage commanded", () -> leftMotor.getMotorVoltage().getValueAsDouble(), null);
   }
 
 
