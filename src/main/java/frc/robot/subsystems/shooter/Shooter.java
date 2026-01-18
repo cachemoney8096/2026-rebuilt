@@ -27,7 +27,7 @@ public class Shooter extends SubsystemBase {
 
     public Shooter() {
         initTalons();
-        zeroHood();
+        relativeZeroHood();
     }
 
     private void initTalons() {
@@ -65,19 +65,17 @@ public class Shooter extends SubsystemBase {
         hoodConfig.apply(hoodToApply);
     }
 
-    public void zeroHood() {
+    public void relativeZeroHood() {
         hoodMotor.setPosition(
             (ShooterCal.HOOD_HOME_DEGREES / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO);
+        hoodDesiredPositionDeg = ShooterCal.HOOD_HOME_DEGREES;
     }
 
     public void setDesiredHoodPosition(double newPositionDegrees) {
         hoodDesiredPositionDeg = Math.max(ShooterCal.HOOD_MIN_DEGREES, Math.min(ShooterCal.HOOD_MAX_DEGREES, newPositionDegrees));
     }
 
-    public void runRollers(double rpm) {
-        double speed = rpm / ShooterCal.ROLLERS_MAX_RPM;
-        speed = Math.max(-1.0, Math.min(1.0, speed));
-
+    public void runRollers(double speed) {
         leftRollerMotor.set(speed);
     }
 
