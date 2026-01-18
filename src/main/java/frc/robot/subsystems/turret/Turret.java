@@ -22,7 +22,7 @@ public class Turret extends SubsystemBase {
 
     public Turret() {
         initTalons();
-        zeroTurret();
+        relativeZeroTurret();
     }
 
     private void initTalons() {
@@ -41,9 +41,10 @@ public class Turret extends SubsystemBase {
         turretConfig.apply(turretToApply);
     }
 
-    public void zeroTurret() {
+    public void relativeZeroTurret() {
         turretMotor.setPosition(
             (TurretCal.TURRET_HOME_DEGREES / 360.0) * TurretCal.TURRET_MOTOR_TO_TURRET_RATIO);
+        turretDesiredPositionDeg = TurretCal.TURRET_HOME_DEGREES;
     }
 
     public void setDesiredTurretPosition(double newPositionDegrees) {
