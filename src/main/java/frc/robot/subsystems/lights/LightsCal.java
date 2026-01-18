@@ -1,5 +1,3 @@
 package frc.robot.subsystems.lights;
 
-public class LightsCal {
-    
-}
+public class LightsCal {}
