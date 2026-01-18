@@ -45,7 +45,7 @@ public class Intake extends SubsystemBase{
         TalonFXConfigurator leftRollerConfig = leftRollerMotor.getConfigurator();
         leftRollerConfig.apply(rollersToApply);
 
-        Follower master = new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue.Aligned);
+        Follower master = new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed);
         rightRollerMotor.setControl(master);
 
         /* Init slapdown */
@@ -67,6 +67,7 @@ public class Intake extends SubsystemBase{
     public void zeroSlapdown() {
         slapdownMotor.setPosition(
             (IntakeCal.SLAPDOWN_HOME_DEGREES / 360.0) * IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO);
+        slapdownDesiredPositionDeg = IntakeCal.HOME_SLAPDOWN_DEGREES;
     }
 
     public void setDesiredSlapdownPosition(double newPositionDegrees) {
