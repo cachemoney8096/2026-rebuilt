@@ -7,9 +7,7 @@ import com.ctre.phoenix6.controls.StrobeAnimation;
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.RGBWColor;
 import com.ctre.phoenix6.signals.StripTypeValue;
-
 import frc.robot.RobotMap;
-
 import java.util.TreeMap;
 
 public class Lights {
@@ -35,7 +33,7 @@ public class Lights {
   }
 
   public Lights() {
-    
+
     config.LED.StripType = StripTypeValue.RGB;
     config.LED.BrightnessScalar = 1.0;
 
@@ -48,7 +46,6 @@ public class Lights {
     lightOptionsMap.put(LightCode.AUTO_LOCKED, new RGBWColor(0, 255, 0));
     lightOptionsMap.put(LightCode.AUTO_LOCKING, new RGBWColor(255, 0, 0));
     lightOptionsMap.put(LightCode.CLIMBING, new RGBWColor(0, 0, 255));
-
   }
 
   public void setLEDColor(LightCode light) {
@@ -57,7 +54,7 @@ public class Lights {
   }
 
   private void setLEDs() {
-    if (currentLightStatus == LightCode.PARTY_MODE 
+    if (currentLightStatus == LightCode.PARTY_MODE
         || currentLightStatus == LightCode.READY_TO_CLIMB) {
       setRainbow();
     } else if (currentLightStatus == LightCode.CLIMBING) {
@@ -68,8 +65,7 @@ public class Lights {
   }
 
   private void setSolid(LightCode code) {
-    SolidColor color = 
-        new SolidColor(0, LightsCal.NUM_CANDLE_LEDS);
+    SolidColor color = new SolidColor(0, LightsCal.NUM_CANDLE_LEDS);
 
     color.withColor(lightOptionsMap.get(code));
 
@@ -77,8 +73,7 @@ public class Lights {
   }
 
   private void setBlink(LightCode code) {
-    StrobeAnimation twinkle =
-        new StrobeAnimation(0, LightsCal.NUM_CANDLE_LEDS);
+    StrobeAnimation twinkle = new StrobeAnimation(0, LightsCal.NUM_CANDLE_LEDS);
 
     twinkle.withColor(lightOptionsMap.get(code));
     twinkle.withFrameRate(LightsCal.LIGHT_FRAMERATE);
@@ -87,8 +82,7 @@ public class Lights {
   }
 
   private void setRainbow() {
-    RainbowAnimation rainbow =
-        new RainbowAnimation(0, LightsCal.NUM_CANDLE_LEDS);
+    RainbowAnimation rainbow = new RainbowAnimation(0, LightsCal.NUM_CANDLE_LEDS);
 
     rainbow.withBrightness(LightsCal.LIGHT_BRIGHTNESS);
     rainbow.withFrameRate(LightsCal.LIGHT_FRAMERATE);
