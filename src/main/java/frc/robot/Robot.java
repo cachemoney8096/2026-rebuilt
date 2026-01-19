@@ -6,6 +6,8 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -60,7 +62,19 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    if (DriverStation.getAlliance().isPresent()) {
+      if (DriverStation.getAlliance().get() == DriverStation.Alliance.Blue && !m_robotContainer.isBlue) {
+        m_robotContainer.drivetrain.resetPose(new Pose2d(m_robotContainer.drivetrain.getState().Pose.getX(), m_robotContainer.drivetrain.getState().Pose.getY(), Rotation2d.fromDegrees(0.0)));
+        m_robotContainer.desiredHeadingDeg = 0.0;
+        m_robotContainer.isBlue = true;
+      } else if(DriverStation.getAlliance().get() == DriverStation.Alliance.Red && m_robotContainer.isBlue){
+        m_robotContainer.drivetrain.resetPose(new Pose2d(m_robotContainer.drivetrain.getState().Pose.getX(), m_robotContainer.drivetrain.getState().Pose.getY(), Rotation2d.fromDegrees(180.0)));
+        m_robotContainer.desiredHeadingDeg = 180.0;
+        m_robotContainer.isBlue = false;
+      }
+    }
+  }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
