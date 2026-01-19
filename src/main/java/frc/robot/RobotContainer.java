@@ -38,7 +38,13 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.lights.Lights;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.turret.Turret;
 import frc.robot.utils.LimelightHelpers;
 
 import java.util.function.BiConsumer;
@@ -134,7 +140,12 @@ public class RobotContainer extends SubsystemBase {
   public boolean isBlue = true;
 
   /* Subsystems */
-  
+  Climb climb;
+  Indexer indexer;
+  Intake intake;
+  Lights lights;
+  Shooter shooter;
+  Turret turret;
 
   public String autoPathCmd = "";
 
@@ -149,7 +160,12 @@ public class RobotContainer extends SubsystemBase {
     FollowPathCommand.warmupCommand().schedule();
 
     /* Init subsystems */
-    
+    climb = new Climb();
+    indexer = new Indexer();
+    intake = new Intake();
+    lights = new Lights();
+    shooter = new Shooter();
+    turret = new Turret();
 
     /* Named commands must be registered immediately */
     
