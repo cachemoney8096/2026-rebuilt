@@ -16,5 +16,7 @@ public class ClimbCal {
     public static final double GEAR_CIRCUMFERENCE = Constants.PLACEHOLDER_DOUBLE;
     public static final double MOTOR_TO_GEAR_RATIO = Constants.PLACEHOLDER_DOUBLE;
     public static final double CLIMB_MARGIN_INCHES = Constants.PLACEHOLDER_DOUBLE;
+    public static final double FIRST_CONSTRAINT = Constants.PLACEHOLDER_DOUBLE;
+    public static final double SECOND_CONSTRAINT = Constants.PLACEHOLDER_DOUBLE;
     
 }

@@ -30,8 +30,8 @@ public class Climb extends SubsystemBase{
 
     private ClimbHeight desiredPosition = ClimbHeight.HOME;
 
-    private TalonFX leftMotor = new TalonFX(RobotMap.LEFT_CLIMB_MOTOR_CAN_ID, "rio");
-    private TalonFX rightMotor = new TalonFX(RobotMap.RIGHT_CLIMB_MOTOR_CAN_ID, "rio");
+    private TalonFX leftMotor = new TalonFX(RobotMap.LEFT_CLIMB_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private TalonFX rightMotor = new TalonFX(RobotMap.RIGHT_CLIMB_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
 
     private boolean allowClimbMovement = true; 
 
@@ -52,12 +52,10 @@ public class Climb extends SubsystemBase{
     toApply.CurrentLimits.StatorCurrentLimit =
         ClimbCal.CLIMB_MOTOR_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
     toApply.CurrentLimits.StatorCurrentLimitEnable = true;
-    // Slot 0 is for Scoring PID values and Slot 1 is for Shallow Climbing PID values
     toApply.Slot0.kP = ClimbCal.CLIMB_SCORE_P;
     toApply.Slot0.kI = ClimbCal.CLIMB_SCORE_I;
     toApply.Slot0.kD = ClimbCal.CLIMB_SCORE_D;
     toApply.Slot0.kV = ClimbCal.CLIMB_SCORE_FF;
-    // [\]
     toApply.Slot0.kG = 0.25;
 
     cfgLeft.apply(toApply);
@@ -65,12 +63,12 @@ public class Climb extends SubsystemBase{
     rightMotor.setControl(master);
 
     zeroClimbToHome();
-    // zeroElevatorUsingCanrange();
 
   }
 
   public void zeroClimbToHome() {
     leftMotor.setPosition(climbPositions.get(ClimbHeight.HOME));
+    setDesiredPosition(ClimbHeight.HOME);
   }
 
   public void setDesiredPosition(ClimbHeight height) {
@@ -78,14 +76,13 @@ public class Climb extends SubsystemBase{
   }
 
   private void controlPosition(double inputRotations) {
-    // final PositionVoltage m_request = new PositionVoltage(0.0).withSlot(currentSlotValue);
     double inches =
         inputRotations
             / ClimbCal.MOTOR_TO_GEAR_RATIO
             * ClimbCal.GEAR_CIRCUMFERENCE;
 
     final TrapezoidProfile trapezoidProfile =
-        new TrapezoidProfile(new TrapezoidProfile.Constraints(1000, 2000));
+        new TrapezoidProfile(new TrapezoidProfile.Constraints(ClimbCal.FIRST_CONSTRAINT, ClimbCal.SECOND_CONSTRAINT));
     TrapezoidProfile.State tGoal = new TrapezoidProfile.State(inches, 0.0);
     TrapezoidProfile.State setpoint =
         new TrapezoidProfile.State(
@@ -156,11 +153,6 @@ public class Climb extends SubsystemBase{
         () ->
             (getClimbHeight()),
         null);
-
-    /*builder.addBooleanProperty("Elevator Limit Switch HOME ", () -> getLimitSwitchHome(), null);
-    builder.addBooleanProperty(
-        "Elevator Limit Switch BELOW HOME", () -> getLimitSwitchBelowHome(), null);
-    builder.addBooleanProperty("Elevator Limit Switch Switch TOP", () -> getLimitSwitchTop(), null);*/
 
     builder.addBooleanProperty("Allow Climb Movement", () -> allowClimbMovement, null);
     builder.addDoubleProperty(
