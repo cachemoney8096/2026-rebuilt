@@ -231,6 +231,7 @@ public class RobotContainer extends SubsystemBase {
     double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
     if (headingTxControlActive){
       double output = headingTxOffsetController.calculate(LimelightHelpers.getTX("limelight-front"), 0.0);
+      desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
       if(output > 0.05){
         return robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity).withRotationalRate(output);
       }
