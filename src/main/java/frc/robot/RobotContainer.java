@@ -128,6 +128,10 @@ public class RobotContainer extends SubsystemBase {
   private double visionOffsetX = 0.0;
   private double visionOffsetY = 0.0;
 
+  // new testing stuff
+  private PIDController headingTxOffsetController = new PIDController(0.03, 0.0, 0.0);
+  private boolean headingTxControlActive = false;
+
   private PIDController visionXController = new PIDController(1.0, 0.0, 0.0); 
   private PIDController visionYController = new PIDController(1.0, 0.0, 0.0); 
   private Pose3d tagPoseRobotSpaceInstance;
@@ -225,8 +229,16 @@ public class RobotContainer extends SubsystemBase {
 
     /* Rotational veloity based on right stick */
     double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
-
-    if (isManualRobotCentric) {
+    if (headingTxControlActive){
+      double output = headingTxOffsetController.calculate(LimelightHelpers.getTX("limelight-front"), 0.0);
+      if(output > 0.05){
+        return robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity).withRotationalRate(output);
+      }
+      else{
+        return robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity);
+      }
+    }
+    else if (isManualRobotCentric) {
       /* Is robot centric */
       return robotCentric
           .withVelocityX(xVelocity)
@@ -300,6 +312,9 @@ public class RobotContainer extends SubsystemBase {
   private void configureOperatorBindings() {
     /* Toggle robot centric */
     operatorController.b().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
+
+    operatorController.a().onTrue(new InstantCommand(()-> {headingTxControlActive = true; headingTxOffsetController.reset();}));
+    operatorController.a().onFalse(new InstantCommand(() -> headingTxControlActive = false));
   }
 
   private void configureDebugBindings() {
