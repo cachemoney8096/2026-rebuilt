@@ -2,6 +2,7 @@ package frc.robot.utils;
 
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
@@ -34,25 +35,24 @@ public class ShootOnMoveUtil {
         Translation2d blueGoal = new Translation2d(4.6, 4);
         Translation2d redGoal = new Translation2d(11.9, 4);
         Translation2d robot = robotPose.getTranslation();
-        double shootSpeedMPS = 7.3; // TODO this
+        double shootSpeedMPS = 7.5; // TODO this
         Translation2d goal = isBlue?blueGoal:redGoal;
         double turretRangeDeg = 180;
 
         // Emperical calibration constants (linear multiplier)
-        double cx = 1.0; 
-        double cy = 1.0;
+        double cdeg = 1.0; 
+        double cpitch = 1.0;
 
         // Get some useful values
         Translation2d difference = goal.minus(robot);
         Pair<Double, Double> shooterData = ShooterPitchCalcUtil.calculate(shootSpeedMPS, new Pair<Double, Double>(Math.abs(difference.getX()), Math.abs(difference.getY())));
         double timeS = shooterData.getFirst();
-        double pitchDeg = shooterData.getSecond();
 
         // Calculate the target offset
         double xVelocityFactor = -speeds.vxMetersPerSecond; 
         double yVelocityFactor = -speeds.vyMetersPerSecond;
-        double targetOffsetX = xVelocityFactor*timeS*cx;
-        double targetOffsetY = yVelocityFactor*timeS*cy;
+        double targetOffsetX = xVelocityFactor*timeS;
+        double targetOffsetY = yVelocityFactor*timeS;
         Translation2d targetOffsetTranslation = new Translation2d(targetOffsetX, targetOffsetY);
         goal = goal.plus(targetOffsetTranslation);
 
@@ -60,8 +60,21 @@ public class ShootOnMoveUtil {
         difference = goal.minus(robot);
         double angle = Math.toDegrees(Math.atan2(difference.getY(), difference.getX()));
 
-        // Calculate the turret angle
-        double headingDifference = angle - heading + turretRangeDeg/2;
-        return new Pair<Double, Double>(pitchDeg, headingDifference);
+        // Calculate the turret angle and pitch
+        double headingDifference = 180 - (angle - heading + turretRangeDeg/2);
+        shooterData = ShooterPitchCalcUtil.calculate(shootSpeedMPS, new Pair<Double, Double>(Math.abs(difference.getX()), Math.abs(difference.getY())));
+        return new Pair<Double, Double>(Math.toDegrees(shooterData.getSecond())*cpitch, headingDifference*cdeg);
+    }
+
+    // Tester (ballparked numbers seem fine, can always use constants to tune)
+    public static void main(String args[]){
+        boolean isBlue = false;
+        Pose2d robotPose = new Pose2d(14.0, 2.0, new Rotation2d());
+        ChassisSpeeds speeds = new ChassisSpeeds(0.0, 0.0, 0.0);
+        double heading = 180.0;
+
+        Pair<Double, Double> calcResult = calcTurret(isBlue, robotPose, speeds, heading);
+        System.out.println("Pitch: " + calcResult.getFirst());
+        System.out.println("Turret heading: " + calcResult.getSecond());
     }
 }
