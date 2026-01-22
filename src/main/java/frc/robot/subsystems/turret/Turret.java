@@ -41,7 +41,7 @@ public class Turret extends SubsystemBase {
         turretConfig.apply(turretToApply);
     }
 
-    public void relativeZeroTurret() {
+    public void relativeZeroTurret() { // turret zero will be all the way to the left, and currently assuming 180 degrees range of motion
         turretMotor.setPosition(
             (TurretCal.TURRET_HOME_DEGREES / 360.0) * TurretCal.TURRET_MOTOR_TO_TURRET_RATIO);
         turretDesiredPositionDeg = TurretCal.TURRET_HOME_DEGREES;

@@ -226,7 +226,7 @@ public class RobotContainer extends SubsystemBase {
       xVelocity = -driverController.getLeftY() * MaxSpeed;
       yVelocity = -driverController.getLeftX() * MaxSpeed;
     }
-
+    
     /* Rotational veloity based on right stick */
     double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
     if (headingTxControlActive){
