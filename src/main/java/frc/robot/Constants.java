@@ -15,4 +15,9 @@ package frc.robot;
 public final class Constants {
   public static int PLACEHOLDER_INT = 0;
   public static double PLACEHOLDER_DOUBLE = 0.0;
+
+  public static int DRIVER_CONTROLLER_PORT = 0;
+  public static int OPERATOR_CONTROLLER_PORT = 1;
+
+  public static String LIMELIGHT_FRONT_NAME = "limelight-front";
 }
