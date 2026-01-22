@@ -38,14 +38,15 @@ public class ShootOnMoveUtil {
         double shootSpeedMPS = 7.5; // TODO this
         Translation2d goal = isBlue?blueGoal:redGoal;
         double turretRangeDeg = 180;
+        double heightDifferenceM = 1.8;
 
         // Emperical calibration constants (linear multiplier)
         double cdeg = 1.0; 
         double cpitch = 1.0;
 
         // Get some useful values
-        Translation2d difference = goal.minus(robot);
-        Pair<Double, Double> shooterData = ShooterPitchCalcUtil.calculate(shootSpeedMPS, new Pair<Double, Double>(Math.abs(difference.getX()), Math.abs(difference.getY())));
+        double distance = goal.getDistance(robot);
+        Pair<Double, Double> shooterData = ShooterPitchCalcUtil.calculate(shootSpeedMPS, new Pair<Double, Double>(distance, heightDifferenceM));
         double timeS = shooterData.getFirst();
 
         // Calculate the target offset
@@ -57,21 +58,22 @@ public class ShootOnMoveUtil {
         goal = goal.plus(targetOffsetTranslation);
 
         // Calculate the absolute field heading to the target
-        difference = goal.minus(robot);
+        Translation2d difference = goal.minus(robot);
+        distance = goal.getDistance(robot);
         double angle = Math.toDegrees(Math.atan2(difference.getY(), difference.getX()));
 
         // Calculate the turret angle and pitch
         double headingDifference = 180 - (angle + heading + turretRangeDeg/2);
-        shooterData = ShooterPitchCalcUtil.calculate(shootSpeedMPS, new Pair<Double, Double>(Math.abs(difference.getX()), Math.abs(difference.getY())));
+        shooterData = ShooterPitchCalcUtil.calculate(shootSpeedMPS, new Pair<Double, Double>(distance, heightDifferenceM));
         return new Pair<Double, Double>(Math.toDegrees(shooterData.getSecond())*cpitch, headingDifference*cdeg);
     }
 
     // Tester (ballparked numbers seem fine, can always use constants to tune)
     public static void main(String args[]){
-        boolean isBlue = false;
-        Pose2d robotPose = new Pose2d(14.0, 6.0, new Rotation2d());
+        boolean isBlue = true;
+        Pose2d robotPose = new Pose2d(2.0, 4.0, new Rotation2d());
         ChassisSpeeds speeds = new ChassisSpeeds(0.0, 0.0, 0.0);
-        double heading = 180.0;
+        double heading = 0.0;
 
         Pair<Double, Double> calcResult = calcTurret(isBlue, robotPose, speeds, heading);
         System.out.println("Pitch: " + calcResult.getFirst());
