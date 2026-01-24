@@ -11,8 +11,7 @@ import frc.robot.subsystems.lights.Lights.LightCode;
 
 public class StartIntakeSequence extends SequentialCommandGroup{
 
-    public StartIntakeSequence(
-      Intake intake, Lights lights) {
+    public StartIntakeSequence(Intake intake, Lights lights) {
     addRequirements(intake);
 
     addCommands(
