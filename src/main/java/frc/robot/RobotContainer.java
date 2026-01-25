@@ -129,7 +129,7 @@ public class RobotContainer extends SubsystemBase {
   private double visionOffsetY = 0.0;
 
   // new testing stuff
-  private PIDController headingTxOffsetController = new PIDController(0.03, 0.0, 0.0);
+  private PIDController headingTxOffsetController = new PIDController(0.001, 0.0, 0.1);
   private boolean headingTxControlActive = false;
 
   private PIDController visionXController = new PIDController(1.0, 0.0, 0.0); 
@@ -173,7 +173,6 @@ public class RobotContainer extends SubsystemBase {
 
     /* Named commands must be registered immediately */ // TODO this
     
-
     /* Auto chooser */
     autoChooser = AutoBuilder.buildAutoChooser(""); //TODO default auto name
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -195,8 +194,6 @@ public class RobotContainer extends SubsystemBase {
 
     /* Shuffleboard */
     Shuffleboard.getTab("Subsystems").add("RobotContainer", this);
-
-    SmartDashboard.putData(autoChooser);
   }
 
   private void zeroRobot() {
@@ -230,7 +227,7 @@ public class RobotContainer extends SubsystemBase {
     /* Rotational veloity based on right stick */
     double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
     if (headingTxControlActive){
-      double output = headingTxOffsetController.calculate(LimelightHelpers.getTX(Constants.LIMELIGHT_FRONT_NAME), 0.0);
+      double output = headingTxOffsetController.calculate(-LimelightHelpers.getTX(Constants.LIMELIGHT_FRONT_NAME), 0.0);
       desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
       if(output > joystickDeadband){
         return robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity).withRotationalRate(output);
@@ -314,8 +311,7 @@ public class RobotContainer extends SubsystemBase {
     /* Toggle robot centric */
     operatorController.b().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
 
-    operatorController.a().onTrue(new InstantCommand(()-> {headingTxControlActive = true; headingTxOffsetController.reset();}));
-    operatorController.a().onFalse(new InstantCommand(() -> headingTxControlActive = false));
+    operatorController.a().onTrue(new InstantCommand(()-> {headingTxControlActive = !headingTxControlActive; headingTxOffsetController.reset();}));
   }
 
   private void configureDebugBindings() {
