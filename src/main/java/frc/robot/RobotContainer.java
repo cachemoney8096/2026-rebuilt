@@ -51,6 +51,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.photonvision.PhotonCamera;
+
 /**
  * This class is where the bulk of the robot should be declared. Since
  * Command-based is a
@@ -132,8 +134,8 @@ public class RobotContainer extends SubsystemBase {
   private PIDController headingTxOffsetController = new PIDController(0.001, 0.0, 0.1);
   private boolean headingTxControlActive = false;
 
-  private PIDController visionXController = new PIDController(1.0, 0.0, 0.0); 
-  private PIDController visionYController = new PIDController(1.0, 0.0, 0.0); 
+  private PIDController visionXController = new PIDController(1.0, 0.0, 0.0);
+  private PIDController visionYController = new PIDController(1.0, 0.0, 0.0);
   private Pose3d tagPoseRobotSpaceInstance;
   private Pose3d tagPoseRobotSpaceCurrent;
 
@@ -144,17 +146,19 @@ public class RobotContainer extends SubsystemBase {
   public boolean isBlue = true;
 
   /* Subsystems */
-  Climb climb;
-  Indexer indexer;
-  Intake intake;
-  Lights lights;
-  Shooter shooter;
-  Turret turret;
+  public Climb climb;
+  public Indexer indexer;
+  public Intake intake;
+  public Lights lights;
+  public Shooter shooter;
+  public Turret turret;
 
   public String autoPathCmd = "";
 
+  // photonvision testing
+  PhotonCamera camera = new PhotonCamera("photonvision");
+
   /* Prep states */ // TODO this
-  
 
   /**
    * The container for the robot. Contains subsystems, IO devices, and commands.
@@ -172,22 +176,22 @@ public class RobotContainer extends SubsystemBase {
     turret = new Turret();
 
     /* Named commands must be registered immediately */ // TODO this
-    
+
     /* Auto chooser */
-    autoChooser = AutoBuilder.buildAutoChooser(""); //TODO default auto name
+    autoChooser = AutoBuilder.buildAutoChooser(""); // TODO default auto name
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
     /* Field centric heading controller */
-    fieldCentricFacingAngle.HeadingController.setPID(6.7, 0.0001, 0.02); //TODO update drive pid
+    fieldCentricFacingAngle.HeadingController.setPID(6.7, 0.0001, 0.02); // TODO update drive pid
 
-    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; //TODO robot.java stuff
+    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; // TODO robot.java stuff
 
     zeroRobot();
 
     /* Configure controller bindings */
     configureDriverBindings();
     configureOperatorBindings();
-    // configureDebugBindings(); 
+    // configureDebugBindings();
 
     driverController.getHID().setRumble(RumbleType.kBothRumble, 0.0);
     operatorController.getHID().setRumble(RumbleType.kBothRumble, 0.0);
@@ -226,17 +230,36 @@ public class RobotContainer extends SubsystemBase {
 
     /* Rotational veloity based on right stick */
     double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
-    if (headingTxControlActive){
-      double output = headingTxOffsetController.calculate(-LimelightHelpers.getTX(Constants.LIMELIGHT_FRONT_NAME), 0.0);
+    if (headingTxControlActive) {
+      boolean targetVisible = false;
+      double targetYaw = 0.0;
+      // var results = camera.getAllUnreadResults();
+      // if (!results.isEmpty()) {
+      //   // Camera processed a new frame since last
+      //   // Get the last one in the list.
+      //   var result = results.get(results.size() - 1);
+      //   if (result.hasTargets()) {
+      //     // At least one AprilTag was seen by the camera
+      //     for (var target : result.getTargets()) {
+      //       if (target.getFiducialId() == 1) {
+      //         // Found Tag 7, record its information
+      //         targetYaw = target.getYaw();
+      //         targetVisible = true;
+      //       }
+      //     }
+      //   }
+      // }
+
+      targetYaw = LimelightHelpers.getTX("limelight-front");
+
+      double output = -1.0 * targetYaw * 0.001 * MaxAngularRate;
       desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
-      if(output > joystickDeadband){
+      if (output > joystickDeadband) {
         return robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity).withRotationalRate(output);
-      }
-      else{
+      } else {
         return robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity);
       }
-    }
-    else if (isManualRobotCentric) {
+    } else if (isManualRobotCentric) {
       /* Is robot centric */
       return robotCentric
           .withVelocityX(xVelocity)
@@ -311,7 +334,10 @@ public class RobotContainer extends SubsystemBase {
     /* Toggle robot centric */
     operatorController.b().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
 
-    operatorController.a().onTrue(new InstantCommand(()-> {headingTxControlActive = !headingTxControlActive; headingTxOffsetController.reset();}));
+    operatorController.a().onTrue(new InstantCommand(() -> {
+      headingTxControlActive = !headingTxControlActive;
+      headingTxOffsetController.reset();
+    }));
   }
 
   private void configureDebugBindings() {
