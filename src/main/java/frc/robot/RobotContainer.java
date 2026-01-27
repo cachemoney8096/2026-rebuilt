@@ -231,34 +231,41 @@ public class RobotContainer extends SubsystemBase {
     /* Rotational veloity based on right stick */
     double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
     if (headingTxControlActive) {
-      boolean targetVisible = false;
       double targetYaw = 0.0;
-      // var results = camera.getAllUnreadResults();
-      // if (!results.isEmpty()) {
-      //   // Camera processed a new frame since last
-      //   // Get the last one in the list.
-      //   var result = results.get(results.size() - 1);
-      //   if (result.hasTargets()) {
-      //     // At least one AprilTag was seen by the camera
-      //     for (var target : result.getTargets()) {
-      //       if (target.getFiducialId() == 1) {
-      //         // Found Tag 7, record its information
-      //         targetYaw = target.getYaw();
-      //         targetVisible = true;
-      //       }
-      //     }
-      //   }
-      // }
-
-      targetYaw = LimelightHelpers.getTX("limelight-front");
-
-      double output = -1.0 * targetYaw * 0.001 * MaxAngularRate;
-      desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
-      if (output > joystickDeadband) {
-        return robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity).withRotationalRate(output);
-      } else {
-        return robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity);
+      var results = camera.getAllUnreadResults();
+      if (!results.isEmpty()) {
+        // Camera processed a new frame since last
+        // Get the last one in the list.
+        var result = results.get(results.size() - 1);
+        if (result.hasTargets()) {
+          for (var target : result.getTargets()) {
+              // Found Tag 7, record its information
+              targetYaw = target.getYaw()/2;
+              // System.out.println(target.getYaw());
+              // desiredHeadingDeg -= target.getYaw()/2;
+          }
+        }
       }
+
+      // double targetYawRad = Math.toRadians(LimelightHelpers.getTX("limelight-front"));
+      double targetYawRad = Math.toRadians(targetYaw);
+      double kP = 4;
+      double output = -kP * targetYawRad;
+
+      output = MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
+      //System.out.println(output);
+      desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
+      if (Math.abs(targetYawRad) > Math.toRadians(1.0) && targetYaw != 0.0) { // && LimelightHelpers.getTX("limelight-front") != 0.0
+        return robotCentric
+            .withVelocityX(xVelocity)
+            .withVelocityY(yVelocity)
+            .withRotationalRate(output);
+      } else {
+        return robotCentric
+            .withVelocityX(xVelocity)
+            .withVelocityY(yVelocity);
+      }
+
     } else if (isManualRobotCentric) {
       /* Is robot centric */
       return robotCentric
@@ -313,13 +320,31 @@ public class RobotContainer extends SubsystemBase {
             }));
 
     /* Cardinals */
-    driverController
-        .a()
-        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 180.0 : 0.0));
+    // driverController
+    // .a()
+    // .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 180.0 :
+    // 0.0));
 
-    driverController
-        .b()
-        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 270.0 : 90.0));
+    // driverController
+    //     .b()
+    //     .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 270.0 : 90.0));
+
+    driverController.b().onTrue(new InstantCommand(()->{
+      var results = camera.getAllUnreadResults();
+      if (!results.isEmpty()) {
+        // Camera processed a new frame since last
+        // Get the last one in the list.
+        var result = results.get(results.size() - 1);
+        if (result.hasTargets()) {
+          for (var target : result.getTargets()) {
+              // Found Tag 7, record its information
+              // targetYaw = target.getYaw();
+              //System.out.println(target.getYaw());
+              desiredHeadingDeg -= target.getYaw()/2;
+          }
+        }
+      }
+    }));
 
     driverController
         .x()
@@ -328,16 +353,17 @@ public class RobotContainer extends SubsystemBase {
     driverController
         .y()
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
+
+    driverController.a().onTrue(new InstantCommand(() -> {
+      headingTxControlActive = !headingTxControlActive;
+      headingTxOffsetController.reset();
+    }));
   }
 
   private void configureOperatorBindings() {
     /* Toggle robot centric */
     operatorController.b().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
 
-    operatorController.a().onTrue(new InstantCommand(() -> {
-      headingTxControlActive = !headingTxControlActive;
-      headingTxOffsetController.reset();
-    }));
   }
 
   private void configureDebugBindings() {
@@ -432,5 +458,6 @@ public class RobotContainer extends SubsystemBase {
     builder.addStringProperty(
         "Current selected auto", () -> this.getAutonomousCommand().getName(), null);
     builder.addBooleanProperty("is blue", () -> isBlue, null);
+    builder.addDoubleProperty("limelight tx", () -> LimelightHelpers.getTX("limelight-front"), null);
   }
 }
