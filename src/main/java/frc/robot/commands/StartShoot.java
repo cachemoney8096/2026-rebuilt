@@ -15,6 +15,7 @@ public class StartShoot extends Command {
     @Override
     public void execute() {
         //TODO find correct speed
+        // Should probably be handled in the shooter subsytem tbh
         shooter.runRollers(1);
     }
 }
