@@ -368,8 +368,6 @@ public class RobotContainer extends SubsystemBase {
       turret.setDesiredTurretPosition(ShootOnMoveUtil.calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond());
     })));
 
-
-
     driverController.povUp().onTrue(new InstantCommand(()->{
       Robot.kUseLimelight = true;
     }));
