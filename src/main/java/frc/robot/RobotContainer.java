@@ -31,6 +31,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -46,6 +48,7 @@ import frc.robot.subsystems.lights.Lights;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.utils.LimelightHelpers;
+import frc.robot.utils.ShootOnMoveUtil;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -198,6 +201,7 @@ public class RobotContainer extends SubsystemBase {
 
     /* Shuffleboard */
     Shuffleboard.getTab("Subsystems").add("RobotContainer", this);
+    Shuffleboard.getTab("Subsystems").add("Turret", turret);
   }
 
   private void zeroRobot() {
@@ -231,37 +235,38 @@ public class RobotContainer extends SubsystemBase {
     /* Rotational veloity based on right stick */
     double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
     if (headingTxControlActive) {
-      double targetYaw = 0.0;
-      var results = camera.getAllUnreadResults();
-      if (!results.isEmpty()) {
-        // Camera processed a new frame since last
-        // Get the last one in the list.
-        var result = results.get(results.size() - 1);
-        if (result.hasTargets()) {
-          for (var target : result.getTargets()) {
-              // Found Tag 7, record its information
-              targetYaw = target.getYaw()/2;
-              // System.out.println(target.getYaw());
-              // desiredHeadingDeg -= target.getYaw()/2;
-          }
-        }
-      }
+      // double targetYaw = 0.0;
+      // var results = camera.getAllUnreadResults();
+      // if (!results.isEmpty()) {
+      //   // Camera processed a new frame since last
+      //   // Get the last one in the list.
+      //   var result = results.get(results.size() - 1);
+      //   if (result.hasTargets()) {
+      //     for (var target : result.getTargets()) {
+      //         // Found Tag 7, record its information
+      //         targetYaw = target.getYaw()/2;
+      //         // System.out.println(target.getYaw());
+      //         // desiredHeadingDeg -= target.getYaw()/2;
+      //     }
+      //   }
+      // }
 
-      // double targetYawRad = Math.toRadians(LimelightHelpers.getTX("limelight-front"));
-      double targetYawRad = Math.toRadians(targetYaw);
-      double kP = 4;
+      double targetYawRad = Math.toRadians(LimelightHelpers.getTX("limelight-front"));
+      //double targetYawRad = Math.toRadians(targetYaw);
+      double kP = 7;
       double output = -kP * targetYawRad;
 
       output = MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
       //System.out.println(output);
       desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
-      if (Math.abs(targetYawRad) > Math.toRadians(1.0) && targetYaw != 0.0) { // && LimelightHelpers.getTX("limelight-front") != 0.0
-        return robotCentric
+      if (Math.abs(targetYawRad) > Math.toRadians(1.0)) { //  && targetYaw != 0.0  && LimelightHelpers.getTX("limelight-front") != 0.0
+        return drive
             .withVelocityX(xVelocity)
             .withVelocityY(yVelocity)
             .withRotationalRate(output);
+            
       } else {
-        return robotCentric
+        return drive
             .withVelocityX(xVelocity)
             .withVelocityY(yVelocity);
       }
@@ -357,6 +362,16 @@ public class RobotContainer extends SubsystemBase {
     driverController.a().onTrue(new InstantCommand(() -> {
       headingTxControlActive = !headingTxControlActive;
       headingTxOffsetController.reset();
+    }));
+
+    driverController.b().onTrue(new RepeatCommand(new InstantCommand(()-> {
+      turret.setDesiredTurretPosition(ShootOnMoveUtil.calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond());
+    })));
+
+
+
+    driverController.povUp().onTrue(new InstantCommand(()->{
+      Robot.kUseLimelight = true;
     }));
   }
 
@@ -459,5 +474,6 @@ public class RobotContainer extends SubsystemBase {
         "Current selected auto", () -> this.getAutonomousCommand().getName(), null);
     builder.addBooleanProperty("is blue", () -> isBlue, null);
     builder.addDoubleProperty("limelight tx", () -> LimelightHelpers.getTX("limelight-front"), null);
+    builder.addDoubleProperty("turret calc heading", ()->ShootOnMoveUtil.calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond(), null);
   }
 }

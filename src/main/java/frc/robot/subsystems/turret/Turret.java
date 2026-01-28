@@ -48,7 +48,9 @@ public class Turret extends SubsystemBase {
     }
 
     public void setDesiredTurretPosition(double newPositionDegrees) {
-        turretDesiredPositionDeg = Math.max(TurretCal.TURRET_MIN_DEGREES, Math.min(TurretCal.TURRET_MAX_DEGREES, newPositionDegrees));
+        if(!Double.isNaN(newPositionDegrees) && newPositionDegrees < 180 && newPositionDegrees > 0){
+            turretDesiredPositionDeg = Math.max(TurretCal.TURRET_MIN_DEGREES, Math.min(TurretCal.TURRET_MAX_DEGREES, newPositionDegrees));
+        }
     }
 
     public boolean atDesiredTurretPosition() {
@@ -83,7 +85,7 @@ public class Turret extends SubsystemBase {
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
 
-        builder.addDoubleProperty("Turret Actual Position (deg.)", () -> (turretMotor.getPosition().getValueAsDouble() / 360.0) * TurretCal.TURRET_MOTOR_TO_TURRET_RATIO, null);
+        builder.addDoubleProperty("Turret Actual Position (deg.)", () -> (turretMotor.getPosition().getValueAsDouble() * 360.0) * TurretCal.TURRET_MOTOR_TO_TURRET_RATIO, null);
         builder.addDoubleProperty("Turret Desired Position (deg.)", () -> turretDesiredPositionDeg, null);
 
         builder.addBooleanProperty("Turret at Desired Position", this::atDesiredTurretPosition, null);
