@@ -18,8 +18,7 @@ public class StopIntakeSequence extends SequentialCommandGroup{
     addCommands(
         new InstantCommand(() -> lights.setLEDColor(LightCode.OFF)),
         new InstantCommand(() -> intake.stopRollers()),
-        new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.HOME)),
-        new WaitUntilCommand(intake::atDesiredSlapdownPosition)
+        new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.HOME))
     );
   }
     

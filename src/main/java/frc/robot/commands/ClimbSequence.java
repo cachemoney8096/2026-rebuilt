@@ -15,8 +15,7 @@ public class ClimbSequence extends SequentialCommandGroup {
         addRequirements(climb);
         addCommands(
             new InstantCommand(() -> lights.setLEDColor(LightCode.CLIMBING)),
-            new InstantCommand(() -> climb.setDesiredPosition(ClimbHeight.L1_TELEOP)),
-            new WaitUntilCommand(() -> climb.atDesiredPosition())
+            new InstantCommand(() -> climb.setDesiredPosition(ClimbHeight.L1_TELEOP))
         );
 
     }

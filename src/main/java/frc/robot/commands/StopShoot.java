@@ -1,19 +1,15 @@
 package frc.robot.commands;
 
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.shooter.Shooter;
-import edu.wpi.first.wpilibj2.command.Command;
 
-
-public class StopShoot extends Command {
-
-    private Shooter shooter;
+public class StopShoot extends SequentialCommandGroup {
     public StopShoot(Shooter shooter) {
-        this.shooter = shooter;
-        addRequirements(shooter); 
-    }
-    
-    @Override
-    public void execute() {
-        shooter.stopRollers();
+        addRequirements(shooter);
+
+        addCommands(
+            new InstantCommand(() -> shooter.stopRollers())
+        );
     }
 }
