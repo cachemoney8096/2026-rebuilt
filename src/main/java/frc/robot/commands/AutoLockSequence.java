@@ -24,15 +24,12 @@ public class AutoLockSequence extends SequentialCommandGroup{
             new InstantCommand(() -> lights.setLEDColor(LightCode.AUTO_LOCKED)),
             new RepeatCommand(
                 new InstantCommand(() -> {
-                    
                     Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(isBlue, robotPoseSupplier.get(), chassisSpeedsSupplier.get(), headingSupplier.get());
 
                     shooter.setDesiredHoodPosition(results.getFirst());
                     turret.setDesiredTurretPosition(results.getSecond());
                 })
-            ).finallyDo(
-                new InstantCommand(() -> lights.setLEDColor(LightCode.OFF))
-            )
+            ).finallyDo(() -> lights.setLEDColor(LightCode.OFF))
         );
     }
 }
