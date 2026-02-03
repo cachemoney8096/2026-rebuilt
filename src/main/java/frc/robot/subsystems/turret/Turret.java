@@ -51,6 +51,10 @@ public class Turret extends SubsystemBase {
         turretDesiredPositionDeg = Math.max(TurretCal.TURRET_MIN_DEGREES, Math.min(TurretCal.TURRET_MAX_DEGREES, newPositionDegrees));
     }
 
+    public double getDesiredPositionDeg() {
+        return turretDesiredPositionDeg;
+    }
+
     public boolean atDesiredTurretPosition() {
         return Math.abs(turretMotor.getPosition().getValueAsDouble() - turretPositionToMotorPosition(turretDesiredPositionDeg)) < TurretCal.TURRET_POSITION_MARGIN;
     }
