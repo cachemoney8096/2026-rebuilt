@@ -31,6 +31,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -46,10 +48,13 @@ import frc.robot.subsystems.lights.Lights;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.utils.LimelightHelpers;
+import frc.robot.utils.ShootOnMoveUtil;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import org.photonvision.PhotonCamera;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -129,11 +134,11 @@ public class RobotContainer extends SubsystemBase {
   private double visionOffsetY = 0.0;
 
   // new testing stuff
-  private PIDController headingTxOffsetController = new PIDController(0.03, 0.0, 0.0);
+  private PIDController headingTxOffsetController = new PIDController(0.001, 0.0, 0.1);
   private boolean headingTxControlActive = false;
 
-  private PIDController visionXController = new PIDController(1.0, 0.0, 0.0); 
-  private PIDController visionYController = new PIDController(1.0, 0.0, 0.0); 
+  private PIDController visionXController = new PIDController(1.0, 0.0, 0.0);
+  private PIDController visionYController = new PIDController(1.0, 0.0, 0.0);
   private Pose3d tagPoseRobotSpaceInstance;
   private Pose3d tagPoseRobotSpaceCurrent;
 
@@ -144,17 +149,19 @@ public class RobotContainer extends SubsystemBase {
   public boolean isBlue = true;
 
   /* Subsystems */
-  Climb climb;
-  Indexer indexer;
-  Intake intake;
-  Lights lights;
-  Shooter shooter;
-  Turret turret;
+  public Climb climb;
+  public Indexer indexer;
+  public Intake intake;
+  public Lights lights;
+  public Shooter shooter;
+  public Turret turret;
 
   public String autoPathCmd = "";
 
+  // photonvision testing
+  PhotonCamera camera = new PhotonCamera("photonvision");
+
   /* Prep states */ // TODO this
-  
 
   /**
    * The container for the robot. Contains subsystems, IO devices, and commands.
@@ -172,31 +179,29 @@ public class RobotContainer extends SubsystemBase {
     turret = new Turret();
 
     /* Named commands must be registered immediately */ // TODO this
-    
 
     /* Auto chooser */
-    autoChooser = AutoBuilder.buildAutoChooser(""); //TODO default auto name
+    autoChooser = AutoBuilder.buildAutoChooser(""); // TODO default auto name
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
     /* Field centric heading controller */
-    fieldCentricFacingAngle.HeadingController.setPID(6.7, 0.0001, 0.02); //TODO update drive pid
+    fieldCentricFacingAngle.HeadingController.setPID(6.7, 0.0001, 0.02); // TODO update drive pid
 
-    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; //TODO robot.java stuff
+    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; // TODO robot.java stuff
 
     zeroRobot();
 
     /* Configure controller bindings */
     configureDriverBindings();
     configureOperatorBindings();
-    // configureDebugBindings(); 
+    // configureDebugBindings();
 
     driverController.getHID().setRumble(RumbleType.kBothRumble, 0.0);
     operatorController.getHID().setRumble(RumbleType.kBothRumble, 0.0);
 
     /* Shuffleboard */
     Shuffleboard.getTab("Subsystems").add("RobotContainer", this);
-
-    SmartDashboard.putData(autoChooser);
+    Shuffleboard.getTab("Subsystems").add("Turret", turret);
   }
 
   private void zeroRobot() {
@@ -229,17 +234,44 @@ public class RobotContainer extends SubsystemBase {
 
     /* Rotational veloity based on right stick */
     double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
-    if (headingTxControlActive){
-      double output = headingTxOffsetController.calculate(LimelightHelpers.getTX(Constants.LIMELIGHT_FRONT_NAME), 0.0);
+    if (headingTxControlActive) {
+      // double targetYaw = 0.0;
+      // var results = camera.getAllUnreadResults();
+      // if (!results.isEmpty()) {
+      //   // Camera processed a new frame since last
+      //   // Get the last one in the list.
+      //   var result = results.get(results.size() - 1);
+      //   if (result.hasTargets()) {
+      //     for (var target : result.getTargets()) {
+      //         // Found Tag 7, record its information
+      //         targetYaw = target.getYaw()/2;
+      //         // System.out.println(target.getYaw());
+      //         // desiredHeadingDeg -= target.getYaw()/2;
+      //     }
+      //   }
+      // }
+
+      double targetYawRad = Math.toRadians(LimelightHelpers.getTX("limelight-front"));
+      //double targetYawRad = Math.toRadians(targetYaw);
+      double kP = 7;
+      double output = -kP * targetYawRad;
+
+      output = MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
+      //System.out.println(output);
       desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
-      if(output > joystickDeadband){
-        return robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity).withRotationalRate(output);
+      if (Math.abs(targetYawRad) > Math.toRadians(1.0)) { //  && targetYaw != 0.0  && LimelightHelpers.getTX("limelight-front") != 0.0
+        return drive
+            .withVelocityX(xVelocity)
+            .withVelocityY(yVelocity)
+            .withRotationalRate(output);
+            
+      } else {
+        return drive
+            .withVelocityX(xVelocity)
+            .withVelocityY(yVelocity);
       }
-      else{
-        return robotCentric.withVelocityX(xVelocity).withVelocityY(yVelocity);
-      }
-    }
-    else if (isManualRobotCentric) {
+
+    } else if (isManualRobotCentric) {
       /* Is robot centric */
       return robotCentric
           .withVelocityX(xVelocity)
@@ -293,13 +325,31 @@ public class RobotContainer extends SubsystemBase {
             }));
 
     /* Cardinals */
-    driverController
-        .a()
-        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 180.0 : 0.0));
+    // driverController
+    // .a()
+    // .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 180.0 :
+    // 0.0));
 
-    driverController
-        .b()
-        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 270.0 : 90.0));
+    // driverController
+    //     .b()
+    //     .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 270.0 : 90.0));
+
+    driverController.b().onTrue(new InstantCommand(()->{
+      var results = camera.getAllUnreadResults();
+      if (!results.isEmpty()) {
+        // Camera processed a new frame since last
+        // Get the last one in the list.
+        var result = results.get(results.size() - 1);
+        if (result.hasTargets()) {
+          for (var target : result.getTargets()) {
+              // Found Tag 7, record its information
+              // targetYaw = target.getYaw();
+              //System.out.println(target.getYaw());
+              desiredHeadingDeg -= target.getYaw()/2;
+          }
+        }
+      }
+    }));
 
     driverController
         .x()
@@ -308,14 +358,25 @@ public class RobotContainer extends SubsystemBase {
     driverController
         .y()
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
+
+    driverController.a().onTrue(new InstantCommand(() -> {
+      headingTxControlActive = !headingTxControlActive;
+      headingTxOffsetController.reset();
+    }));
+
+    driverController.b().onTrue(new RepeatCommand(new InstantCommand(()-> {
+      turret.setDesiredTurretPosition(ShootOnMoveUtil.calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond());
+    })));
+
+    driverController.povUp().onTrue(new InstantCommand(()->{
+      Robot.kUseLimelight = true;
+    }));
   }
 
   private void configureOperatorBindings() {
     /* Toggle robot centric */
     operatorController.b().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
 
-    operatorController.a().onTrue(new InstantCommand(()-> {headingTxControlActive = true; headingTxOffsetController.reset();}));
-    operatorController.a().onFalse(new InstantCommand(() -> headingTxControlActive = false));
   }
 
   private void configureDebugBindings() {
@@ -410,5 +471,7 @@ public class RobotContainer extends SubsystemBase {
     builder.addStringProperty(
         "Current selected auto", () -> this.getAutonomousCommand().getName(), null);
     builder.addBooleanProperty("is blue", () -> isBlue, null);
+    builder.addDoubleProperty("limelight tx", () -> LimelightHelpers.getTX("limelight-front"), null);
+    builder.addDoubleProperty("turret calc heading", ()->ShootOnMoveUtil.calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond(), null);
   }
 }

@@ -19,7 +19,7 @@ public class ShooterPitchCalcUtil {
         double TERM2_1 = Math.pow(square_velocity - (GRAVITY * distances.getSecond()), 2);
         double TERM2_2 = Math.pow(GRAVITY, 2) * (Math.pow(distances.getFirst(), 2) + Math.pow(distances.getSecond(), 2));
 
-        double TERM2 = Math.sqrt(TERM2_1 - TERM2_2);
+        double TERM2 = Math.sqrt(Math.abs(TERM2_1 - TERM2_2));
 
         double numerator_pos = 2 * (TERM1 + TERM2);
         // ignoring negative term for now..
@@ -30,5 +30,11 @@ public class ShooterPitchCalcUtil {
         double theta = Math.atan((distances.getSecond() + (0.5 * GRAVITY * Math.pow(time, 2))) / distances.getFirst());
 
         return new Pair<Double,Double>(time, theta);
+    }
+
+    public static void main(String[] args) {
+        Double sixtySevenConstant = 3.113537662842512;
+        Pair<Double, Double> location = new Pair<Double, Double>(sixtySevenConstant, 1.8);
+        System.out.println(Math.toDegrees(calculate(7.5, location).getSecond()));
     }
 }
