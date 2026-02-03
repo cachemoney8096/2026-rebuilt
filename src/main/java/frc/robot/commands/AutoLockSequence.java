@@ -21,7 +21,7 @@ public class AutoLockSequence extends SequentialCommandGroup{
         addRequirements(shooter, turret);
 
         addCommands(
-            new InstantCommand(() -> lights.setLEDColor(LightCode.AUTO_LOCKED)),
+            new InstantCommand(() -> lights.setLEDColor(LightCode.AUTO_INTAKING)),
             new RepeatCommand(
                 new InstantCommand(() -> {
                     Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(isBlue, robotPoseSupplier.get(), chassisSpeedsSupplier.get(), headingSupplier.get());

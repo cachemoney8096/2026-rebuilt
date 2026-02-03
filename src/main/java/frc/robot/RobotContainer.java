@@ -359,6 +359,8 @@ public class RobotContainer extends SubsystemBase {
         .y()
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
 
+    driverController.a().toggleOnTrue(new InstantCommand().finallyDo(null));
+
     driverController.a().onTrue(new InstantCommand(() -> {
       headingTxControlActive = !headingTxControlActive;
       headingTxOffsetController.reset();
