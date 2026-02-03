@@ -9,7 +9,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -133,9 +132,7 @@ public class RobotContainer extends SubsystemBase {
   private double visionOffsetX = 0.0;
   private double visionOffsetY = 0.0;
 
-  // new testing stuff
-  private PIDController headingTxOffsetController = new PIDController(0.001, 0.0, 0.1);
-  private boolean headingTxControlActive = false;
+  private boolean lookForNote = false;
 
   private PIDController visionXController = new PIDController(1.0, 0.0, 0.0);
   private PIDController visionYController = new PIDController(1.0, 0.0, 0.0);
@@ -234,43 +231,32 @@ public class RobotContainer extends SubsystemBase {
 
     /* Rotational veloity based on right stick */
     double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
-    if (headingTxControlActive) {
-      // double targetYaw = 0.0;
-      // var results = camera.getAllUnreadResults();
-      // if (!results.isEmpty()) {
-      //   // Camera processed a new frame since last
-      //   // Get the last one in the list.
-      //   var result = results.get(results.size() - 1);
-      //   if (result.hasTargets()) {
-      //     for (var target : result.getTargets()) {
-      //         // Found Tag 7, record its information
-      //         targetYaw = target.getYaw()/2;
-      //         // System.out.println(target.getYaw());
-      //         // desiredHeadingDeg -= target.getYaw()/2;
-      //     }
-      //   }
-      // }
-
-      double targetYawRad = Math.toRadians(LimelightHelpers.getTX("limelight-front"));
-      //double targetYawRad = Math.toRadians(targetYaw);
+    if (lookForNote) {
+      double targetYaw = 0.0;
+      var results = camera.getAllUnreadResults();
+      if (!results.isEmpty()) {
+        var result = results.get(results.size() - 1);
+        if (result.hasTargets()) {
+          targetYaw = result.getTargets().get(0).getYaw();
+        }
+      }
+      double targetYawRad = Math.toRadians(targetYaw);
       double kP = 7;
       double output = -kP * targetYawRad;
 
       output = MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
-      //System.out.println(output);
       desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
-      if (Math.abs(targetYawRad) > Math.toRadians(1.0)) { //  && targetYaw != 0.0  && LimelightHelpers.getTX("limelight-front") != 0.0
+      if (Math.abs(targetYawRad) > Math.toRadians(1.0)) {
         return drive
             .withVelocityX(xVelocity)
             .withVelocityY(yVelocity)
             .withRotationalRate(output);
-            
       } else {
         return drive
             .withVelocityX(xVelocity)
-            .withVelocityY(yVelocity);
+            .withVelocityY(yVelocity)
+            .withRotationalRate(rotationVelocity);
       }
-
     } else if (isManualRobotCentric) {
       /* Is robot centric */
       return robotCentric
@@ -325,31 +311,13 @@ public class RobotContainer extends SubsystemBase {
             }));
 
     /* Cardinals */
-    // driverController
-    // .a()
-    // .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 180.0 :
-    // 0.0));
+    driverController
+        .a()
+        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 180.0 : 0.0));
 
-    // driverController
-    //     .b()
-    //     .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 270.0 : 90.0));
-
-    driverController.b().onTrue(new InstantCommand(()->{
-      var results = camera.getAllUnreadResults();
-      if (!results.isEmpty()) {
-        // Camera processed a new frame since last
-        // Get the last one in the list.
-        var result = results.get(results.size() - 1);
-        if (result.hasTargets()) {
-          for (var target : result.getTargets()) {
-              // Found Tag 7, record its information
-              // targetYaw = target.getYaw();
-              //System.out.println(target.getYaw());
-              desiredHeadingDeg -= target.getYaw()/2;
-          }
-        }
-      }
-    }));
+    driverController
+        .b()
+        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 270.0 : 90.0));
 
     driverController
         .x()
@@ -359,17 +327,12 @@ public class RobotContainer extends SubsystemBase {
         .y()
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
 
-    driverController.a().onTrue(new InstantCommand(() -> {
-      headingTxControlActive = !headingTxControlActive;
-      headingTxOffsetController.reset();
+    driverController.leftTrigger().onTrue(new InstantCommand(() -> {
+      lookForNote = true;
     }));
 
-    driverController.b().onTrue(new RepeatCommand(new InstantCommand(()-> {
-      turret.setDesiredTurretPosition(ShootOnMoveUtil.calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond());
-    })));
-
-    driverController.povUp().onTrue(new InstantCommand(()->{
-      Robot.kUseLimelight = true;
+    driverController.leftTrigger().onFalse(new InstantCommand(() -> {
+      lookForNote = false;
     }));
   }
 
@@ -472,6 +435,9 @@ public class RobotContainer extends SubsystemBase {
         "Current selected auto", () -> this.getAutonomousCommand().getName(), null);
     builder.addBooleanProperty("is blue", () -> isBlue, null);
     builder.addDoubleProperty("limelight tx", () -> LimelightHelpers.getTX("limelight-front"), null);
-    builder.addDoubleProperty("turret calc heading", ()->ShootOnMoveUtil.calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond(), null);
+    builder.addDoubleProperty("turret calc heading",
+        () -> ShootOnMoveUtil
+            .calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond(),
+        null);
   }
 }
