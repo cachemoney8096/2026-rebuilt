@@ -53,6 +53,10 @@ public class Turret extends SubsystemBase {
         }
     }
 
+    public double getDesiredPositionDeg() {
+        return turretDesiredPositionDeg;
+    }
+
     public boolean atDesiredTurretPosition() {
         return Math.abs(turretMotor.getPosition().getValueAsDouble() - turretPositionToMotorPosition(turretDesiredPositionDeg)) < TurretCal.TURRET_POSITION_MARGIN;
     }
