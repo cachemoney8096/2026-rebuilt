@@ -50,6 +50,13 @@ public class Indexer extends SubsystemBase {
   public void runIndexer() {
     rotatorMotor.set(IndexerCal.INDEXER_SPEED);
   }
+  public boolean indexerIsOn() {
+    return rotatorMotor.get() > 0;
+  }
+
+  public boolean kickerIsOn() {
+    return kickerMotor.get() > 0;
+  }
 
   public void stopIndexer() {
     rotatorMotor.set(0.0);

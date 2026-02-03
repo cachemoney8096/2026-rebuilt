@@ -5,8 +5,8 @@ import frc.robot.Constants;
 public class ClimbCal {
 
     public static final Double POSITION_HOME_INCHES = Constants.PLACEHOLDER_DOUBLE;
-    public static final Double POSITION_L1_AUTO_INCHES = Constants.PLACEHOLDER_DOUBLE;
-    public static final Double POSITION_LI_TELEOP_INCHES = Constants.PLACEHOLDER_DOUBLE;
+    public static final Double POSITION_FINISHED_INCHES = Constants.PLACEHOLDER_DOUBLE;
+    public static final Double POSITION_PREP_INCHES = Constants.PLACEHOLDER_DOUBLE;
     public static final double CLIMB_MOTOR_SUPPLY_CURRENT_LIMIT_AMPS = Constants.PLACEHOLDER_DOUBLE;
     public static final double CLIMB_MOTOR_STATOR_SUPPLY_CURRENT_LIMIT_AMPS = Constants.PLACEHOLDER_DOUBLE;
     public static final double CLIMB_SCORE_P = Constants.PLACEHOLDER_DOUBLE;

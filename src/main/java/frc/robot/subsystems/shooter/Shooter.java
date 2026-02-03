@@ -91,6 +91,13 @@ public class Shooter extends SubsystemBase {
         return (hoodPositionDeg / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO;
     }
 
+    public boolean atDesiredSpeed() {
+
+        //TODO change 1 
+        return leftRollerMotor.get() == 1.0;
+
+    }
+
     private void controlHoodPosition() {
         TrapezoidProfile.State goal = new TrapezoidProfile.State(
             hoodPositionToMotorPosition(hoodDesiredPositionDeg), 0.0);

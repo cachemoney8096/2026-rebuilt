@@ -8,16 +8,14 @@ import frc.robot.subsystems.lights.Lights;
 import frc.robot.subsystems.lights.Lights.LightCode;
 
 
+public class ClimbPrepSequence extends SequentialCommandGroup {
 
-public class ClimbSequence extends SequentialCommandGroup {
-
-    public ClimbSequence(Climb climb, Lights lights) {
+    public ClimbPrepSequence(Climb climb, Lights lights) {
         addRequirements(climb);
         addCommands(
             new InstantCommand(() -> lights.setLEDColor(LightCode.CLIMBING)),
-            new InstantCommand(() -> climb.setDesiredPosition(ClimbHeight.FINISHED))
+            new InstantCommand(() -> climb.setDesiredPosition(ClimbHeight.PREP))
         );
-
     }
     
 }
