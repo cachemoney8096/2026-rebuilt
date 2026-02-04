@@ -4,6 +4,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterCal;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretCal;
 import frc.robot.subsystems.lights.Lights;
@@ -21,7 +22,7 @@ public class GoHomeSequence extends SequentialCommandGroup{
         addRequirements(turret, intake, climb, shooter, indexer);
         addCommands(
             new InstantCommand(() -> lights.setLEDColor(LightCode.HOMING)),
-            new InstantCommand(() -> shooter.setDesiredHoodPosition(0)),
+            new InstantCommand(() -> shooter.setDesiredHoodPosition(ShooterCal.HOOD_HOME_DEGREES)),
             new InstantCommand(() -> intake.stopRollers()),
             new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.HOME)),
             new InstantCommand(() -> climb.setDesiredPosition(ClimbHeight.HOME)),

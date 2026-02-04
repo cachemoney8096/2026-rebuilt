@@ -28,6 +28,7 @@ public class Lights {
     HOME, // PURPLE
     HOMING, // BLINKING PURLE
     ALIGNED, // RAINBOW
+    ALIGNING, // GREEN
     SHOOT_PREPPED, // GREEN
     SHOOT_PREPPING, // BLINKING GREEN
     CLIMB_PREPPING, // BLINKING BLUE
@@ -50,6 +51,7 @@ public class Lights {
     lightOptionsMap.put(LightCode.OFF, new RGBWColor(Color.kBlack));
     lightOptionsMap.put(LightCode.HOME, new RGBWColor(Color.kPurple));
     lightOptionsMap.put(LightCode.HOMING, new RGBWColor(Color.kPurple));
+    lightOptionsMap.put(LightCode.ALIGNING, new RGBWColor(Color.kGreen));
     lightOptionsMap.put(LightCode.SHOOT_PREPPED, new RGBWColor(Color.kGreen));
     lightOptionsMap.put(LightCode.SHOOT_PREPPING, new RGBWColor(Color.kGreen));
     lightOptionsMap.put(LightCode.CLIMB_PREPPING, new RGBWColor(Color.kBlue));

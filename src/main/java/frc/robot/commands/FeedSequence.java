@@ -23,7 +23,7 @@ public class FeedSequence extends SequentialCommandGroup {
                 adjustedHeading = adjustedHeading <= 180.0 ? adjustedHeading : adjustedHeading - 360.0;
 
                 turret.setDesiredTurretPosition(targetAngle - adjustedHeading + 180);
-            })).unless(cancelButton)
+            })).until(cancelButton)
         );
     }
 }

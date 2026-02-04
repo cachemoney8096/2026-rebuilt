@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -21,13 +22,16 @@ public class ShootOnFlySequence extends SequentialCommandGroup{
         addRequirements(shooter, turret);
 
         addCommands(
-            new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNED)),
             new RepeatCommand(
                 new InstantCommand(() -> {
                     Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(isBlue, robotPoseSupplier.get(), chassisSpeedsSupplier.get(), headingSupplier.get());
                     shooter.setDesiredHoodPosition(results.getFirst());
                     turret.setDesiredTurretPosition(results.getSecond());
-                })
+                }),
+                new ConditionalCommand(
+                    new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNED)),
+                    new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNING)),
+                    (() -> shooter.atDesiredHoodPosition() & turret.atDesiredTurretPosition()))
             ).finallyDo(() -> lights.setLEDColor(LightCode.HOME))
         );
     }
