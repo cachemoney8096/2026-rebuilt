@@ -14,8 +14,6 @@ public class StartPrepShootSequence extends SequentialCommandGroup {
         addRequirements(shooter);
 
         addCommands(
-            /* TODO: Add variable shoot speed */
-            /* TODO: Add hood pitch */
             new InstantCommand(() -> lights.setLEDColor(LightCode.SHOOT_PREPPING)),
             new InstantCommand(() -> shooter.runRollers(1.0)),
             new WaitUntilCommand(shooter::atDesiredSpeed),

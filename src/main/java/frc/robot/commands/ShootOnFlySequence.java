@@ -23,7 +23,8 @@ public class ShootOnFlySequence extends SequentialCommandGroup{
 
         addCommands(
             new RepeatCommand(
-                new InstantCommand(() -> {
+                new SequentialCommandGroup(
+                    new InstantCommand(() -> {
                     Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(isBlue, robotPoseSupplier.get(), chassisSpeedsSupplier.get(), headingSupplier.get());
                     shooter.setDesiredHoodPosition(results.getFirst());
                     turret.setDesiredTurretPosition(results.getSecond());
@@ -32,6 +33,7 @@ public class ShootOnFlySequence extends SequentialCommandGroup{
                     new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNED)),
                     new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNING)),
                     (() -> shooter.atDesiredHoodPosition() & turret.atDesiredTurretPosition()))
+                )
             ).finallyDo(() -> lights.setLEDColor(LightCode.HOME))
         );
     }

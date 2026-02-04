@@ -13,7 +13,7 @@ public class StopPrepShootSequence extends SequentialCommandGroup {
         addCommands(
             new InstantCommand(() -> shooter.stopRollers()),
             new InstantCommand(() -> lights.setLEDColor(LightCode.HOME))
-
+            
         );
     }
 }
