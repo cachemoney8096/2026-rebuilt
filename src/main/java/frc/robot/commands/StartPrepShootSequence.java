@@ -15,7 +15,7 @@ public class StartPrepShootSequence extends SequentialCommandGroup {
 
         addCommands(
             new InstantCommand(() -> lights.setLEDColor(LightCode.SHOOT_PREPPING)),
-            new InstantCommand(() -> shooter.runRollers(1.0)),
+            new InstantCommand(() -> shooter.runRollers()),
             new WaitUntilCommand(shooter::atDesiredSpeed),
             new InstantCommand(() -> lights.setLEDColor(LightCode.SHOOT_PREPPED))
 

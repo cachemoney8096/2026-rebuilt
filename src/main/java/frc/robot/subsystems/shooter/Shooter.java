@@ -25,6 +25,8 @@ public class Shooter extends SubsystemBase {
     private final TalonFX leftRollerMotor = new TalonFX(RobotMap.SHOOTER_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
     private final TalonFX rightRollerMotor = new TalonFX(RobotMap.SHOOTER_RIGHT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
 
+    private double currentRollerSpeedRPS = 0.0;
+
     public Shooter() {
         initTalons();
         relativeZeroHood();
@@ -75,12 +77,20 @@ public class Shooter extends SubsystemBase {
         hoodDesiredPositionDeg = Math.max(ShooterCal.HOOD_MIN_DEGREES, Math.min(ShooterCal.HOOD_MAX_DEGREES, newPositionDegrees));
     }
 
-    public void runRollers(double speed) {
-        leftRollerMotor.set(speed);
+    public void runRollers() {
+        leftRollerMotor.set(currentRollerSpeedRPS / ShooterCal.ROLLERS_MAX_RPS);
     }
 
     public void stopRollers() {
         leftRollerMotor.set(0.0);
+    }
+
+    public void setRollerSpeedRPS(double speedRPS) {
+        currentRollerSpeedRPS = Math.min(Math.max(speedRPS, 0.0), ShooterCal.ROLLERS_MAX_RPS);
+    }
+
+    public double getRollerSpeedRPS() {
+        return currentRollerSpeedRPS;
     }
 
     public boolean atDesiredHoodPosition() {
@@ -94,7 +104,7 @@ public class Shooter extends SubsystemBase {
     public boolean atDesiredSpeed() {
 
         //TODO change 1 and add tolernce
-        return leftRollerMotor.getVelocity().getValueAsDouble() == 1.0 * ShooterCal.ROLLERS_MAX_RPM;
+        return leftRollerMotor.getVelocity().getValueAsDouble() == 1.0 * ShooterCal.ROLLERS_MAX_RPS;
 
     }
 
