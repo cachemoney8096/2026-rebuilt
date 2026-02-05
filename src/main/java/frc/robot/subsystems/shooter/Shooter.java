@@ -93,8 +93,8 @@ public class Shooter extends SubsystemBase {
 
     public boolean atDesiredSpeed() {
 
-        //TODO change 1 
-        return leftRollerMotor.get() == 1.0;
+        //TODO change 1 and add tolernce
+        return leftRollerMotor.getVelocity().getValueAsDouble() == 1.0 * ShooterCal.ROLLERS_MAX_RPM;
 
     }
 
@@ -132,7 +132,7 @@ public class Shooter extends SubsystemBase {
         builder.addDoubleProperty("Hood Commanded Voltage (volts)", () -> hoodMotor.getMotorVoltage().getValueAsDouble(), null);
 
         /* Rollers */
-        builder.addDoubleProperty("Rollers Speed (percent)", () -> leftRollerMotor.get(), null);
+        builder.addDoubleProperty("Rollers Speed (RPM)", () -> leftRollerMotor.getVelocity().getValueAsDouble(), null);
         
         builder.addDoubleProperty("Left Roller Amperage (amps)", () -> leftRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
         builder.addDoubleProperty("Right Roller Amperage (amps)", () -> rightRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
