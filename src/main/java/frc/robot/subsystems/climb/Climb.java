@@ -22,8 +22,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 public class Climb extends SubsystemBase{
     public enum ClimbHeight {
         HOME,
-        L1_AUTO,
-        L1_TELEOP;
+        FINISHED,
+        PREP;
     }
 
     private TreeMap<ClimbHeight, Double> climbPositions = new TreeMap<ClimbHeight, Double>();
@@ -37,8 +37,8 @@ public class Climb extends SubsystemBase{
 
     public Climb() {
     climbPositions.put(ClimbHeight.HOME, ClimbCal.POSITION_HOME_INCHES);
-    climbPositions.put(ClimbHeight.L1_AUTO, ClimbCal.POSITION_L1_AUTO_INCHES);
-    climbPositions.put(ClimbHeight.L1_TELEOP, ClimbCal.POSITION_LI_TELEOP_INCHES);
+    climbPositions.put(ClimbHeight.FINISHED, ClimbCal.POSITION_FINISHED_INCHES);
+    climbPositions.put(ClimbHeight.PREP, ClimbCal.POSITION_PREP_INCHES);
   }
 
   private void initTalons() {

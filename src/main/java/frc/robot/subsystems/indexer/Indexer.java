@@ -50,6 +50,13 @@ public class Indexer extends SubsystemBase {
   public void runIndexer() {
     rotatorMotor.set(IndexerCal.INDEXER_SPEED);
   }
+  public boolean indexerIsOn() {
+    return Math.abs(rotatorMotor.getVelocity().getValueAsDouble()) > 0.0;
+  }
+
+  public boolean kickerIsOn() {
+    return Math.abs(kickerMotor.getVelocity().getValueAsDouble()) > 0.0;
+  }
 
   public void stopIndexer() {
     rotatorMotor.set(0.0);
@@ -67,10 +74,10 @@ public class Indexer extends SubsystemBase {
   public void initSendable(SendableBuilder builder) {
 
     super.initSendable(builder);
-    builder.addDoubleProperty("Indexer Speed (percent)", () -> rotatorMotor.get(), null);
+    builder.addDoubleProperty("Indexer Speed (RPM)", () -> rotatorMotor.getVelocity().getValueAsDouble(), null);
     builder.addDoubleProperty(
         "Indexer Amperage (amps)", () -> rotatorMotor.getTorqueCurrent().getValueAsDouble(), null);
-    builder.addDoubleProperty("Kicker Speed (percent)", () -> kickerMotor.get(), null);
+    builder.addDoubleProperty("Kicker Speed (RPM)", () -> kickerMotor.getVelocity().getValueAsDouble(), null);
     builder.addDoubleProperty(
         "Kicker Amperage (amps)", () -> kickerMotor.getTorqueCurrent().getValueAsDouble(), null);
   }

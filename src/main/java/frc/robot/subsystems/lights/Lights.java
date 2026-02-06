@@ -7,6 +7,8 @@ import com.ctre.phoenix6.controls.StrobeAnimation;
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.RGBWColor;
 import com.ctre.phoenix6.signals.StripTypeValue;
+
+import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.RobotMap;
 import java.util.TreeMap;
 
@@ -23,13 +25,19 @@ public class Lights {
 
   public enum LightCode {
     OFF, // BLACK
-    DISABLED, // ORANGE
-    INTAKING, // BLUE
-    AUTO_LOCKED, // GREEN
-    AUTO_LOCKING, // BLINK RED
-    READY_TO_CLIMB, // RAINBOW
-    CLIMBING, // BLINK BLUE
-    PARTY_MODE // RAINBOW ANIMATION
+    HOME, // PURPLE
+    HOMING, // BLINKING PURLE
+    ALIGNED, // RAINBOW
+    ALIGNING, // GREEN
+    SHOOT_PREPPED, // GREEN
+    SHOOT_PREPPING, // BLINKING GREEN
+    CLIMB_PREPPING, // BLINKING BLUE
+    CLIMB_PREPPED, // BLUE
+    CLIMBING, // RAINBOW
+    INTAKING, // ORANGE
+    AUTO_INTAKING, // BLINKING ORANGE
+    FEEDING_PREPPING, // BLINKING GREEN
+    FEEDING_PREPPED // GREEN
   }
 
   public Lights() {
@@ -40,12 +48,18 @@ public class Lights {
     candle.getConfigurator().apply(config);
 
     lightOptionsMap = new TreeMap<LightCode, RGBWColor>();
-    lightOptionsMap.put(LightCode.OFF, new RGBWColor(0, 0, 0));
-    lightOptionsMap.put(LightCode.DISABLED, new RGBWColor(255, 128, 0));
-    lightOptionsMap.put(LightCode.INTAKING, new RGBWColor(0, 0, 255));
-    lightOptionsMap.put(LightCode.AUTO_LOCKED, new RGBWColor(0, 255, 0));
-    lightOptionsMap.put(LightCode.AUTO_LOCKING, new RGBWColor(255, 0, 0));
-    lightOptionsMap.put(LightCode.CLIMBING, new RGBWColor(0, 0, 255));
+    lightOptionsMap.put(LightCode.OFF, new RGBWColor(Color.kBlack));
+    lightOptionsMap.put(LightCode.HOME, new RGBWColor(Color.kPurple));
+    lightOptionsMap.put(LightCode.HOMING, new RGBWColor(Color.kPurple));
+    lightOptionsMap.put(LightCode.ALIGNING, new RGBWColor(Color.kGreen));
+    lightOptionsMap.put(LightCode.SHOOT_PREPPED, new RGBWColor(Color.kGreen));
+    lightOptionsMap.put(LightCode.SHOOT_PREPPING, new RGBWColor(Color.kGreen));
+    lightOptionsMap.put(LightCode.CLIMB_PREPPING, new RGBWColor(Color.kBlue));
+    lightOptionsMap.put(LightCode.CLIMB_PREPPED, new RGBWColor(Color.kBlue));
+    lightOptionsMap.put(LightCode.INTAKING, new RGBWColor(Color.kOrange));
+    lightOptionsMap.put(LightCode.AUTO_INTAKING, new RGBWColor(Color.kOrange));
+    lightOptionsMap.put(LightCode.FEEDING_PREPPED, new RGBWColor(Color.kGreen));
+    lightOptionsMap.put(LightCode.FEEDING_PREPPING, new RGBWColor(Color.kGreen));
   }
 
   public void setLEDColor(LightCode light) {
@@ -54,10 +68,14 @@ public class Lights {
   }
 
   private void setLEDs() {
-    if (currentLightStatus == LightCode.PARTY_MODE
-        || currentLightStatus == LightCode.READY_TO_CLIMB) {
+    if (currentLightStatus == LightCode.ALIGNED ||
+        currentLightStatus == LightCode.CLIMBING) {
       setRainbow();
-    } else if (currentLightStatus == LightCode.CLIMBING) {
+    } else if (currentLightStatus == LightCode.HOMING ||
+               currentLightStatus == LightCode.SHOOT_PREPPING ||
+               currentLightStatus == LightCode.CLIMB_PREPPING ||
+               currentLightStatus == LightCode.AUTO_INTAKING ||
+               currentLightStatus == LightCode.FEEDING_PREPPING ) {
       setBlink(currentLightStatus);
     } else {
       setSolid(currentLightStatus);

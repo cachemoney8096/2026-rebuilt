@@ -2,11 +2,11 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.Climb.ClimbHeight;
 import frc.robot.subsystems.lights.Lights;
 import frc.robot.subsystems.lights.Lights.LightCode;
+
 
 
 public class ClimbSequence extends SequentialCommandGroup {
@@ -15,7 +15,7 @@ public class ClimbSequence extends SequentialCommandGroup {
         addRequirements(climb);
         addCommands(
             new InstantCommand(() -> lights.setLEDColor(LightCode.CLIMBING)),
-            new InstantCommand(() -> climb.setDesiredPosition(ClimbHeight.L1_TELEOP))
+            new InstantCommand(() -> climb.setDesiredPosition(ClimbHeight.FINISHED))
         );
 
     }
