@@ -38,6 +38,8 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.StartShootSequence;
+import frc.robot.commands.StopShootSequence;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -326,6 +328,24 @@ public class RobotContainer extends SubsystemBase {
     driverController
         .y()
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
+    driverController
+        .povRight()
+        .whileTrue(new RepeatCommand(new InstantCommand(() -> turret.setDesiredTurretPosition(turret.getDesiredPositionDeg() + 0.02))));
+    driverController
+        .povLeft()
+        .whileTrue(new RepeatCommand(new InstantCommand(() -> turret.setDesiredTurretPosition(turret.getDesiredPositionDeg() - 0.02))));
+    driverController
+        .povUp()
+        .whileTrue(new RepeatCommand(new InstantCommand(() -> shooter.setDesiredHoodPosition(shooter.getDesiredPositionDeg() + 0.02))));
+    driverController
+        .povDown()
+        .whileTrue(new RepeatCommand(new InstantCommand(() -> shooter.setDesiredHoodPosition(shooter.getDesiredPositionDeg() - 0.02))));
+    driverController
+        .rightBumper()
+        .onTrue(new StartShootSequence(indexer, lights));
+    driverController
+        .rightBumper()
+        .onFalse(new StopShootSequence(indexer, lights));
 
     driverController.leftTrigger().onTrue(new InstantCommand(() -> {
       lookForNote = true;
