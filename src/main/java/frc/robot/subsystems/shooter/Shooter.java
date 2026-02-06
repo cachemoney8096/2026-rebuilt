@@ -142,7 +142,7 @@ public class Shooter extends SubsystemBase {
         builder.addDoubleProperty("Hood Commanded Voltage (volts)", () -> hoodMotor.getMotorVoltage().getValueAsDouble(), null);
 
         /* Rollers */
-        builder.addDoubleProperty("Rollers Speed (RPM)", () -> leftRollerMotor.getVelocity().getValueAsDouble(), null);
+        builder.addDoubleProperty("Rollers Speed (RPS)", () -> leftRollerMotor.getVelocity().getValueAsDouble(), null);
         
         builder.addDoubleProperty("Left Roller Amperage (amps)", () -> leftRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
         builder.addDoubleProperty("Right Roller Amperage (amps)", () -> rightRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
