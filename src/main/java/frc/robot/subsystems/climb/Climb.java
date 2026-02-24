@@ -73,14 +73,15 @@ public class Climb extends SubsystemBase {
     desiredPosition = height;
   }
 
-  private void controlPosition(double inputRotations) {
-    double inches = inputRotations
-        / ClimbCal.MOTOR_TO_GEAR_RATIO
-        * ClimbCal.GEAR_CIRCUMFERENCE;
+  private double climbPositionToMotorPosition(ClimbHeight climbPosition)  {
+        return (climbPositions.get(climbPosition) / 360.0) / ClimbCal.CLIMB_MOTOR_TO_CLIMB_INCHES_RATIO;
+  }
+
+  private void controlPosition() {
 
     final TrapezoidProfile trapezoidProfile = new TrapezoidProfile(
         new TrapezoidProfile.Constraints(ClimbCal.FIRST_CONSTRAINT, ClimbCal.SECOND_CONSTRAINT));
-    TrapezoidProfile.State tGoal = new TrapezoidProfile.State(inches, 0.0);
+    TrapezoidProfile.State tGoal = new TrapezoidProfile.State(climbPositionToMotorPosition(desiredPosition), 0.0);
     TrapezoidProfile.State setpoint = new TrapezoidProfile.State(
         leftMotor.getPosition().getValueAsDouble(), leftMotor.getVelocity().getValueAsDouble());
     final PositionVoltage request = new PositionVoltage(0).withSlot(0);
@@ -107,12 +108,12 @@ public class Climb extends SubsystemBase {
         .getPosition()
         .getValueAsDouble()
         * ClimbCal.GEAR_CIRCUMFERENCE
-        / ClimbCal.MOTOR_TO_GEAR_RATIO;
+        / ClimbCal.CLIMB_MOTOR_TO_CLIMB_INCHES_RATIO;
   }
 
   public void periodic() {
     if (allowClimbMovement) {
-      controlPosition(climbPositions.get(desiredPosition));
+      controlPosition();
     }
   }
 
