@@ -69,7 +69,7 @@ public class Shooter extends SubsystemBase {
 
     public void relativeZeroHood() {
         hoodMotor.setPosition(
-            (ShooterCal.HOOD_HOME_DEGREES / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO); 
+            hoodPositionToMotorPosition(ShooterCal.HOOD_HOME_DEGREES)); 
         hoodDesiredPositionDeg = ShooterCal.HOOD_HOME_DEGREES;
     }
 

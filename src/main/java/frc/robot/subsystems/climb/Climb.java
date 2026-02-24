@@ -17,7 +17,6 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 public class Climb extends SubsystemBase {
-  // TODO THIS SUBSYSTEM NEEDS REVIEW THERE ARE MISTAKES IN THE CONTROL POSITION LOGIC (CHECK UNITS ON PARAMETERS, INPUT, ETC)
   public enum ClimbHeight {
     HOME,
     FINISHED,
@@ -31,7 +30,7 @@ public class Climb extends SubsystemBase {
   private TalonFX leftMotor = new TalonFX(RobotMap.LEFT_CLIMB_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
   private TalonFX rightMotor = new TalonFX(RobotMap.RIGHT_CLIMB_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
 
-  private boolean allowClimbMovement = false;
+  private boolean allowClimbMovement = true;
 
   public Climb() {
     climbPositions.put(ClimbHeight.HOME, ClimbCal.POSITION_HOME_INCHES);
