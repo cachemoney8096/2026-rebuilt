@@ -73,7 +73,7 @@ public class Climb extends SubsystemBase {
   }
 
   private double climbPositionToMotorPosition(ClimbHeight climbPosition)  {
-        return (climbPositions.get(climbPosition) / 360.0) / ClimbCal.CLIMB_MOTOR_TO_CLIMB_INCHES_RATIO;
+        return (climbPositions.get(climbPosition)) * ClimbCal.CLIMB_MOTOR_TO_CLIMB_INCHES_RATIO;
   }
 
   private void controlPosition() {
