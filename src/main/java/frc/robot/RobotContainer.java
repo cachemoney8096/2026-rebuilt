@@ -182,7 +182,7 @@ public class RobotContainer extends SubsystemBase {
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
     /* Field centric heading controller */
-    fieldCentricFacingAngle.HeadingController.setPID(6.7, 0.0001, 0.02); // TODO update drive pid
+    fieldCentricFacingAngle.HeadingController.setPID(2.0, 0.0001, 0.02); // TODO update drive pid
 
     isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; // TODO robot.java limelight stuff
 
@@ -331,8 +331,24 @@ public class RobotContainer extends SubsystemBase {
         .y()
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
 
+    driverController.start().onTrue(new InstantCommand(()->zeroRobot()));
+
     driverController.rightBumper().onTrue(
-      new InstantCommand()
+      new SequentialCommandGroup(
+        new InstantCommand(()->shooter.setRollerSpeedRPS(1000)),
+        new InstantCommand(()->shooter.runRollers()),
+        new InstantCommand(()->indexer.runKicker()),
+        new WaitCommand(2),
+        new InstantCommand(()->indexer.runIndexer())
+      )
+    );
+
+    driverController.leftBumper().onTrue(
+      new SequentialCommandGroup(
+        new InstantCommand(()->shooter.stopRollers()),
+        new InstantCommand(()->indexer.stopKicker()),
+        new InstantCommand(()->indexer.stopIndexer())
+      )
     );
   }
 

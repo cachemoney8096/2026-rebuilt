@@ -35,7 +35,7 @@ public class Shooter extends SubsystemBase {
     private void initTalons() {
         /* Init rollers */
         TalonFXConfiguration rollersToApply = new TalonFXConfiguration();
-        rollersToApply.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        rollersToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         rollersToApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         rollersToApply.CurrentLimits.SupplyCurrentLimit = ShooterCal.ROLLERS_SUPPLY_CURRENT_LIMIT_AMPS;
         rollersToApply.CurrentLimits.StatorCurrentLimit = ShooterCal.ROLLERS_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
@@ -125,7 +125,7 @@ public class Shooter extends SubsystemBase {
 
     @Override
     public void periodic() {
-        controlHoodPosition();
+        // controlHoodPosition();
     }
 
     @Override
