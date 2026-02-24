@@ -20,6 +20,8 @@ import frc.robot.RobotMap;
 
 public class Intake extends SubsystemBase {
     // TODO this subsystem should probably actually offer use of absolute encoder it declares
+    private boolean allowIntakeMovement = true;
+
     private final TalonFX slapdownMotor = new TalonFX(RobotMap.INTAKE_SLAPDOWN_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
 
     private final TrapezoidProfile slapdownTrapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(
@@ -116,18 +118,22 @@ public class Intake extends SubsystemBase {
     }
 
     public boolean atDesiredSlapdownPosition() {
-        return Math.abs(slapdownMotor.getPosition().getValueAsDouble() - slapdownPositionToMotorPosition(slapdownDesiredPosition)) < IntakeCal.SLAPDOWN_POSITION_MARGIN;
+        return Math.abs(getRealPositionRotations() - slapdownPositionToMotorPosition(slapdownDesiredPosition)) < IntakeCal.SLAPDOWN_POSITION_MARGIN;
     }
 
     private double slapdownPositionToMotorPosition(IntakePosition slapdownPosition)  {
         return (intakePositions.get(slapdownPosition) / 360.0) * IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO;
     }
 
+    public void setIntakeMovementAllowed(boolean allowed) {
+        allowIntakeMovement = allowed;
+    }
+
     private void controlSlapdownPosition() {
         TrapezoidProfile.State goal = new TrapezoidProfile.State(
             slapdownPositionToMotorPosition(slapdownDesiredPosition), 0.0);
         TrapezoidProfile.State start = new TrapezoidProfile.State(
-            slapdownMotor.getPosition().getValueAsDouble(), slapdownMotor.getVelocity().getValueAsDouble());
+            getRealPositionRotations(), slapdownMotor.getVelocity().getValueAsDouble());
         
         PositionVoltage request = new PositionVoltage(0.0).withSlot(0);
         TrapezoidProfile.State setpoint = slapdownTrapezoidProfile.calculate(0.020, start, goal);
@@ -140,7 +146,9 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // controlSlapdownPosition(); // TODO uncomment this to run intake
+        if (allowIntakeMovement) {
+            controlSlapdownPosition();
+        }
     }
 
     @Override
@@ -157,6 +165,7 @@ public class Intake extends SubsystemBase {
 
         builder.addDoubleProperty("Slapdown Amperage (amps)", () -> slapdownMotor.getTorqueCurrent().getValueAsDouble(), null);
         builder.addDoubleProperty("Slapdown Commanded Voltage (volts)", () -> slapdownMotor.getMotorVoltage().getValueAsDouble(), null);
+        builder.addBooleanProperty("Allow Intake Movement", () -> allowIntakeMovement, null);
 
         /* Rollers */
         builder.addDoubleProperty("Rollers Speed (percent)", () -> leftRollerMotor.get(), null);
