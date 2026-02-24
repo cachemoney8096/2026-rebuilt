@@ -19,7 +19,7 @@ public class Lights {
    */
   private TreeMap<LightCode, RGBWColor> lightOptionsMap;
 
-  private CANdle candle = new CANdle(RobotMap.CANDLE_CAN_ID, RobotMap.RIO_CAN_BUS);
+  private CANdle candle = new CANdle(RobotMap.CANDLE_CAN_ID, RobotMap.MAIN_CAN_BUS);
   private CANdleConfiguration config = new CANdleConfiguration();
   private LightCode currentLightStatus = LightCode.OFF;
 

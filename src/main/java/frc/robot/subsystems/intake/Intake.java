@@ -19,16 +19,17 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotMap;
 
 public class Intake extends SubsystemBase {
-    private final TalonFX slapdownMotor = new TalonFX(RobotMap.INTAKE_SLAPDOWN_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    // TODO this subsystem should probably actually offer use of absolute encoder it declares
+    private final TalonFX slapdownMotor = new TalonFX(RobotMap.INTAKE_SLAPDOWN_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
 
     private final TrapezoidProfile slapdownTrapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(
         IntakeCal.SLAPDOWN_MAX_VELOCITY_RPS, 
         IntakeCal.SLAPDOWN_MAX_ACCELERATION_RPS_SQUARED));
 
-    private final TalonFX leftRollerMotor = new TalonFX(RobotMap.INTAKE_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
-    private final TalonFX rightRollerMotor = new TalonFX(RobotMap.INTAKE_RIGHT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX leftRollerMotor = new TalonFX(RobotMap.INTAKE_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
+    private final TalonFX rightRollerMotor = new TalonFX(RobotMap.INTAKE_RIGHT_ROLLER_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
 
-    private final CANcoder absoluteEncoder = new CANcoder(RobotMap.INTAKE_CANCODER_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final CANcoder absoluteEncoder = new CANcoder(RobotMap.INTAKE_CANCODER_CAN_ID, RobotMap.MAIN_CAN_BUS);
 
     public enum IntakePosition {
         HOME,
@@ -94,7 +95,7 @@ public class Intake extends SubsystemBase {
 
     public void zeroSlapdown() {
         slapdownMotor.setPosition(
-            (IntakeCal.SLAPDOWN_HOME_DEGREES / 360.0) * IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO);
+            (IntakeCal.INTAKE_POSITION_HOME_DEGREES / 360.0) * IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO); 
         slapdownDesiredPosition = IntakePosition.HOME;
     }
 
@@ -139,7 +140,7 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        controlSlapdownPosition();
+        // controlSlapdownPosition(); // TODO uncomment this to run intake
     }
 
     @Override

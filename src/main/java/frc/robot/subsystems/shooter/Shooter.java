@@ -15,15 +15,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotMap;
 
 public class Shooter extends SubsystemBase {
-    private final TalonFX hoodMotor = new TalonFX(RobotMap.SHOOTER_HOOD_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX hoodMotor = new TalonFX(RobotMap.SHOOTER_HOOD_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
     private double hoodDesiredPositionDeg = ShooterCal.HOOD_HOME_DEGREES; 
 
     private final TrapezoidProfile hoodTrapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(
         ShooterCal.HOOD_MAX_VELOCITY_RPS, 
         ShooterCal.HOOD_MAX_ACCELERATION_RPS_SQUARED));
 
-    private final TalonFX leftRollerMotor = new TalonFX(RobotMap.SHOOTER_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
-    private final TalonFX rightRollerMotor = new TalonFX(RobotMap.SHOOTER_RIGHT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX leftRollerMotor = new TalonFX(RobotMap.SHOOTER_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
+    private final TalonFX rightRollerMotor = new TalonFX(RobotMap.SHOOTER_RIGHT_ROLLER_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
 
     private double currentRollerSpeedRPS = 0.0;
 
@@ -35,7 +35,7 @@ public class Shooter extends SubsystemBase {
     private void initTalons() {
         /* Init rollers */
         TalonFXConfiguration rollersToApply = new TalonFXConfiguration();
-        rollersToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        rollersToApply.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         rollersToApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         rollersToApply.CurrentLimits.SupplyCurrentLimit = ShooterCal.ROLLERS_SUPPLY_CURRENT_LIMIT_AMPS;
         rollersToApply.CurrentLimits.StatorCurrentLimit = ShooterCal.ROLLERS_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
@@ -69,7 +69,7 @@ public class Shooter extends SubsystemBase {
 
     public void relativeZeroHood() {
         hoodMotor.setPosition(
-            (ShooterCal.HOOD_HOME_DEGREES / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO);
+            (ShooterCal.HOOD_HOME_DEGREES / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO); 
         hoodDesiredPositionDeg = ShooterCal.HOOD_HOME_DEGREES;
     }
 
@@ -97,8 +97,8 @@ public class Shooter extends SubsystemBase {
         return Math.abs(hoodMotor.getPosition().getValueAsDouble() - hoodPositionToMotorPosition(hoodDesiredPositionDeg)) < ShooterCal.HOOD_POSITION_MARGIN;
     }
 
-    private double hoodPositionToMotorPosition(double hoodPositionDeg)  {
-        return (hoodPositionDeg / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO;
+    private double hoodPositionToMotorPosition(double hoodPositionDeg)  { 
+        return (hoodPositionDeg / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO; 
     }
 
     public boolean atDesiredSpeed() {

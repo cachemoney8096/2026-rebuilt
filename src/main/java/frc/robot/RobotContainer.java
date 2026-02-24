@@ -184,7 +184,7 @@ public class RobotContainer extends SubsystemBase {
     /* Field centric heading controller */
     fieldCentricFacingAngle.HeadingController.setPID(6.7, 0.0001, 0.02); // TODO update drive pid
 
-    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; // TODO robot.java stuff
+    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; // TODO robot.java limelight stuff
 
     zeroRobot();
 
@@ -199,6 +199,10 @@ public class RobotContainer extends SubsystemBase {
     /* Shuffleboard */
     Shuffleboard.getTab("Subsystems").add("RobotContainer", this);
     Shuffleboard.getTab("Subsystems").add("Turret", turret);
+    Shuffleboard.getTab("Subsystems").add("Intake", intake);
+    Shuffleboard.getTab("Subsystems").add("Climb", climb);
+    Shuffleboard.getTab("Subsystems").add("Spindexer/Kicker", indexer);
+    Shuffleboard.getTab("Subsystems").add("Shooter", shooter);
   }
 
   private void zeroRobot() {
@@ -310,7 +314,7 @@ public class RobotContainer extends SubsystemBase {
               driverController.getHID().setRumble(RumbleType.kBothRumble, 0.0);
             }));
 
-    /* Cardinals */
+    /* Cardinals */ // TODO make these correct
     driverController
         .a()
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 180.0 : 0.0));
@@ -327,13 +331,9 @@ public class RobotContainer extends SubsystemBase {
         .y()
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
 
-    driverController.leftTrigger().onTrue(new InstantCommand(() -> {
-      lookForNote = true;
-    }));
-
-    driverController.leftTrigger().onFalse(new InstantCommand(() -> {
-      lookForNote = false;
-    }));
+    driverController.rightBumper().onTrue(
+      new InstantCommand()
+    );
   }
 
   private void configureOperatorBindings() {

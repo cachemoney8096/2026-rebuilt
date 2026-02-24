@@ -12,9 +12,9 @@ import frc.robot.RobotMap;
 public class Indexer extends SubsystemBase {
 
   private final TalonFX rotatorMotor =
-      new TalonFX(RobotMap.INDEXER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+      new TalonFX(RobotMap.INDEXER_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
   private final TalonFX kickerMotor =
-      new TalonFX(RobotMap.KICKER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+      new TalonFX(RobotMap.KICKER_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
 
   public Indexer() {
     initTalons();
@@ -24,7 +24,7 @@ public class Indexer extends SubsystemBase {
     TalonFXConfiguration toApply = new TalonFXConfiguration();
 
     // adjust direction if needed
-    toApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+    toApply.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     toApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     toApply.CurrentLimits.SupplyCurrentLimit = IndexerCal.INDEXER_SUPPLY_CURRENT_LIMIT_AMPS;
     toApply.CurrentLimits.StatorCurrentLimit = IndexerCal.INDEXER_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
@@ -38,7 +38,7 @@ public class Indexer extends SubsystemBase {
     indexerConfigurator.apply(toApply);
 
     TalonFXConfigurator kickerConfigurator = kickerMotor.getConfigurator();
-    // adjust direction if needed
+    // adjust direction if needed (not needed, they are both counterclockwise positive)
     toApply.Slot0.kP = IndexerCal.KICKER_P;
     toApply.Slot0.kI = IndexerCal.KICKER_I;
     toApply.Slot0.kD = IndexerCal.KICKER_D;

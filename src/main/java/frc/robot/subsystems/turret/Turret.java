@@ -13,7 +13,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotMap;
 
 public class Turret extends SubsystemBase {
-    private final TalonFX turretMotor = new TalonFX(RobotMap.TURRET_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX turretMotor = new TalonFX(RobotMap.TURRET_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
     private double turretDesiredPositionDeg = TurretCal.TURRET_HOME_DEGREES; 
 
     private final TrapezoidProfile turretTrapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(
