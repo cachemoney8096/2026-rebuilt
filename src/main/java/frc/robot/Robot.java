@@ -27,7 +27,7 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
-  public static boolean kUseLimelight = true;
+  public static boolean kUseLimelight = false;
 
   /**
    * This function is run when the robot is first started up and should be used

@@ -43,6 +43,7 @@ import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.Intake.IntakePosition;
 import frc.robot.subsystems.lights.Lights;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
@@ -332,7 +333,8 @@ public class RobotContainer extends SubsystemBase {
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
 
     driverController.start().onTrue(new InstantCommand(()->zeroRobot()));
-
+    
+    /* INITIAL TESTING BINDINGS */
     driverController.rightBumper().onTrue(
       new SequentialCommandGroup(
         new InstantCommand(()->shooter.setRollerSpeedRPS(1000)),
@@ -350,6 +352,42 @@ public class RobotContainer extends SubsystemBase {
         new InstantCommand(()->indexer.stopIndexer())
       )
     );
+
+    driverController.povDown().onTrue(
+      new InstantCommand(()->intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED))
+    );
+
+    driverController.povUp().onTrue(
+      new InstantCommand(()->intake.setDesiredSlapdownPosition(IntakePosition.HOME))
+    );
+
+    driverController.leftTrigger().onTrue(
+      new InstantCommand(()->intake.runRollers())
+    );
+
+    driverController.leftTrigger().onFalse(
+      new InstantCommand(()->intake.stopRollers())
+    );
+
+    driverController.povLeft().onTrue(
+      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg-10))
+    );
+
+    driverController.povRight().onTrue(
+      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg+10))
+    );
+
+    driverController.rightTrigger().whileTrue(
+      new InstantCommand(()->{
+        double error = LimelightHelpers.getTX("limelight-turret");
+        double kP = 1.0;
+        double output = MathUtil.clamp(error*kP, -0.2, 0.2);
+        turret.turretMotor.set(output);
+      })
+    );
+
+    /* MAIN BINDINGS */
+
   }
 
   private void configureOperatorBindings() {
