@@ -53,7 +53,7 @@ public class Shooter extends SubsystemBase {
 
         /* Init hood */
         TalonFXConfiguration hoodToApply = new TalonFXConfiguration();
-        hoodToApply.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        hoodToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         hoodToApply.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         hoodToApply.CurrentLimits.SupplyCurrentLimit = ShooterCal.HOOD_SUPPLY_CURRENT_LIMIT_AMPS;
         hoodToApply.CurrentLimits.StatorCurrentLimit = ShooterCal.HOOD_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
@@ -125,7 +125,7 @@ public class Shooter extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // controlHoodPosition();
+        controlHoodPosition();
     }
 
     @Override
@@ -133,7 +133,7 @@ public class Shooter extends SubsystemBase {
         super.initSendable(builder);
 
         /* Hood */
-        builder.addDoubleProperty("Hood Actual Position (deg.)", () -> (hoodMotor.getPosition().getValueAsDouble() / 360.0) * ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO, null);
+        builder.addDoubleProperty("Hood Actual Position (deg.)", () -> ((hoodMotor.getPosition().getValueAsDouble()) / ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO) * 360.0, null);
         builder.addDoubleProperty("Hood Desired Position (deg.)", () -> hoodDesiredPositionDeg, null);
 
         builder.addBooleanProperty("Hood at Desired Position", this::atDesiredHoodPosition, null);

@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -27,8 +28,8 @@ public class Turret extends SubsystemBase {
 
     private void initTalons() {
         TalonFXConfiguration turretToApply = new TalonFXConfiguration();
-        turretToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
-        turretToApply.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        turretToApply.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        turretToApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         turretToApply.CurrentLimits.SupplyCurrentLimit = TurretCal.TURRET_SUPPLY_CURRENT_LIMIT_AMPS;
         turretToApply.CurrentLimits.StatorCurrentLimit = TurretCal.TURRET_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
         turretToApply.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -70,13 +71,11 @@ public class Turret extends SubsystemBase {
             turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
         TrapezoidProfile.State start = new TrapezoidProfile.State(
             turretMotor.getPosition().getValueAsDouble(), turretMotor.getVelocity().getValueAsDouble());
-        
-        PositionVoltage request = new PositionVoltage(0.0).withSlot(0);
+        PositionDutyCycle request = new PositionDutyCycle(0.0).withSlot(0);
         TrapezoidProfile.State setpoint = turretTrapezoidProfile.calculate(0.020, start, goal);
         
         request.Position = setpoint.position;
         request.Velocity = setpoint.velocity;
-        
         turretMotor.setControl(request);
     }
 
@@ -89,8 +88,9 @@ public class Turret extends SubsystemBase {
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
 
-        builder.addDoubleProperty("Turret Actual Position (deg.)", () -> (turretMotor.getPosition().getValueAsDouble() * 360.0) * TurretCal.TURRET_MOTOR_TO_TURRET_RATIO, null);
+        builder.addDoubleProperty("Turret Actual Position (deg.)", () -> (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO, null);
         builder.addDoubleProperty("Turret Desired Position (deg.)", () -> turretDesiredPositionDeg, null);
+        builder.addDoubleProperty("Turret pos rotations", ()->turretMotor.getPosition().getValueAsDouble(), null);
 
         builder.addBooleanProperty("Turret at Desired Position", this::atDesiredTurretPosition, null);
 

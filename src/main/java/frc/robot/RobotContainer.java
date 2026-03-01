@@ -335,17 +335,17 @@ public class RobotContainer extends SubsystemBase {
     driverController.start().onTrue(new InstantCommand(()->zeroRobot()));
     
     /* INITIAL TESTING BINDINGS */
-    driverController.rightBumper().onTrue(
+    driverController.rightTrigger().onTrue(
       new SequentialCommandGroup(
-        new InstantCommand(()->shooter.setRollerSpeedRPS(1000)),
+        new InstantCommand(()->shooter.setRollerSpeedRPS(6000)),
         new InstantCommand(()->shooter.runRollers()),
+        new WaitCommand(2.0),
         new InstantCommand(()->indexer.runKicker()),
-        new WaitCommand(2),
         new InstantCommand(()->indexer.runIndexer())
       )
     );
 
-    driverController.leftBumper().onTrue(
+    driverController.rightTrigger().onFalse(
       new SequentialCommandGroup(
         new InstantCommand(()->shooter.stopRollers()),
         new InstantCommand(()->indexer.stopKicker()),
@@ -353,12 +353,28 @@ public class RobotContainer extends SubsystemBase {
       )
     );
 
-    driverController.povDown().onTrue(
-      new InstantCommand(()->intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED))
+    driverController.leftBumper().onTrue(
+      new InstantCommand(()->{
+        if(intake.slapdownDesiredPosition == IntakePosition.HOME){
+          intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED);
+        }
+        else{
+          intake.setDesiredSlapdownPosition(IntakePosition.HOME);
+        }
+      })
+    );
+
+    driverController.leftTrigger().onTrue(
+      new InstantCommand(()->intake.runRollers())
+    );
+
+    driverController.leftTrigger().onFalse(
+      new InstantCommand(()->intake.stopRollers())
     );
 
     driverController.povUp().onTrue(
       new InstantCommand(()->intake.setDesiredSlapdownPosition(IntakePosition.HOME))
+      //new InstantCommand(()->shooter.setDesiredHoodPosition(70.0))
     );
 
     driverController.leftTrigger().onTrue(

@@ -18,19 +18,19 @@ public class ShooterCal {
     public static final double HOOD_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
     public static final double HOOD_STATOR_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
 
-    public static final double HOOD_P = 0.5; // TODO check this
+    public static final double HOOD_P = 2.6; // TODO check this
     public static final double HOOD_I = 0.0;
     public static final double HOOD_D = 0.0;
     public static final double HOOD_FF = 0.0;
 
-    public static final double HOOD_MAX_VELOCITY_RPS = 1000.0;
-    public static final double HOOD_MAX_ACCELERATION_RPS_SQUARED = 1000.0; // TODO again, maybe should tune these sometime, but they'll work for now cause pid is good
+    public static final double HOOD_MAX_VELOCITY_RPS = 6000.0;
+    public static final double HOOD_MAX_ACCELERATION_RPS_SQUARED = 6000.0; // TODO again, maybe should tune these sometime, but they'll work for now cause pid is good
 
-    public static final double HOOD_HOME_DEGREES = Constants.PLACEHOLDER_DOUBLE; // TODO calibrate these based on true angle
-    public static final double HOOD_MAX_DEGREES = Constants.PLACEHOLDER_DOUBLE;
-    public static final double HOOD_MIN_DEGREES = Constants.PLACEHOLDER_DOUBLE;
+    public static final double HOOD_HOME_DEGREES = 45.0; // TODO calibrate these based on true angle
+    public static final double HOOD_MAX_DEGREES = 70.0;
+    public static final double HOOD_MIN_DEGREES = 45.0;
 
-    public static final double HOOD_MOTOR_TO_HOOD_RATIO = Constants.PLACEHOLDER_DOUBLE; // TODO get this
+    public static final double HOOD_MOTOR_TO_HOOD_RATIO = 340.0/28.0; // TODO get this
     
     public static final double HOOD_POSITION_MARGIN = 2.0;
 }

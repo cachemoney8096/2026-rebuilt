@@ -7,9 +7,8 @@ public class RobotMap {
   public static final int LEFT_CLIMB_MOTOR_CAN_ID = 26;
   public static final int RIGHT_CLIMB_MOTOR_CAN_ID = 27;
   
-  public static final int INTAKE_SLAPDOWN_MOTOR_CAN_ID = 21;
-  public static final int INTAKE_LEFT_ROLLER_MOTOR_CAN_ID = 22;
-  public static final int INTAKE_RIGHT_ROLLER_MOTOR_CAN_ID = 23;
+  public static final int INTAKE_SLAPDOWN_MOTOR_CAN_ID = 28;
+  public static final int INTAKE_LEFT_ROLLER_MOTOR_CAN_ID = 48;
   public static final int INTAKE_CANCODER_CAN_ID = 24;
     
   public static final int SHOOTER_HOOD_MOTOR_CAN_ID = 16;
