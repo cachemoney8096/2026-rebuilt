@@ -58,10 +58,13 @@ public class Shooter extends SubsystemBase {
         hoodToApply.CurrentLimits.SupplyCurrentLimit = ShooterCal.HOOD_SUPPLY_CURRENT_LIMIT_AMPS;
         hoodToApply.CurrentLimits.StatorCurrentLimit = ShooterCal.HOOD_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
         hoodToApply.CurrentLimits.StatorCurrentLimitEnable = true;
+        
         hoodToApply.Slot0.kP = ShooterCal.HOOD_P;
-        hoodToApply.Slot0.kI = ShooterCal.HOOD_I;
-        hoodToApply.Slot0.kD = ShooterCal.HOOD_D;
-        hoodToApply.Slot0.kV = ShooterCal.HOOD_FF;
+        hoodToApply.Slot1.kP = ShooterCal.HOOD_HOLD_P;
+
+        hoodToApply.Slot0.kI = hoodToApply.Slot1.kI = ShooterCal.HOOD_I;
+        hoodToApply.Slot0.kD = hoodToApply.Slot1.kD = ShooterCal.HOOD_D;
+        hoodToApply.Slot0.kV = hoodToApply.Slot1.kV = ShooterCal.HOOD_FF;
 
         TalonFXConfigurator hoodConfig = hoodMotor.getConfigurator();
         hoodConfig.apply(hoodToApply);
@@ -108,7 +111,7 @@ public class Shooter extends SubsystemBase {
 
     }
 
-    private void controlHoodPosition() {
+    private void controlHoodPosition() {        
         TrapezoidProfile.State goal = new TrapezoidProfile.State(
             hoodPositionToMotorPosition(hoodDesiredPositionDeg), 0.0);
         TrapezoidProfile.State start = new TrapezoidProfile.State(
@@ -117,6 +120,8 @@ public class Shooter extends SubsystemBase {
         PositionVoltage request = new PositionVoltage(0.0).withSlot(0);
         TrapezoidProfile.State setpoint = hoodTrapezoidProfile.calculate(0.020, start, goal);
         
+        request.withSlot(atDesiredHoodPosition() ? 1 : 0);
+
         request.Position = setpoint.position;
         request.Velocity = setpoint.velocity;
         

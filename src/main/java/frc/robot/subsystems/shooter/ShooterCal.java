@@ -19,6 +19,7 @@ public class ShooterCal {
     public static final double HOOD_STATOR_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
 
     public static final double HOOD_P = 2.6; // TODO check this
+    public static final double HOOD_HOLD_P = 5.0; // TODO check this
     public static final double HOOD_I = 0.0;
     public static final double HOOD_D = 0.0;
     public static final double HOOD_FF = 0.0;
