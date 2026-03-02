@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.MotionMagicDutyCycle;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -67,21 +68,25 @@ public class Turret extends SubsystemBase {
     }
 
     private void controlTurretPosition() {
-        TrapezoidProfile.State goal = new TrapezoidProfile.State(
-            turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
-        TrapezoidProfile.State start = new TrapezoidProfile.State(
-            turretMotor.getPosition().getValueAsDouble(), turretMotor.getVelocity().getValueAsDouble());
-        PositionDutyCycle request = new PositionDutyCycle(0.0).withSlot(0);
-        TrapezoidProfile.State setpoint = turretTrapezoidProfile.calculate(0.020, start, goal);
+        // TrapezoidProfile.State goal = new TrapezoidProfile.State(
+        //     turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
+        // TrapezoidProfile.State start = new TrapezoidProfile.State(
+        //     turretMotor.getPosition().getValueAsDouble(), turretMotor.getVelocity().getValueAsDouble());
+        // PositionDutyCycle request = new PositionDutyCycle(0.0).withSlot(0);
+        // TrapezoidProfile.State setpoint = turretTrapezoidProfile.calculate(0.020, start, goal);
         
-        request.Position = setpoint.position;
-        request.Velocity = setpoint.velocity;
+        // request.Position = setpoint.position;
+        // request.Velocity = setpoint.velocity;
+        // turretMotor.setControl(request);
+        MotionMagicDutyCycle request = new MotionMagicDutyCycle(0);
+        request.Position = turretPositionToMotorPosition(turretDesiredPositionDeg);
+
         turretMotor.setControl(request);
     }
 
     @Override
     public void periodic() {
-        // controlTurretPosition();
+        controlTurretPosition();
     }
 
     @Override
