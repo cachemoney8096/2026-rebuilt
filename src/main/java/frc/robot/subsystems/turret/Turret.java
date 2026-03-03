@@ -37,7 +37,7 @@ public class Turret extends SubsystemBase {
         turretToApply.Slot0.kP = TurretCal.TURRET_P;
         turretToApply.Slot0.kI = TurretCal.TURRET_I;
         turretToApply.Slot0.kD = TurretCal.TURRET_D;
-        turretToApply.Slot0.kV = TurretCal.TURRET_FF;
+        turretToApply.Slot0.kS = TurretCal.TURRET_FF;
 
         TalonFXConfigurator turretConfig = turretMotor.getConfigurator();
         turretConfig.apply(turretToApply);
@@ -90,7 +90,7 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // controlTurretPosition();
+        controlTurretPosition();
     }
 
     @Override

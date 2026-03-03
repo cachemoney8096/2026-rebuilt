@@ -396,15 +396,15 @@ public class RobotContainer extends SubsystemBase {
     //   }));
 
     driverController.rightBumper().whileTrue(
-      //new RepeatCommand(new InstantCommand(()->turret.setDesiredTurretPosition(turret.getTurretPosDeg()+LimelightHelpers.getTX("limelight-turret"))))
-      new RepeatCommand(
-        new InstantCommand(()->{
-          double error = LimelightHelpers.getTX("limelight-turret");
-          if(error > 2.0){
-            turret.turretMotor.set(0.15*Math.signum(error));
-          }
-        })
-      )
+      new RepeatCommand(new InstantCommand(()->turret.setDesiredTurretPosition(turret.getTurretPosDeg()+LimelightHelpers.getTX("limelight-turret"))))
+      // new RepeatCommand(
+      //   new InstantCommand(()->{
+      //     double error = LimelightHelpers.getTX("limelight-turret");
+      //     if(error > 2.0){
+      //       turret.turretMotor.set(0.15*Math.signum(error));
+      //     }
+      //   })
+      // )
     );
 
     // driverController.rightBumper().onFalse(
