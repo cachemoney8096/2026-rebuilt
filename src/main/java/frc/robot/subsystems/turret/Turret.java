@@ -38,6 +38,7 @@ public class Turret extends SubsystemBase {
         turretToApply.Slot0.kI = TurretCal.TURRET_I;
         turretToApply.Slot0.kD = TurretCal.TURRET_D;
         turretToApply.Slot0.kS = TurretCal.TURRET_FF;
+        turretToApply.Slot0.kV = 0.0; //should be zero for now
 
         TalonFXConfigurator turretConfig = turretMotor.getConfigurator();
         turretConfig.apply(turretToApply);
