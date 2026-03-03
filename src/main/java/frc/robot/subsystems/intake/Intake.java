@@ -20,7 +20,7 @@ import frc.robot.RobotMap;
 
 public class Intake extends SubsystemBase {
     // TODO this subsystem should probably actually offer use of absolute encoder it declares
-    private boolean allowIntakeMovement = false;
+    private boolean allowIntakeMovement = true;
 
     private final TalonFX slapdownMotor = new TalonFX(RobotMap.INTAKE_SLAPDOWN_MOTOR_CAN_ID, RobotMap.SWERVE_CAN_BUS);
 

@@ -4,7 +4,7 @@ import frc.robot.Constants;
 
 public class IntakeCal {
     public static final double INTAKE_POSITION_HOME_DEGREES = 0.0; // TODO calibrate this
-    public static final double INTAKE_POSITION_EXTENDED_DEGREES = 145.0; // TODO calibrate this
+    public static final double INTAKE_POSITION_EXTENDED_DEGREES = 155.0; // TODO calibrate this
 
     public static final double SLAPDOWN_MAX_ACCELERATION_RPS_SQUARED = 6000.0;
     public static final double SLAPDOWN_MAX_VELOCITY_RPS = 6000.0; // TODO consider tuning these, though pid is pretty effective and I am just giving a high ceiling rn

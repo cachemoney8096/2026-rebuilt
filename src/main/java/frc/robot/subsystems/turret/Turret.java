@@ -67,26 +67,30 @@ public class Turret extends SubsystemBase {
         return (turretPositionDeg / 360.0) * TurretCal.TURRET_MOTOR_TO_TURRET_RATIO;
     }
 
-    private void controlTurretPosition() {
-        // TrapezoidProfile.State goal = new TrapezoidProfile.State(
-        //     turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
-        // TrapezoidProfile.State start = new TrapezoidProfile.State(
-        //     turretMotor.getPosition().getValueAsDouble(), turretMotor.getVelocity().getValueAsDouble());
-        // PositionDutyCycle request = new PositionDutyCycle(0.0).withSlot(0);
-        // TrapezoidProfile.State setpoint = turretTrapezoidProfile.calculate(0.020, start, goal);
-        
-        // request.Position = setpoint.position;
-        // request.Velocity = setpoint.velocity;
-        // turretMotor.setControl(request);
-        MotionMagicDutyCycle request = new MotionMagicDutyCycle(0);
-        request.Position = turretPositionToMotorPosition(turretDesiredPositionDeg);
+    public double getTurretPosDeg(){
+        return (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO;
+    }
 
+    private void controlTurretPosition() {
+        TrapezoidProfile.State goal = new TrapezoidProfile.State(
+            turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
+        TrapezoidProfile.State start = new TrapezoidProfile.State(
+            turretMotor.getPosition().getValueAsDouble(), turretMotor.getVelocity().getValueAsDouble());
+        PositionDutyCycle request = new PositionDutyCycle(0.0).withSlot(0);
+        TrapezoidProfile.State setpoint = turretTrapezoidProfile.calculate(0.020, start, goal);
+        
+        request.Position = setpoint.position;
+        request.Velocity = setpoint.velocity;
         turretMotor.setControl(request);
+        // MotionMagicDutyCycle request = new MotionMagicDutyCycle(0);
+        // request.Position = 0.26;
+
+        // turretMotor.setControl(request);
     }
 
     @Override
     public void periodic() {
-        controlTurretPosition();
+        // controlTurretPosition();
     }
 
     @Override
@@ -94,6 +98,7 @@ public class Turret extends SubsystemBase {
         super.initSendable(builder);
 
         builder.addDoubleProperty("Turret Actual Position (deg.)", () -> (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO, null);
+        builder.addDoubleProperty("Turret maybe fake position (rotations)", () -> (turretPositionToMotorPosition(turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO), null);
         builder.addDoubleProperty("Turret Desired Position (deg.)", () -> turretDesiredPositionDeg, null);
         builder.addDoubleProperty("Turret pos rotations", ()->turretMotor.getPosition().getValueAsDouble(), null);
 

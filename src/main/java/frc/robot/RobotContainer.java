@@ -373,34 +373,43 @@ public class RobotContainer extends SubsystemBase {
     );
 
     driverController.povUp().onTrue(
-      new InstantCommand(()->intake.setDesiredSlapdownPosition(IntakePosition.HOME))
-      //new InstantCommand(()->shooter.setDesiredHoodPosition(70.0))
+      new InstantCommand(()->shooter.setDesiredHoodPosition(70.0))
     );
 
-    driverController.leftTrigger().onTrue(
-      new InstantCommand(()->intake.runRollers())
-    );
-
-    driverController.leftTrigger().onFalse(
-      new InstantCommand(()->intake.stopRollers())
+    driverController.povDown().onTrue(
+      new InstantCommand(()->shooter.setDesiredHoodPosition(45.0))
     );
 
     driverController.povLeft().onTrue(
-      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg-10))
+      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg-50))
     );
 
     driverController.povRight().onTrue(
-      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg+10))
+      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg+50))
     );
 
-    driverController.rightTrigger().whileTrue(
-      new InstantCommand(()->{
-        double error = LimelightHelpers.getTX("limelight-turret");
-        double kP = 1.0;
-        double output = MathUtil.clamp(error*kP, -0.2, 0.2);
-        turret.turretMotor.set(output);
-      })
+    // RepeatCommand turretLock = new RepeatCommand(new InstantCommand(()->{
+    //     double error = LimelightHelpers.getTX("limelight-turret");
+    //     double kP = 0.1;
+    //     double output = MathUtil.clamp(error*kP, -0.1,0.1);
+    //     turret.turretMotor.set(output);
+    //   }));
+
+    driverController.rightBumper().whileTrue(
+      //new RepeatCommand(new InstantCommand(()->turret.setDesiredTurretPosition(turret.getTurretPosDeg()+LimelightHelpers.getTX("limelight-turret"))))
+      new RepeatCommand(
+        new InstantCommand(()->{
+          double error = LimelightHelpers.getTX("limelight-turret");
+          if(error > 2.0){
+            turret.turretMotor.set(0.15*Math.signum(error));
+          }
+        })
+      )
     );
+
+    // driverController.rightBumper().onFalse(
+    //   new InstantCommand(()->turretLock.cancel())
+    // );
 
     /* MAIN BINDINGS */
 
