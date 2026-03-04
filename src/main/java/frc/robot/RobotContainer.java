@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.ShootOnFlySequence;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -337,7 +338,7 @@ public class RobotContainer extends SubsystemBase {
     /* INITIAL TESTING BINDINGS */
     driverController.rightTrigger().onTrue(
       new SequentialCommandGroup(
-        new InstantCommand(()->shooter.setRollerSpeedRPS(6000)),
+        new InstantCommand(()->shooter.setRollerSpeedRPS(3000)),
         new InstantCommand(()->shooter.runRollers()),
         new WaitCommand(2.0),
         new InstantCommand(()->indexer.runKicker()),
@@ -381,11 +382,11 @@ public class RobotContainer extends SubsystemBase {
     );
 
     driverController.povLeft().onTrue(
-      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg-50))
+      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg-10))
     );
 
     driverController.povRight().onTrue(
-      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg+50))
+      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg+10))
     );
 
     // RepeatCommand turretLock = new RepeatCommand(new InstantCommand(()->{
@@ -396,7 +397,7 @@ public class RobotContainer extends SubsystemBase {
     //   }));
 
     driverController.rightBumper().whileTrue(
-      new RepeatCommand(new InstantCommand(()->turret.setDesiredTurretPosition(turret.getTurretPosDeg()+LimelightHelpers.getTX("limelight-turret"))))
+      //new RepeatCommand(new InstantCommand(()->turret.setDesiredTurretPosition(turret.getTurretPosDeg()+LimelightHelpers.getTX("limelight-turret")))) // TODO EMERGENCY BACKUP CODE
       // new RepeatCommand(
       //   new InstantCommand(()->{
       //     double error = LimelightHelpers.getTX("limelight-turret");
@@ -405,6 +406,7 @@ public class RobotContainer extends SubsystemBase {
       //     }
       //   })
       // )
+      new ShootOnFlySequence(turret, shooter, ()->drivetrain.getState().Pose, ()->drivetrain.getState().Pose.getRotation().getDegrees(), ()->drivetrain.getState().Speeds, isBlue, lights)
     );
 
     // driverController.rightBumper().onFalse(

@@ -6,10 +6,10 @@ public class TurretCal {
     public static final double TURRET_SUPPLY_CURRENT_LIMIT_AMPS = 40;
     public static final double TURRET_STATOR_SUPPLY_CURRENT_LIMIT_AMPS = 40;
 
-    public static final double TURRET_P = 3.0;
+    public static final double TURRET_P = 6.0;
     public static final double TURRET_I = 0.0;
     public static final double TURRET_D = 0.0;
-    public static final double TURRET_FF = 0.15;
+    public static final double TURRET_FF = 1.0;
 
     public static final double TURRET_MAX_VELOCITY_RPS = 6000.0;
     public static final double TURRET_MAX_ACCELERATION_RPS_SQUARED = 6000.0;

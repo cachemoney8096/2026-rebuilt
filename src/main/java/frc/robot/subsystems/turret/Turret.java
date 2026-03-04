@@ -73,16 +73,18 @@ public class Turret extends SubsystemBase {
     }
 
     private void controlTurretPosition() {
-        TrapezoidProfile.State goal = new TrapezoidProfile.State(
-            turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
-        TrapezoidProfile.State start = new TrapezoidProfile.State(
-            turretMotor.getPosition().getValueAsDouble(), turretMotor.getVelocity().getValueAsDouble());
-        PositionDutyCycle request = new PositionDutyCycle(0.0).withSlot(0);
-        TrapezoidProfile.State setpoint = turretTrapezoidProfile.calculate(0.020, start, goal);
+        // TrapezoidProfile.State goal = new TrapezoidProfile.State(
+        //     turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
+        // TrapezoidProfile.State start = new TrapezoidProfile.State(
+        //     turretMotor.getPosition().getValueAsDouble(), turretMotor.getVelocity().getValueAsDouble());
+        // PositionDutyCycle request = new PositionDutyCycle(0.0).withSlot(0);
+        // TrapezoidProfile.State setpoint = turretTrapezoidProfile.calculate(0.020, start, goal);
         
-        request.Position = setpoint.position;
-        request.Velocity = setpoint.velocity;
-        turretMotor.setControl(request);
+        // request.Position = setpoint.position;
+        // request.Velocity = setpoint.velocity;
+        // turretMotor.setControl(request);
+        final PositionVoltage m_request = new PositionVoltage(0).withSlot(0);
+        turretMotor.setControl(m_request.withPosition(turretPositionToMotorPosition(turretDesiredPositionDeg)));
         // MotionMagicDutyCycle request = new MotionMagicDutyCycle(0);
         // request.Position = 0.26;
 

@@ -71,7 +71,7 @@ public class ShootOnMoveUtil {
     // Tester (ballparked numbers seem fine, can always use constants to tune)
     public static void main(String args[]){
         boolean isBlue = true;
-        Pose2d robotPose = new Pose2d(2.0, 4.0, new Rotation2d());
+        Pose2d robotPose = new Pose2d(1.0, 1.0, new Rotation2d());
         ChassisSpeeds speeds = new ChassisSpeeds(0.0, 0.0, 0.0);
         double heading = 0.0;
 
