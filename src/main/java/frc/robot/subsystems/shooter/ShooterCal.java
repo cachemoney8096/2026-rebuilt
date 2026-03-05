@@ -12,13 +12,13 @@ public class ShooterCal {
     public static final double ROLLERS_D = 0.0;
     public static final double ROLLERS_FF = 0.0;
 
-    public static final double ROLLERS_MAX_RPS = 5000; // TODO tune this
+    public static final double ROLLERS_MAX_RPS = 6000; // TODO tune this
 
     /* Hood */
     public static final double HOOD_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
     public static final double HOOD_STATOR_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
 
-    public static final double HOOD_P = 4.0; // TODO check this
+    public static final double HOOD_P = 8.0; // TODO check this
     public static final double HOOD_I = 0.0;
     public static final double HOOD_D = 0.0;
     public static final double HOOD_FF = 0.0;

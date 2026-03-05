@@ -6,7 +6,7 @@ public class TurretCal {
     public static final double TURRET_SUPPLY_CURRENT_LIMIT_AMPS = 40;
     public static final double TURRET_STATOR_SUPPLY_CURRENT_LIMIT_AMPS = 40;
 
-    public static final double TURRET_P = 6.0;
+    public static final double TURRET_P = 5.0;
     public static final double TURRET_I = 0.0;
     public static final double TURRET_D = 0.0;
     public static final double TURRET_FF = 1.0;

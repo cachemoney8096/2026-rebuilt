@@ -83,7 +83,7 @@ public class Turret extends SubsystemBase {
         // request.Position = setpoint.position;
         // request.Velocity = setpoint.velocity;
         // turretMotor.setControl(request);
-        final PositionVoltage m_request = new PositionVoltage(0).withSlot(0);
+        final PositionDutyCycle m_request = new PositionDutyCycle(0).withSlot(0);
         turretMotor.setControl(m_request.withPosition(turretPositionToMotorPosition(turretDesiredPositionDeg)));
         // MotionMagicDutyCycle request = new MotionMagicDutyCycle(0);
         // request.Position = 0.26;

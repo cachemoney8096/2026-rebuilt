@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -338,9 +339,8 @@ public class RobotContainer extends SubsystemBase {
     /* INITIAL TESTING BINDINGS */
     driverController.rightTrigger().onTrue(
       new SequentialCommandGroup(
-        new InstantCommand(()->shooter.setRollerSpeedRPS(3000)),
+        new InstantCommand(()->shooter.setRollerSpeedRPS(getShooterPower())),
         new InstantCommand(()->shooter.runRollers()),
-        new WaitCommand(2.0),
         new InstantCommand(()->indexer.runKicker()),
         new InstantCommand(()->indexer.runIndexer())
       )
@@ -373,12 +373,26 @@ public class RobotContainer extends SubsystemBase {
       new InstantCommand(()->intake.stopRollers())
     );
 
-    driverController.povUp().onTrue(
-      new InstantCommand(()->shooter.setDesiredHoodPosition(70.0))
-    );
+    // driverController.povUp().onTrue(
+    //   new InstantCommand(()->shooter.setDesiredHoodPosition(70.0))
+    // );
+
+    // driverController.povDown().onTrue(
+    //   new InstantCommand(()->shooter.setDesiredHoodPosition(45.0))
+    // );
 
     driverController.povDown().onTrue(
-      new InstantCommand(()->shooter.setDesiredHoodPosition(45.0))
+      new InstantCommand(()->{
+        var driveState = drivetrain.getState();
+      double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
+
+      var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-turret");
+      if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
+        // drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
+        drivetrain.resetPose(new Pose2d(llMeasurement.pose.getTranslation(), Rotation2d.fromDegrees(llMeasurement.pose.getRotation().getDegrees()+180)));
+        desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
+      }
+      })
     );
 
     driverController.povLeft().onTrue(
@@ -421,6 +435,17 @@ public class RobotContainer extends SubsystemBase {
     /* Toggle robot centric */
     operatorController.b().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
 
+  }
+
+  public double getShooterPower(){
+    double powerRpm = 3800;
+    if(3.6-drivetrain.getState().Pose.getX() > 0){ // TODO RED VS BLUE
+      powerRpm+=(3.6-drivetrain.getState().Pose.getX())*825;
+    }
+    if(Math.abs(4-drivetrain.getState().Pose.getY()) > 1){ // TODO RED VS BLUE
+      powerRpm+=(Math.abs(4-drivetrain.getState().Pose.getY())-1)*750;
+    }
+    return powerRpm;
   }
 
   private void configureDebugBindings() {
