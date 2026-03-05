@@ -2,6 +2,7 @@ package frc.robot.subsystems.climb;
 
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotMap;
 
@@ -27,20 +28,20 @@ public class Climb extends SubsystemBase {
 
   private ClimbHeight desiredPosition = ClimbHeight.HOME;
 
-  private TalonFX leftMotor = new TalonFX(RobotMap.LEFT_CLIMB_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
-  private TalonFX rightMotor = new TalonFX(RobotMap.RIGHT_CLIMB_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
-
+  private TalonFX motor = new TalonFX(RobotMap.LEFT_CLIMB_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
   private boolean allowClimbMovement = true;
+  private Servo ratchet;
 
   public Climb() {
     climbPositions.put(ClimbHeight.HOME, ClimbCal.POSITION_HOME_INCHES);
     climbPositions.put(ClimbHeight.FINISHED, ClimbCal.POSITION_FINISHED_INCHES);
     climbPositions.put(ClimbHeight.PREP, ClimbCal.POSITION_PREP_INCHES);
+    ratchet = new Servo(1);
     initTalons();
   }
 
   private void initTalons() {
-    TalonFXConfigurator cfgLeft = leftMotor.getConfigurator();
+    TalonFXConfigurator cfgLeft = motor.getConfigurator();
     TalonFXConfiguration toApply = new TalonFXConfiguration();
 
     toApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -53,19 +54,24 @@ public class Climb extends SubsystemBase {
     toApply.Slot0.kI = ClimbCal.CLIMB_SCORE_I;
     toApply.Slot0.kD = ClimbCal.CLIMB_SCORE_D;
     toApply.Slot0.kV = ClimbCal.CLIMB_SCORE_FF;
-    toApply.Slot0.kG = 0.25;
+    toApply.Slot0.kG = 0.0;
 
     cfgLeft.apply(toApply);
-    Follower master = new Follower(leftMotor.getDeviceID(), MotorAlignmentValue.Opposed);
-    rightMotor.setControl(master);
-
     zeroClimbToHome();
 
   }
 
   public void zeroClimbToHome() {
-    leftMotor.setPosition(climbPositions.get(ClimbHeight.HOME));
+    motor.setPosition(climbPositionToMotorPosition(ClimbHeight.HOME));
     setDesiredPosition(ClimbHeight.HOME);
+  }
+
+  public void setRatchetLocked(){
+    ratchet.setAngle(0.0);
+  }
+
+  public void setRatchetUnlocked(){
+    ratchet.setAngle(180.0);
   }
 
   public void setDesiredPosition(ClimbHeight height) {
@@ -77,17 +83,16 @@ public class Climb extends SubsystemBase {
   }
 
   private void controlPosition() {
-
     final TrapezoidProfile trapezoidProfile = new TrapezoidProfile(
-        new TrapezoidProfile.Constraints(ClimbCal.FIRST_CONSTRAINT, ClimbCal.SECOND_CONSTRAINT));
+        new TrapezoidProfile.Constraints(6000.0, 6000.0));
     TrapezoidProfile.State tGoal = new TrapezoidProfile.State(climbPositionToMotorPosition(desiredPosition), 0.0);
     TrapezoidProfile.State setpoint = new TrapezoidProfile.State(
-        leftMotor.getPosition().getValueAsDouble(), leftMotor.getVelocity().getValueAsDouble());
+        motor.getPosition().getValueAsDouble(), motor.getVelocity().getValueAsDouble());
     final PositionVoltage request = new PositionVoltage(0).withSlot(0);
     setpoint = trapezoidProfile.calculate(0.020, setpoint, tGoal);
     request.Position = setpoint.position;
     request.Velocity = setpoint.velocity;
-    leftMotor.setControl(request);
+    motor.setControl(request);
   }
 
   public boolean atDesiredPosition() {
@@ -103,10 +108,9 @@ public class Climb extends SubsystemBase {
   }
 
   public double getClimbHeight() {
-    return leftMotor
+    return motor
         .getPosition()
         .getValueAsDouble()
-        * ClimbCal.GEAR_CIRCUMFERENCE
         / ClimbCal.CLIMB_MOTOR_TO_CLIMB_INCHES_RATIO;
   }
 
@@ -117,7 +121,7 @@ public class Climb extends SubsystemBase {
   }
 
   public void stopClimbMovement() {
-    leftMotor.setVoltage(0.0);
+    motor.setVoltage(0.0);
   }
 
   public void setClimbMovementAllowed(boolean allowed) {
@@ -135,11 +139,7 @@ public class Climb extends SubsystemBase {
 
     builder.addDoubleProperty(
         "Climb Left Motor RELATIVE (deg)",
-        () -> leftMotor.getPosition().getValueAsDouble() * 360.0,
-        null);
-    builder.addDoubleProperty(
-        "Climb Right Motor RELATIVE (deg)",
-        () -> rightMotor.getPosition().getValueAsDouble() * 360.0,
+        () -> motor.getPosition().getValueAsDouble() * 360.0,
         null);
 
     builder.addDoubleProperty(
@@ -149,7 +149,7 @@ public class Climb extends SubsystemBase {
 
     builder.addBooleanProperty("Allow Climb Movement", () -> allowClimbMovement, null);
     builder.addDoubleProperty(
-        "Climb voltage commanded", () -> leftMotor.getMotorVoltage().getValueAsDouble(), null);
+        "Climb voltage commanded", () ->motor.getMotorVoltage().getValueAsDouble(), null);
   }
 
 }
