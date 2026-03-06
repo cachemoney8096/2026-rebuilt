@@ -396,11 +396,11 @@ public class RobotContainer extends SubsystemBase {
     );
 
     driverController.povLeft().onTrue(
-      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg-10))
+      new InstantCommand(()->climb.setDesiredPosition(Climb.ClimbHeight.HOME))
     );
 
     driverController.povRight().onTrue(
-      new InstantCommand(()->turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg+10))
+      new InstantCommand(()->climb.setDesiredPosition(Climb.ClimbHeight.PREP))
     );
 
     // RepeatCommand turretLock = new RepeatCommand(new InstantCommand(()->{

@@ -38,7 +38,7 @@ public class Turret extends SubsystemBase {
         turretToApply.Slot0.kI = TurretCal.TURRET_I;
         turretToApply.Slot0.kD = TurretCal.TURRET_D;
         turretToApply.Slot0.kS = TurretCal.TURRET_FF;
-        turretToApply.Slot0.kV = 0.0; //should be zero for now
+        turretToApply.Slot0.kV = 0.0; 
 
         TalonFXConfigurator turretConfig = turretMotor.getConfigurator();
         turretConfig.apply(turretToApply);
@@ -61,7 +61,7 @@ public class Turret extends SubsystemBase {
     }
 
     public boolean atDesiredTurretPosition() {
-        return Math.abs(turretMotor.getPosition().getValueAsDouble() - turretPositionToMotorPosition(turretDesiredPositionDeg)) < TurretCal.TURRET_POSITION_MARGIN;
+        return Math.abs((turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO - turretDesiredPositionDeg) < TurretCal.TURRET_POSITION_MARGIN;
     }
 
     private double turretPositionToMotorPosition(double turretPositionDeg)  {
@@ -83,9 +83,22 @@ public class Turret extends SubsystemBase {
         // request.Position = setpoint.position;
         // request.Velocity = setpoint.velocity;
         // turretMotor.setControl(request);
+        
         final PositionDutyCycle m_request = new PositionDutyCycle(0).withSlot(0);
-        turretMotor.setControl(m_request.withPosition(turretPositionToMotorPosition(turretDesiredPositionDeg)));
-        // MotionMagicDutyCycle request = new MotionMagicDutyCycle(0);
+        double error = turretPositionToMotorPosition(turretDesiredPositionDeg)
+                    - turretMotor.getPosition().getValueAsDouble();
+
+        double ff = 0;
+
+        if (Math.abs(error) > 8.0/360.0) {   // tune this threshold
+            ff = 0.2 * Math.signum(error);
+        }
+
+        turretMotor.setControl(
+            m_request
+                .withPosition(turretPositionToMotorPosition(turretDesiredPositionDeg))
+                .withFeedForward(ff)
+        );        // MotionMagicDutyCycle request = new MotionMagicDutyCycle(0);
         // request.Position = 0.26;
 
         // turretMotor.setControl(request);

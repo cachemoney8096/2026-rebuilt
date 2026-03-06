@@ -46,7 +46,7 @@ public class Climb extends SubsystemBase {
 
     toApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
 
-    toApply.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+    toApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     toApply.CurrentLimits.SupplyCurrentLimit = ClimbCal.CLIMB_MOTOR_SUPPLY_CURRENT_LIMIT_AMPS;
     toApply.CurrentLimits.StatorCurrentLimit = ClimbCal.CLIMB_MOTOR_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
     toApply.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -150,6 +150,8 @@ public class Climb extends SubsystemBase {
     builder.addBooleanProperty("Allow Climb Movement", () -> allowClimbMovement, null);
     builder.addDoubleProperty(
         "Climb voltage commanded", () ->motor.getMotorVoltage().getValueAsDouble(), null);
+      builder.addDoubleProperty("Pos in", ()->motor.getPosition().getValueAsDouble()/ClimbCal.CLIMB_MOTOR_TO_CLIMB_INCHES_RATIO, null);
+      builder.addDoubleProperty("pos rot", ()->motor.getPosition().getValueAsDouble(), null);
   }
 
 }
