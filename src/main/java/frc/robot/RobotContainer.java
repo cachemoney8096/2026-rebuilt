@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -29,6 +30,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
@@ -39,6 +41,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.GoHomeSequence;
 import frc.robot.commands.ShootOnFlySequence;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climb.Climb;
@@ -51,10 +54,12 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.ShootOnMoveUtil;
+import frc.robot.commands.*;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
 
 import org.photonvision.PhotonCamera;
 
@@ -157,6 +162,8 @@ public class RobotContainer extends SubsystemBase {
   public Turret turret;
 
   public String autoPathCmd = "";
+
+  private boolean turretActive = false;
 
   // photonvision testing
   PhotonCamera camera = new PhotonCamera("photonvision");
@@ -334,118 +341,175 @@ public class RobotContainer extends SubsystemBase {
         .y()
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
 
-    driverController.start().onTrue(new InstantCommand(()->zeroRobot()));
-    
-    /* INITIAL TESTING BINDINGS */
-    driverController.rightTrigger().onTrue(
-      new SequentialCommandGroup(
-        new InstantCommand(()->shooter.setRollerSpeedRPS(getShooterPower())),
-        new InstantCommand(()->shooter.runRollers()),
-        new InstantCommand(()->indexer.runKicker()),
-        new InstantCommand(()->indexer.runIndexer())
-      )
-    );
+    driverController.start().onTrue(new InstantCommand(() -> zeroRobot()));
 
-    driverController.rightTrigger().onFalse(
-      new SequentialCommandGroup(
-        new InstantCommand(()->shooter.stopRollers()),
-        new InstantCommand(()->indexer.stopKicker()),
-        new InstantCommand(()->indexer.stopIndexer())
-      )
-    );
+    driverController.rightTrigger().whileTrue(
+        new RepeatCommand(
+          new SequentialCommandGroup(
+            new InstantCommand(() -> shooter.setRollerSpeedRPS(getShooterPower())),
+            new InstantCommand(() -> shooter.runRollers()),
+            new InstantCommand(() -> indexer.runKicker()),
+            new WaitCommand(0.5),
+            new InstantCommand(() -> indexer.runIndexer())
+        )).finallyDo(
+              (b)->{
+                shooter.stopRollers();
+                indexer.stopIndexer();
+                indexer.stopKicker();
+              }
+            )
+        );
 
     driverController.leftBumper().onTrue(
-      new InstantCommand(()->{
-        if(intake.slapdownDesiredPosition == IntakePosition.HOME){
-          intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED);
-        }
-        else{
-          intake.setDesiredSlapdownPosition(IntakePosition.HOME);
-        }
-      })
-    );
+        new InstantCommand(() -> {
+          if (intake.slapdownDesiredPosition == IntakePosition.HOME) {
+            intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED);
+          } else {
+            intake.setDesiredSlapdownPosition(IntakePosition.HOME);
+          }
+        }));
 
     driverController.leftTrigger().onTrue(
-      new InstantCommand(()->intake.runRollers())
-    );
+        new InstantCommand(() -> intake.runRollers()));
 
     driverController.leftTrigger().onFalse(
-      new InstantCommand(()->intake.stopRollers())
+        new InstantCommand(() -> intake.stopRollers()));
+
+    RepeatCommand aimTurret = new RepeatCommand(
+      new InstantCommand(()->new ShootOnFlySequence(turret, shooter, () -> drivetrain.getState().Pose,
+            () -> drivetrain.getState().Pose.getRotation().getDegrees(), () -> drivetrain.getState().Speeds, isBlue,
+            lights))
     );
 
-    // driverController.povUp().onTrue(
-    //   new InstantCommand(()->shooter.setDesiredHoodPosition(70.0))
-    // );
-
-    // driverController.povDown().onTrue(
-    //   new InstantCommand(()->shooter.setDesiredHoodPosition(45.0))
-    // );
-
-    driverController.povDown().onTrue(
-      new InstantCommand(()->{
-        var driveState = drivetrain.getState();
-      double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
-
-      var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-turret");
-      if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
-        // drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
-        drivetrain.resetPose(new Pose2d(llMeasurement.pose.getTranslation(), Rotation2d.fromDegrees(llMeasurement.pose.getRotation().getDegrees()+180)));
-        desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
-      }
-      })
-    );
-
-    driverController.povLeft().onTrue(
-      new InstantCommand(()->climb.setDesiredPosition(Climb.ClimbHeight.HOME))
+    driverController.rightBumper().onTrue(
+      new SequentialCommandGroup(
+        new InstantCommand(()->turretActive = !turretActive),
+        new ConditionalCommand(aimTurret, new InstantCommand(), ()->turretActive)
+      )
     );
 
     driverController.povRight().onTrue(
-      new InstantCommand(()->climb.setDesiredPosition(Climb.ClimbHeight.PREP))
+      new GoHomeSequence(turret, intake, climb, shooter, indexer, lights)
     );
 
-    // RepeatCommand turretLock = new RepeatCommand(new InstantCommand(()->{
-    //     double error = LimelightHelpers.getTX("limelight-turret");
-    //     double kP = 0.1;
-    //     double output = MathUtil.clamp(error*kP, -0.1,0.1);
-    //     turret.turretMotor.set(output);
-    //   }));
-
-    driverController.rightBumper().whileTrue(
-      //new RepeatCommand(new InstantCommand(()->turret.setDesiredTurretPosition(turret.getTurretPosDeg()+LimelightHelpers.getTX("limelight-turret")))) // TODO EMERGENCY BACKUP CODE
-      // new RepeatCommand(
-      //   new InstantCommand(()->{
-      //     double error = LimelightHelpers.getTX("limelight-turret");
-      //     if(error > 2.0){
-      //       turret.turretMotor.set(0.15*Math.signum(error));
-      //     }
-      //   })
-      // )
-      new ShootOnFlySequence(turret, shooter, ()->drivetrain.getState().Pose, ()->drivetrain.getState().Pose.getRotation().getDegrees(), ()->drivetrain.getState().Speeds, isBlue, lights)
+    driverController.povLeft().onTrue(
+      new FeedSequence(turret, ()->drivetrain.getState().Pose.getRotation().getDegrees(), isBlue, driverController.povLeft())
     );
-
-    // driverController.rightBumper().onFalse(
-    //   new InstantCommand(()->turretLock.cancel())
-    // );
-
-    /* MAIN BINDINGS */
-
   }
 
   private void configureOperatorBindings() {
-    /* Toggle robot centric */
-    operatorController.b().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
+    operatorController.a().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
 
+    operatorController.start().onTrue(
+      new InstantCommand(() -> {
+          var driveState = drivetrain.getState();
+          double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
+
+          var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-turret");
+          if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
+            // drivetrain.addVisionMeasurement(llMeasurement.pose,
+            // llMeasurement.timestampSeconds);
+            drivetrain.resetPose(new Pose2d(llMeasurement.pose.getTranslation(),
+                Rotation2d.fromDegrees(llMeasurement.pose.getRotation().getDegrees() + 180)));
+            desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
+          }
+        })
+    );
+
+    operatorController.povUp().onTrue(
+      new InstantCommand(()->climb.setDesiredPosition(Climb.ClimbHeight.PREP))
+    );
+
+    operatorController.povDown().onTrue(
+      new InstantCommand(()->climb.setDesiredPosition(Climb.ClimbHeight.HOME))
+    );
+
+    operatorController.b().onTrue(
+      new SequentialCommandGroup(
+        new InstantCommand(()->{
+        shooter.stopRollers();
+        indexer.reverseIndexer();
+        indexer.reverseKicker();
+      }),
+      new WaitCommand(0.5),
+      new InstantCommand(()->{
+        indexer.stopIndexer();
+        indexer.stopKicker();
+      })
+      )
+    );
+
+    operatorController.povLeft().onTrue(
+      new InstantCommand(()->turret.turretDesiredPositionDeg-=10)
+    );
+
+    operatorController.povLeft().onTrue(
+      new InstantCommand(()->turret.turretDesiredPositionDeg+=10)
+    );
+
+    operatorController.a().onTrue(
+      new InstantCommand(()->shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg-=3))
+    );
+
+    operatorController.y().onTrue(
+      new InstantCommand(()->shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg+=3))
+    );
+
+    operatorController.leftTrigger().onTrue(
+      new SequentialCommandGroup(
+        new InstantCommand(()->intake.reverseRollers()),
+        new WaitCommand(0.5),
+        new InstantCommand(()->intake.stopRollers())
+      )
+    );
+
+    operatorController.rightTrigger().whileTrue(
+        new RepeatCommand(
+          new SequentialCommandGroup(
+            new InstantCommand(() -> shooter.setRollerSpeedRPS(3800)),
+            new InstantCommand(() -> shooter.setDesiredHoodPosition(70)),
+            new InstantCommand(() -> shooter.runRollers()),
+            new InstantCommand(() -> indexer.runKicker()),
+            new WaitCommand(0.5),
+            new InstantCommand(() -> indexer.runIndexer())
+        )).finallyDo(
+              (b)->{
+                shooter.stopRollers();
+                indexer.stopIndexer();
+                indexer.stopKicker();
+              }
+            )
+        );
+
+    operatorController.rightBumper().whileTrue(
+      new RepeatCommand(
+          new SequentialCommandGroup(
+            new InstantCommand(() -> shooter.setRollerSpeedRPS(4500)),
+            new InstantCommand(() -> shooter.setDesiredHoodPosition(60)),
+            new InstantCommand(() -> shooter.runRollers()),
+            new InstantCommand(() -> indexer.runKicker()),
+            new WaitCommand(0.5),
+            new InstantCommand(() -> indexer.runIndexer())
+        )).finallyDo(
+              (b)->{
+                shooter.stopRollers();
+                indexer.stopIndexer();
+                indexer.stopKicker();
+              }
+            )
+    );
   }
 
-  public double getShooterPower(){
+  public double getShooterPower() {
     double powerRpm = 3800;
-    if(3.6-drivetrain.getState().Pose.getX() > 0){ // TODO RED VS BLUE
-      powerRpm+=(3.6-drivetrain.getState().Pose.getX())*825;
+    Translation2d target = new Translation2d();
+    if (isBlue) {
+      target = new Translation2d(4.0, 4.0);
+    } else {
+      target = new Translation2d(12.0, 4.0);
     }
-    if(Math.abs(4-drivetrain.getState().Pose.getY()) > 1){ // TODO RED VS BLUE
-      powerRpm+=(Math.abs(4-drivetrain.getState().Pose.getY())-1)*750;
-    }
-    return powerRpm;
+    double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
+    return powerRpm + 825*dist;
   }
 
   private void configureDebugBindings() {

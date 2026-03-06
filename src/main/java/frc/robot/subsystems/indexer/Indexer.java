@@ -70,6 +70,14 @@ public class Indexer extends SubsystemBase {
     kickerMotor.set(0.0);
   }
 
+  public void reverseKicker(){
+    kickerMotor.set(-0.5);
+  }
+
+  public void reverseIndexer(){
+    rotatorMotor.set(-0.2);
+  }
+
   @Override
   public void initSendable(SendableBuilder builder) {
 

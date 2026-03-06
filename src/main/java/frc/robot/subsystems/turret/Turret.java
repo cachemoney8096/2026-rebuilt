@@ -9,6 +9,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -72,7 +73,27 @@ public class Turret extends SubsystemBase {
         return (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO;
     }
 
+    private boolean holding = true;
+
     private void controlTurretPosition() {
+        double errorDeg = Math.abs(turretDesiredPositionDeg - (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO);
+        if(holding){
+            if(errorDeg > 5.0){
+                holding = false;
+            }
+        }
+        else{
+            if(errorDeg < 2.0){
+                holding = true;
+            }
+        }
+
+        if(holding){
+            turretMotor.set(0.0);
+        }
+        else{
+            turretMotor.set(Math.signum(errorDeg)*MathUtil.clamp(0.11 + errorDeg*0.01, 0.11, 0.22));
+        }
         // TrapezoidProfile.State goal = new TrapezoidProfile.State(
         //     turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
         // TrapezoidProfile.State start = new TrapezoidProfile.State(
@@ -84,21 +105,21 @@ public class Turret extends SubsystemBase {
         // request.Velocity = setpoint.velocity;
         // turretMotor.setControl(request);
         
-        final PositionDutyCycle m_request = new PositionDutyCycle(0).withSlot(0);
-        double error = turretPositionToMotorPosition(turretDesiredPositionDeg)
-                    - turretMotor.getPosition().getValueAsDouble();
+        // final PositionDutyCycle m_request = new PositionDutyCycle(0).withSlot(0);
+        // double error = turretPositionToMotorPosition(turretDesiredPositionDeg)
+        //             - turretMotor.getPosition().getValueAsDouble();
 
-        double ff = 0;
+        // double ff = 0;
 
-        if (Math.abs(error) > 8.0/360.0) {   // tune this threshold
-            ff = 0.2 * Math.signum(error);
-        }
+        // if (Math.abs(error) > 8.0/360.0) {   // tune this threshold
+        //     ff = 0.2 * Math.signum(error);
+        // }
 
-        turretMotor.setControl(
-            m_request
-                .withPosition(turretPositionToMotorPosition(turretDesiredPositionDeg))
-                .withFeedForward(ff)
-        );        // MotionMagicDutyCycle request = new MotionMagicDutyCycle(0);
+        // turretMotor.setControl(
+        //     m_request
+        //         .withPosition(turretPositionToMotorPosition(turretDesiredPositionDeg))
+        //         .withFeedForward(ff)
+        // );        // MotionMagicDutyCycle request = new MotionMagicDutyCycle(0);
         // request.Position = 0.26;
 
         // turretMotor.setControl(request);

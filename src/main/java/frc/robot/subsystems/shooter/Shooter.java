@@ -16,7 +16,7 @@ import frc.robot.RobotMap;
 
 public class Shooter extends SubsystemBase {
     private final TalonFX hoodMotor = new TalonFX(RobotMap.SHOOTER_HOOD_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
-    private double hoodDesiredPositionDeg = ShooterCal.HOOD_HOME_DEGREES; 
+    public double hoodDesiredPositionDeg = ShooterCal.HOOD_HOME_DEGREES; 
 
     private final TrapezoidProfile hoodTrapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(
         ShooterCal.HOOD_MAX_VELOCITY_RPS, 

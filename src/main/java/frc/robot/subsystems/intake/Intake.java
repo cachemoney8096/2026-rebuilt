@@ -113,6 +113,10 @@ public class Intake extends SubsystemBase {
         rollerMotor.set(0.0);
     }
 
+    public void reverseRollers(){
+        rollerMotor.set(-0.6);
+    }
+
     public boolean atDesiredSlapdownPosition() {
         return Math.abs(getRealPositionRotations() - slapdownPositionToMotorPosition(slapdownDesiredPosition)) < IntakeCal.SLAPDOWN_POSITION_MARGIN;
     }

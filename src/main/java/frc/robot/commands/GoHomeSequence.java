@@ -29,12 +29,6 @@ public class GoHomeSequence extends SequentialCommandGroup{
             new InstantCommand(() -> turret.setDesiredTurretPosition(TurretCal.TURRET_HOME_DEGREES)),
             new InstantCommand(() -> indexer.stopKicker()),
             new InstantCommand(() -> indexer.stopIndexer()),
-            new WaitUntilCommand(shooter::atDesiredHoodPosition),
-            new WaitUntilCommand(intake::atDesiredSlapdownPosition),
-            new WaitUntilCommand(climb::atDesiredPosition),
-            new WaitUntilCommand(turret::atDesiredTurretPosition),
-            new WaitUntilCommand(() -> !indexer.indexerIsOn()),
-            new WaitUntilCommand(() -> !indexer.kickerIsOn()),
             new InstantCommand(() -> lights.setLEDColor(LightCode.HOME))
         );
     }
