@@ -1,0 +1,85 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "SHOOT SEQUENCE AIM LEFT TRENCH"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "DEPLOY INTAKE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "RUN INTAKE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Go to mid left trench"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Go to shoot left trench"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SHOOT SEQUENCE AIM LEFT TRENCH"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 7.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Go to mid left trench"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Go to shoot left trench"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

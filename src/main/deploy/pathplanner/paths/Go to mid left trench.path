@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.0,
-        "y": 7.0
+        "x": 3.9793791390728472,
+        "y": 7.556067880794702
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0,
-        "y": 7.0
+        "x": 9.010513245033113,
+        "y": 7.839205298013244
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "shoot left trench"
     },
     {
       "anchor": {
-        "x": 4.0,
-        "y": 6.0
+        "x": 7.798104304635762,
+        "y": 4.6085347682119195
       },
       "prevControl": {
-        "x": 3.0,
-        "y": 6.0
+        "x": 7.907003311258279,
+        "y": 5.951622516556291
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "intake left mid"
     }
   ],
   "rotationTargets": [],
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Left",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -90.86805144974558
   },
   "useDefaultConstraints": true
 }

@@ -60,7 +60,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-
 import org.photonvision.PhotonCamera;
 
 /**
@@ -186,15 +185,77 @@ public class RobotContainer extends SubsystemBase {
     turret = new Turret();
 
     /* Named commands must be registered immediately */ // TODO this
+    NamedCommands.registerCommand("DEPLOY INTAKE",
+        new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED)));
+    NamedCommands.registerCommand("RUN INTAKE", new InstantCommand(() -> intake.runRollers()));
+    NamedCommands.registerCommand("STOP INTAKE", new InstantCommand(() -> intake.stopRollers()));
+    NamedCommands.registerCommand("STOP SHOOT SEQUENCE", new InstantCommand(()->{
+      turret.setDesiredTurretPosition(90);
+      shooter.stopRollers();
+      indexer.stopIndexer();
+      indexer.stopKicker();
+    }));
+    NamedCommands.registerCommand("SHOOT SEQUENCE AIM FORWARD CLOSE", new SequentialCommandGroup(
+        new InstantCommand(() -> shooter.setRollerSpeedRPS(3800)),
+        new InstantCommand(() -> turret.setDesiredTurretPosition(90)),
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(70)),
+        new InstantCommand(() -> shooter.runRollers()),
+        new InstantCommand(() -> indexer.runKicker()),
+        new InstantCommand(() -> indexer.runIndexer())));
+    NamedCommands.registerCommand("SHOOT SEQUENCE AIM LEFT TRENCH", new SequentialCommandGroup(
+        new InstantCommand(() -> shooter.setRollerSpeedRPS(4500)),
+        new InstantCommand(() -> turret.setDesiredTurretPosition(100)),
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(60)),
+        new InstantCommand(() -> shooter.runRollers()),
+        new InstantCommand(() -> indexer.runKicker()),
+        new InstantCommand(() -> indexer.runIndexer())));
+    NamedCommands.registerCommand("SHOOT SEQUENCE AIM RIGHT TRENCH", new SequentialCommandGroup(
+        new InstantCommand(() -> shooter.setRollerSpeedRPS(4500)),
+        new InstantCommand(() -> turret.setDesiredTurretPosition(80)),
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(60)),
+        new InstantCommand(() -> shooter.runRollers()),
+        new InstantCommand(() -> indexer.runKicker()),
+        new InstantCommand(() -> indexer.runIndexer())));
+    NamedCommands.registerCommand("SHOOT SEQUENCE AIM STRAIGHT TRENCH", new SequentialCommandGroup( 
+        new InstantCommand(() -> shooter.setRollerSpeedRPS(4500)),
+        new InstantCommand(() -> turret.setDesiredTurretPosition(90)),
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(70)),
+        new InstantCommand(() -> shooter.runRollers()),
+        new InstantCommand(() -> indexer.runKicker()),
+        new InstantCommand(() -> indexer.runIndexer())));
+    NamedCommands.registerCommand("SHOOT SEQUENCE AUTO AIM FROM POSITION", new SequentialCommandGroup(
+        new ShootOnFlySequence(turret, shooter, () -> drivetrain.getState().Pose,
+            () -> drivetrain.getState().Pose.getRotation().getDegrees(), () -> drivetrain.getState().Speeds, isBlue,
+            lights),
+        new InstantCommand(() -> shooter.setRollerSpeedRPS(getShooterPower())),
+        new InstantCommand(() -> shooter.runRollers()),
+        new InstantCommand(() -> indexer.runKicker()),
+        new InstantCommand(() -> indexer.runIndexer())));
+    NamedCommands.registerCommand("SHOOT SEQUENCE FROM DEPOT", new SequentialCommandGroup(
+      new InstantCommand(() -> shooter.setRollerSpeedRPS(5000)),
+        new InstantCommand(() -> turret.setDesiredTurretPosition(90)),
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(55)),
+        new InstantCommand(() -> shooter.runRollers()),
+        new InstantCommand(() -> indexer.runKicker()),
+        new InstantCommand(() -> indexer.runIndexer()))
+    );
+    NamedCommands.registerCommand("SHOOT SEQUENCE FROM HP", new SequentialCommandGroup(
+      new InstantCommand(() -> shooter.setRollerSpeedRPS(5000)),
+        new InstantCommand(() -> turret.setDesiredTurretPosition(90)),
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(55)),
+        new InstantCommand(() -> shooter.runRollers()),
+        new InstantCommand(() -> indexer.runKicker()),
+        new InstantCommand(() -> indexer.runIndexer()))
+    );
 
     /* Auto chooser */
     autoChooser = AutoBuilder.buildAutoChooser(""); // TODO default auto name
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
     /* Field centric heading controller */
-    fieldCentricFacingAngle.HeadingController.setPID(2.0, 0.0001, 0.02); // TODO update drive pid
+    fieldCentricFacingAngle.HeadingController.setPID(2.0, 0.0001, 0.02);
 
-    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; // TODO robot.java limelight stuff
+    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; // TODO robot.java limelight stuff AND ODOMETRY
 
     zeroRobot();
 
@@ -345,20 +406,18 @@ public class RobotContainer extends SubsystemBase {
 
     driverController.rightTrigger().whileTrue(
         new RepeatCommand(
-          new SequentialCommandGroup(
-            new InstantCommand(() -> shooter.setRollerSpeedRPS(getShooterPower())),
-            new InstantCommand(() -> shooter.runRollers()),
-            new InstantCommand(() -> indexer.runKicker()),
-            new WaitCommand(0.5),
-            new InstantCommand(() -> indexer.runIndexer())
-        )).finallyDo(
-              (b)->{
-                shooter.stopRollers();
-                indexer.stopIndexer();
-                indexer.stopKicker();
-              }
-            )
-        );
+            new SequentialCommandGroup(
+                new InstantCommand(() -> shooter.setRollerSpeedRPS(getShooterPower())),
+                new InstantCommand(() -> shooter.runRollers()),
+                new InstantCommand(() -> indexer.runKicker()),
+                new WaitCommand(0.5),
+                new InstantCommand(() -> indexer.runIndexer())))
+            .finallyDo(
+                (b) -> {
+                  shooter.stopRollers();
+                  indexer.stopIndexer();
+                  indexer.stopKicker();
+                }));
 
     driverController.leftBumper().onTrue(
         new InstantCommand(() -> {
@@ -376,32 +435,28 @@ public class RobotContainer extends SubsystemBase {
         new InstantCommand(() -> intake.stopRollers()));
 
     RepeatCommand aimTurret = new RepeatCommand(
-      new InstantCommand(()->new ShootOnFlySequence(turret, shooter, () -> drivetrain.getState().Pose,
+        new ShootOnFlySequence(turret, shooter, () -> drivetrain.getState().Pose,
             () -> drivetrain.getState().Pose.getRotation().getDegrees(), () -> drivetrain.getState().Speeds, isBlue,
-            lights))
-    );
+            lights));
 
     driverController.rightBumper().onTrue(
-      new SequentialCommandGroup(
-        new InstantCommand(()->turretActive = !turretActive),
-        new ConditionalCommand(aimTurret, new InstantCommand(), ()->turretActive)
-      )
-    );
+        new SequentialCommandGroup(
+            new InstantCommand(() -> turretActive = !turretActive),
+            new ConditionalCommand(aimTurret, new InstantCommand(), () -> turretActive)));
 
     driverController.povRight().onTrue(
-      new GoHomeSequence(turret, intake, climb, shooter, indexer, lights)
-    );
+        new GoHomeSequence(turret, intake, climb, shooter, indexer, lights));
 
     driverController.povLeft().onTrue(
-      new FeedSequence(turret, ()->drivetrain.getState().Pose.getRotation().getDegrees(), isBlue, driverController.povLeft())
-    );
+        new FeedSequence(turret, () -> drivetrain.getState().Pose.getRotation().getDegrees(), isBlue,
+            driverController.povLeft()));
   }
 
   private void configureOperatorBindings() {
     operatorController.a().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
 
     operatorController.start().onTrue(
-      new InstantCommand(() -> {
+        new InstantCommand(() -> {
           var driveState = drivetrain.getState();
           double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
 
@@ -413,91 +468,76 @@ public class RobotContainer extends SubsystemBase {
                 Rotation2d.fromDegrees(llMeasurement.pose.getRotation().getDegrees() + 180)));
             desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
           }
-        })
-    );
+        }));
 
     operatorController.povUp().onTrue(
-      new InstantCommand(()->climb.setDesiredPosition(Climb.ClimbHeight.PREP))
-    );
+        new InstantCommand(() -> climb.setDesiredPosition(Climb.ClimbHeight.PREP)));
 
     operatorController.povDown().onTrue(
-      new InstantCommand(()->climb.setDesiredPosition(Climb.ClimbHeight.HOME))
-    );
+        new InstantCommand(() -> climb.setDesiredPosition(Climb.ClimbHeight.HOME)));
 
     operatorController.b().onTrue(
-      new SequentialCommandGroup(
-        new InstantCommand(()->{
-        shooter.stopRollers();
-        indexer.reverseIndexer();
-        indexer.reverseKicker();
-      }),
-      new WaitCommand(0.5),
-      new InstantCommand(()->{
-        indexer.stopIndexer();
-        indexer.stopKicker();
-      })
-      )
-    );
+        new SequentialCommandGroup(
+            new InstantCommand(() -> {
+              shooter.stopRollers();
+              indexer.reverseIndexer();
+              indexer.reverseKicker();
+            }),
+            new WaitCommand(0.5),
+            new InstantCommand(() -> {
+              indexer.stopIndexer();
+              indexer.stopKicker();
+            })));
 
     operatorController.povLeft().onTrue(
-      new InstantCommand(()->turret.turretDesiredPositionDeg-=10)
-    );
+        new InstantCommand(() -> turret.turretDesiredPositionDeg -= 10));
 
     operatorController.povLeft().onTrue(
-      new InstantCommand(()->turret.turretDesiredPositionDeg+=10)
-    );
+        new InstantCommand(() -> turret.turretDesiredPositionDeg += 10));
 
     operatorController.a().onTrue(
-      new InstantCommand(()->shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg-=3))
-    );
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg -= 3)));
 
     operatorController.y().onTrue(
-      new InstantCommand(()->shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg+=3))
-    );
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg += 3)));
 
     operatorController.leftTrigger().onTrue(
-      new SequentialCommandGroup(
-        new InstantCommand(()->intake.reverseRollers()),
-        new WaitCommand(0.5),
-        new InstantCommand(()->intake.stopRollers())
-      )
-    );
+        new SequentialCommandGroup(
+            new InstantCommand(() -> intake.reverseRollers()),
+            new WaitCommand(0.5),
+            new InstantCommand(() -> intake.stopRollers())));
 
     operatorController.rightTrigger().whileTrue(
         new RepeatCommand(
-          new SequentialCommandGroup(
-            new InstantCommand(() -> shooter.setRollerSpeedRPS(3800)),
-            new InstantCommand(() -> shooter.setDesiredHoodPosition(70)),
-            new InstantCommand(() -> shooter.runRollers()),
-            new InstantCommand(() -> indexer.runKicker()),
-            new WaitCommand(0.5),
-            new InstantCommand(() -> indexer.runIndexer())
-        )).finallyDo(
-              (b)->{
-                shooter.stopRollers();
-                indexer.stopIndexer();
-                indexer.stopKicker();
-              }
-            )
-        );
+            new SequentialCommandGroup(
+                new InstantCommand(() -> shooter.setRollerSpeedRPS(3800)),
+                new InstantCommand(() -> shooter.setDesiredHoodPosition(70)),
+                new InstantCommand(() -> shooter.runRollers()),
+                new InstantCommand(() -> indexer.runKicker()),
+                new WaitCommand(0.5),
+                new InstantCommand(() -> indexer.runIndexer())))
+            .finallyDo(
+                (b) -> {
+                  shooter.stopRollers();
+                  indexer.stopIndexer();
+                  indexer.stopKicker();
+                }));
 
     operatorController.rightBumper().whileTrue(
-      new RepeatCommand(
-          new SequentialCommandGroup(
-            new InstantCommand(() -> shooter.setRollerSpeedRPS(4500)),
-            new InstantCommand(() -> shooter.setDesiredHoodPosition(60)),
-            new InstantCommand(() -> shooter.runRollers()),
-            new InstantCommand(() -> indexer.runKicker()),
-            new WaitCommand(0.5),
-            new InstantCommand(() -> indexer.runIndexer())
-        )).finallyDo(
-              (b)->{
-                shooter.stopRollers();
-                indexer.stopIndexer();
-                indexer.stopKicker();
-              }
-            )
-    );
+        new RepeatCommand(
+            new SequentialCommandGroup(
+                new InstantCommand(() -> shooter.setRollerSpeedRPS(4500)),
+                new InstantCommand(() -> shooter.setDesiredHoodPosition(60)),
+                new InstantCommand(() -> shooter.runRollers()),
+                new InstantCommand(() -> indexer.runKicker()),
+                new WaitCommand(0.5),
+                new InstantCommand(() -> indexer.runIndexer())))
+            .finallyDo(
+                (b) -> {
+                  shooter.stopRollers();
+                  indexer.stopIndexer();
+                  indexer.stopKicker();
+                }));
   }
 
   public double getShooterPower() {
@@ -509,7 +549,7 @@ public class RobotContainer extends SubsystemBase {
       target = new Translation2d(12.0, 4.0);
     }
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
-    return powerRpm + 825*dist;
+    return powerRpm + 825 * dist;
   }
 
   private void configureDebugBindings() {
