@@ -76,14 +76,14 @@ public class Turret extends SubsystemBase {
     private boolean holding = true;
 
     private void controlTurretPosition() {
-        double errorDeg = Math.abs(turretDesiredPositionDeg - (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO);
+        double errorDeg = turretDesiredPositionDeg - (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO;
         if(holding){
-            if(errorDeg > 5.0){
+            if(Math.abs(errorDeg) > 5.0){
                 holding = false;
             }
         }
         else{
-            if(errorDeg < 2.0){
+            if(Math.abs(errorDeg) < 2.0){
                 holding = true;
             }
         }
@@ -92,7 +92,7 @@ public class Turret extends SubsystemBase {
             turretMotor.set(0.0);
         }
         else{
-            turretMotor.set(Math.signum(errorDeg)*MathUtil.clamp(0.11 + errorDeg*0.001, 0.11, 0.22));
+            turretMotor.set(Math.signum(errorDeg)*MathUtil.clamp(0.11 + Math.abs(errorDeg)*0.001, 0.11, 0.22));
         }
         // TrapezoidProfile.State goal = new TrapezoidProfile.State(
         //     turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
