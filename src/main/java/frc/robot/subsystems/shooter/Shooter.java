@@ -1,5 +1,7 @@
 package frc.robot.subsystems.shooter;
 
+import java.util.function.DoubleSupplier;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
@@ -85,8 +87,8 @@ public class Shooter extends SubsystemBase {
         leftRollerMotor.set(0.0);
     }
 
-    public void setRollerSpeedRPS(double speedRPS) {
-        currentRollerSpeedRPS = Math.min(Math.max(speedRPS, 0.0), ShooterCal.ROLLERS_MAX_RPS);
+    public void setRollerSpeedRPS(DoubleSupplier speedRPS) {
+        currentRollerSpeedRPS = Math.min(Math.max(speedRPS.getAsDouble(), 0.0), ShooterCal.ROLLERS_MAX_RPS);
     }
 
     public double getRollerSpeedRPS() {
