@@ -167,8 +167,6 @@ public class RobotContainer extends SubsystemBase {
   // photonvision testing
   PhotonCamera camera = new PhotonCamera("photonvision");
 
-  /* Prep states */ // TODO this
-
   /**
    * The container for the robot. Contains subsystems, IO devices, and commands.
    */
@@ -184,7 +182,7 @@ public class RobotContainer extends SubsystemBase {
     shooter = new Shooter();
     turret = new Turret();
 
-    /* Named commands must be registered immediately */ // TODO this
+    /* Named commands must be registered immediately */
     NamedCommands.registerCommand("DEPLOY INTAKE",
         new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED)));
     NamedCommands.registerCommand("RUN INTAKE", new InstantCommand(() -> intake.runRollers()));
@@ -249,7 +247,7 @@ public class RobotContainer extends SubsystemBase {
     );
 
     /* Auto chooser */
-    autoChooser = AutoBuilder.buildAutoChooser(""); // TODO default auto name
+    autoChooser = AutoBuilder.buildAutoChooser("Mid");
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
     /* Field centric heading controller */
@@ -442,7 +440,7 @@ public class RobotContainer extends SubsystemBase {
     driverController.rightBumper().onTrue(
         new SequentialCommandGroup(
             new InstantCommand(() -> turretActive = !turretActive),
-            new ConditionalCommand(aimTurret, new InstantCommand(), () -> turretActive)));
+            new ConditionalCommand(aimTurret, new InstantCommand(()->aimTurret.cancel()), () -> turretActive)));
 
     driverController.povRight().onTrue(
         new GoHomeSequence(turret, intake, climb, shooter, indexer, lights));
@@ -496,10 +494,10 @@ public class RobotContainer extends SubsystemBase {
         new InstantCommand(() -> turret.turretDesiredPositionDeg += 10));
 
     operatorController.a().onTrue(
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg -= 3)));
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg -= 2)));
 
     operatorController.y().onTrue(
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg += 3)));
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg += 2)));
 
     operatorController.leftTrigger().onTrue(
         new SequentialCommandGroup(
