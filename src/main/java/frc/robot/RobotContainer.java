@@ -408,7 +408,6 @@ public class RobotContainer extends SubsystemBase {
                 new InstantCommand(() -> shooter.setRollerSpeedRPS(getShooterPower())),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
-                new WaitCommand(0.5),
                 new InstantCommand(() -> indexer.runIndexer())))
             .finallyDo(
                 (b) -> {
@@ -463,7 +462,7 @@ public class RobotContainer extends SubsystemBase {
             // drivetrain.addVisionMeasurement(llMeasurement.pose,
             // llMeasurement.timestampSeconds);
             drivetrain.resetPose(new Pose2d(llMeasurement.pose.getTranslation(),
-                Rotation2d.fromDegrees(llMeasurement.pose.getRotation().getDegrees() + 180)));
+                Rotation2d.fromDegrees(isBlue?llMeasurement.pose.getRotation().getDegrees() + 180:llMeasurement.pose.getRotation().getDegrees())));
             desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
           }
         }));
@@ -539,7 +538,7 @@ public class RobotContainer extends SubsystemBase {
   }
 
   public double getShooterPower() {
-    double powerRpm = 3800;
+    double powerRpm = 4000;
     Translation2d target = new Translation2d();
     if (isBlue) {
       target = new Translation2d(4.0, 4.0);
@@ -547,7 +546,7 @@ public class RobotContainer extends SubsystemBase {
       target = new Translation2d(12.0, 4.0);
     }
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
-    return powerRpm + 825 * dist;
+    return powerRpm + 875 * dist;
   }
 
   private void configureDebugBindings() {

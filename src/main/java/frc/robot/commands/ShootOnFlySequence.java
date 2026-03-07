@@ -20,7 +20,10 @@ public class ShootOnFlySequence extends SequentialCommandGroup{
 
     public ShootOnFlySequence(Turret turret, Shooter shooter, Supplier<Pose2d> robotPoseSupplier, Supplier<Double> headingSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier, boolean isBlue, Lights lights){
         addRequirements(shooter, turret);
-
+        double heading = headingSupplier.get();
+        if(heading < 0){
+            heading += 360;
+        }
         addCommands(
             new RepeatCommand(
                 new SequentialCommandGroup(
