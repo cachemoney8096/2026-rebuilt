@@ -63,17 +63,27 @@ public class ShootOnMoveUtil {
         double angle = Math.toDegrees(Math.atan2(difference.getY(), difference.getX()));
 
         // Calculate the turret angle and pitch
-        double headingDifference = 180 - (angle - heading + turretRangeDeg/2);
+        System.out.println(difference.getY() < 0.0);
+        double headingDifference = 180 - (angle + ((difference.getY() < 0.0 & !isBlue) ? heading : -heading) + turretRangeDeg/2);
+        // double headingDifference = 0;
+        // if (!isBlue) {
+        //     if (difference.getX() > 0) {
+        //         headingDifference = 90+angle;
+        //     }
+        //     else {
+        //         headingDifference = 270-angle;
+        //     }
+        // }
         shooterData = ShooterPitchCalcUtil.calculate(shootSpeedMPS, new Pair<Double, Double>(distance, heightDifferenceM));
         return new Pair<Double, Double>(Math.toDegrees(shooterData.getSecond())*cpitch, headingDifference*cdeg);
     }
 
     // Tester (ballparked numbers seem fine, can always use constants to tune)
     public static void main(String args[]){
-        boolean isBlue = true;
-        Pose2d robotPose = new Pose2d(1.0, 1.0, new Rotation2d());
+        boolean isBlue = false;
+        Pose2d robotPose = new Pose2d(16.5, 3.0, new Rotation2d());
         ChassisSpeeds speeds = new ChassisSpeeds(0.0, 0.0, 0.0);
-        double heading = 0.0;
+        double heading = 180.0;
 
         Pair<Double, Double> calcResult = calcTurret(isBlue, robotPose, speeds, heading);
         System.out.println("Pitch: " + calcResult.getFirst());
