@@ -54,6 +54,7 @@ import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.ShootOnMoveUtil;
+import frc.robot.utils.ShooterPitchPower;
 import frc.robot.commands.*;
 
 import java.util.function.BiConsumer;
@@ -193,58 +194,9 @@ public class RobotContainer extends SubsystemBase {
       indexer.stopIndexer();
       indexer.stopKicker();
     }));
-    NamedCommands.registerCommand("SHOOT SEQUENCE AIM FORWARD CLOSE", new SequentialCommandGroup(
-        new InstantCommand(() -> shooter.setRollerSpeedRPS(()->3800)),
-        new InstantCommand(() -> turret.setDesiredTurretPosition(90)),
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(70)),
-        new InstantCommand(() -> shooter.runRollers()),
-        new InstantCommand(() -> indexer.runKicker()),
-        new InstantCommand(() -> indexer.runIndexer())));
-    NamedCommands.registerCommand("SHOOT SEQUENCE AIM LEFT TRENCH", new SequentialCommandGroup(
-        new InstantCommand(() -> shooter.setRollerSpeedRPS(()->4500)),
-        new InstantCommand(() -> turret.setDesiredTurretPosition(100)),
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(60)),
-        new InstantCommand(() -> shooter.runRollers()),
-        new InstantCommand(() -> indexer.runKicker()),
-        new InstantCommand(() -> indexer.runIndexer())));
-    NamedCommands.registerCommand("SHOOT SEQUENCE AIM RIGHT TRENCH", new SequentialCommandGroup(
-        new InstantCommand(() -> shooter.setRollerSpeedRPS(()->4500)),
-        new InstantCommand(() -> turret.setDesiredTurretPosition(80)),
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(60)),
-        new InstantCommand(() -> shooter.runRollers()),
-        new InstantCommand(() -> indexer.runKicker()),
-        new InstantCommand(() -> indexer.runIndexer())));
-    NamedCommands.registerCommand("SHOOT SEQUENCE AIM STRAIGHT TRENCH", new SequentialCommandGroup( 
-        new InstantCommand(() -> shooter.setRollerSpeedRPS(()->4500)),
-        new InstantCommand(() -> turret.setDesiredTurretPosition(90)),
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(70)),
-        new InstantCommand(() -> shooter.runRollers()),
-        new InstantCommand(() -> indexer.runKicker()),
-        new InstantCommand(() -> indexer.runIndexer())));
-    NamedCommands.registerCommand("SHOOT SEQUENCE AUTO AIM FROM POSITION", new SequentialCommandGroup(
-        new ShootOnFlySequence(turret, shooter, () -> drivetrain.getState().Pose,
-            () -> drivetrain.getState().Pose.getRotation().getDegrees(), () -> drivetrain.getState().Speeds, isBlue,
-            lights),
-        new InstantCommand(() -> shooter.setRollerSpeedRPS(this::getShooterPower)),
-        new InstantCommand(() -> shooter.runRollers()),
-        new InstantCommand(() -> indexer.runKicker()),
-        new InstantCommand(() -> indexer.runIndexer())));
-    NamedCommands.registerCommand("SHOOT SEQUENCE FROM DEPOT", new SequentialCommandGroup(
-      new InstantCommand(() -> shooter.setRollerSpeedRPS(()->5000)),
-        new InstantCommand(() -> turret.setDesiredTurretPosition(90)),
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(55)),
-        new InstantCommand(() -> shooter.runRollers()),
-        new InstantCommand(() -> indexer.runKicker()),
-        new InstantCommand(() -> indexer.runIndexer()))
-    );
-    NamedCommands.registerCommand("SHOOT SEQUENCE FROM HP", new SequentialCommandGroup(
-      new InstantCommand(() -> shooter.setRollerSpeedRPS(()->5000)),
-        new InstantCommand(() -> turret.setDesiredTurretPosition(90)),
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(55)),
-        new InstantCommand(() -> shooter.runRollers()),
-        new InstantCommand(() -> indexer.runKicker()),
-        new InstantCommand(() -> indexer.runIndexer()))
-    );
+    // TODO REDO NAMEDCOMMANDS BASED ON MONDAY TESTING
+
+    ShooterPitchPower.init();
 
     /* Auto chooser */
     autoChooser = AutoBuilder.buildAutoChooser("Mid");
@@ -406,6 +358,7 @@ public class RobotContainer extends SubsystemBase {
         new RepeatCommand(
             new SequentialCommandGroup(
                 new InstantCommand(() -> shooter.setRollerSpeedRPS(this::getShooterPower)),
+                new InstantCommand(() -> shooter.setDesiredHoodPosition(this::getShooterPitch)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
                 new InstantCommand(() -> indexer.runIndexer())))
@@ -436,10 +389,9 @@ public class RobotContainer extends SubsystemBase {
             () -> drivetrain.getState().Pose.getRotation().getDegrees(), () -> drivetrain.getState().Speeds, isBlue,
             lights));
 
-    driverController.rightBumper().onTrue(
-        new SequentialCommandGroup(
-            new InstantCommand(() -> turretActive = !turretActive),
-            new ConditionalCommand(aimTurret, new InstantCommand(()->aimTurret.cancel()), () -> turretActive)));
+    driverController.rightBumper().whileTrue(
+      aimTurret
+    );
 
     driverController.povRight().onTrue(
         new GoHomeSequence(turret, intake, climb, shooter, indexer, lights));
@@ -462,16 +414,10 @@ public class RobotContainer extends SubsystemBase {
             // drivetrain.addVisionMeasurement(llMeasurement.pose,
             // llMeasurement.timestampSeconds);
             drivetrain.resetPose(new Pose2d(llMeasurement.pose.getTranslation(),
-                Rotation2d.fromDegrees(isBlue?llMeasurement.pose.getRotation().getDegrees():llMeasurement.pose.getRotation().getDegrees())));
+                Rotation2d.fromDegrees(isBlue?llMeasurement.pose.getRotation().getDegrees():llMeasurement.pose.getRotation().getDegrees()+180)));
             desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
           }
         }));
-
-    operatorController.povUp().onTrue(
-        new InstantCommand(() -> climb.setDesiredPosition(Climb.ClimbHeight.PREP)));
-
-    operatorController.povDown().onTrue(
-        new InstantCommand(() -> climb.setDesiredPosition(Climb.ClimbHeight.HOME)));
 
     operatorController.b().onTrue(
         new SequentialCommandGroup(
@@ -492,11 +438,35 @@ public class RobotContainer extends SubsystemBase {
     operatorController.povLeft().onTrue(
         new InstantCommand(() -> turret.turretDesiredPositionDeg += 10));
 
+    // operatorController.povUp().onTrue(
+    //     new InstantCommand(() -> climb.setDesiredPosition(Climb.ClimbHeight.PREP)));
+
+    // operatorController.povDown().onTrue(
+    //     new InstantCommand(() -> climb.setDesiredPosition(Climb.ClimbHeight.HOME)));
+    operatorController.povUp().onTrue(
+        new InstantCommand(() -> shooter.setRollerSpeedRPS(()->shooter.currentRollerSpeedRPM+100)));
+
+    operatorController.povDown().onTrue(
+        new InstantCommand(() -> shooter.setRollerSpeedRPS(()->shooter.currentRollerSpeedRPM-100)));
+
     operatorController.a().onTrue(
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg -= 2)));
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(()->shooter.hoodDesiredPositionDeg - 1)));
 
     operatorController.y().onTrue(
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(shooter.hoodDesiredPositionDeg += 2)));
+        new InstantCommand(() -> shooter.setDesiredHoodPosition(()->shooter.hoodDesiredPositionDeg + 1)));
+
+    operatorController.leftBumper().whileTrue(
+        new RepeatCommand(
+            new SequentialCommandGroup(
+                new InstantCommand(() -> shooter.runRollers()),
+                new InstantCommand(() -> indexer.runKicker()),
+                new InstantCommand(() -> indexer.runIndexer())))
+            .finallyDo(
+                (b) -> {
+                  shooter.stopRollers();
+                  indexer.stopIndexer();
+                  indexer.stopKicker();
+                }));
 
     operatorController.leftTrigger().onTrue(
         new SequentialCommandGroup(
@@ -508,7 +478,7 @@ public class RobotContainer extends SubsystemBase {
         new RepeatCommand(
             new SequentialCommandGroup(
                 new InstantCommand(() -> shooter.setRollerSpeedRPS(()->3800)),
-                new InstantCommand(() -> shooter.setDesiredHoodPosition(70)),
+                new InstantCommand(() -> shooter.setDesiredHoodPosition(()->70)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
                 new WaitCommand(0.5),
@@ -524,7 +494,7 @@ public class RobotContainer extends SubsystemBase {
         new RepeatCommand(
             new SequentialCommandGroup(
                 new InstantCommand(() -> shooter.setRollerSpeedRPS(()->4500)),
-                new InstantCommand(() -> shooter.setDesiredHoodPosition(60)),
+                new InstantCommand(() -> shooter.setDesiredHoodPosition(()->60)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
                 new WaitCommand(0.5),
@@ -538,8 +508,6 @@ public class RobotContainer extends SubsystemBase {
   }
 
   public double getShooterPower() {
-    double powerRpm = 2700;
-    
     Translation2d target = new Translation2d();
     if (isBlue) {
       target = new Translation2d(4.0, 4.0);
@@ -547,7 +515,18 @@ public class RobotContainer extends SubsystemBase {
       target = new Translation2d(12.0, 4.0);
     }
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
-    return Math.min(powerRpm + 400 * dist, 6000);
+    return ShooterPitchPower.getPower(dist);
+  }
+
+  public double getShooterPitch() {
+    Translation2d target = new Translation2d();
+    if (isBlue) {
+      target = new Translation2d(4.0, 4.0);
+    } else {
+      target = new Translation2d(12.0, 4.0);
+    }
+    double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
+    return ShooterPitchPower.getPitch(dist);
   }
 
   private void configureDebugBindings() {

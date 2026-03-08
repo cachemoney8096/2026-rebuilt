@@ -80,10 +80,10 @@ public class ShootOnMoveUtil {
 
     // Tester (ballparked numbers seem fine, can always use constants to tune)
     public static void main(String args[]){
-        boolean isBlue = false;
-        Pose2d robotPose = new Pose2d(16.5, 3.0, new Rotation2d());
+        boolean isBlue = true;
+        Pose2d robotPose = new Pose2d(1.0, 4.0, new Rotation2d());
         ChassisSpeeds speeds = new ChassisSpeeds(0.0, 0.0, 0.0);
-        double heading = 180.0;
+        double heading = 0.0;
 
         Pair<Double, Double> calcResult = calcTurret(isBlue, robotPose, speeds, heading);
         System.out.println("Pitch: " + calcResult.getFirst());

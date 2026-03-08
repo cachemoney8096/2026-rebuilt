@@ -22,7 +22,7 @@ public class GoHomeSequence extends SequentialCommandGroup{
         addRequirements(turret, intake, climb, shooter, indexer);
         addCommands(
             new InstantCommand(() -> lights.setLEDColor(LightCode.HOMING)),
-            new InstantCommand(() -> shooter.setDesiredHoodPosition(ShooterCal.HOOD_HOME_DEGREES)),
+            new InstantCommand(() -> shooter.setDesiredHoodPosition(()->ShooterCal.HOOD_HOME_DEGREES)),
             new InstantCommand(() -> intake.stopRollers()),
             new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.HOME)),
             new InstantCommand(() -> climb.setDesiredPosition(ClimbHeight.HOME)),

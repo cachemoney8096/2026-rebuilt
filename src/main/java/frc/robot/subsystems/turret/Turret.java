@@ -92,7 +92,7 @@ public class Turret extends SubsystemBase {
             turretMotor.set(0.0);
         }
         else{
-            turretMotor.set(Math.signum(errorDeg)*MathUtil.clamp(0.15 + Math.abs(errorDeg)*0.005, 0.15, 0.22));
+            turretMotor.set(Math.signum(errorDeg)*MathUtil.clamp(0.13 + Math.abs(errorDeg)*0.001, 0.13, 0.20));
         }
         // TrapezoidProfile.State goal = new TrapezoidProfile.State(
         //     turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);

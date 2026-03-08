@@ -27,7 +27,7 @@ public class Shooter extends SubsystemBase {
     private final TalonFX leftRollerMotor = new TalonFX(RobotMap.SHOOTER_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
     private final TalonFX rightRollerMotor = new TalonFX(RobotMap.SHOOTER_RIGHT_ROLLER_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
 
-    private double currentRollerSpeedRPS = 0.0;
+    public double currentRollerSpeedRPM = 0.0; 
 
     public Shooter() {
         initTalons();
@@ -75,12 +75,12 @@ public class Shooter extends SubsystemBase {
         hoodDesiredPositionDeg = ShooterCal.HOOD_HOME_DEGREES;
     }
 
-    public void setDesiredHoodPosition(double newPositionDegrees) {
-        hoodDesiredPositionDeg = Math.min(Math.max(50+(70-newPositionDegrees), ShooterCal.HOOD_MIN_DEGREES), ShooterCal.HOOD_MAX_DEGREES);
+    public void setDesiredHoodPosition(DoubleSupplier newPositionDegrees) {
+        hoodDesiredPositionDeg = Math.min(Math.max(45+(70-newPositionDegrees.getAsDouble()), ShooterCal.HOOD_MIN_DEGREES), ShooterCal.HOOD_MAX_DEGREES);
     }
 
     public void runRollers() {
-        leftRollerMotor.set(currentRollerSpeedRPS / ShooterCal.ROLLERS_MAX_RPS);
+        leftRollerMotor.set(currentRollerSpeedRPM / ShooterCal.ROLLERS_MAX_RPS);
     }
 
     public void stopRollers() {
@@ -88,11 +88,11 @@ public class Shooter extends SubsystemBase {
     }
 
     public void setRollerSpeedRPS(DoubleSupplier speedRPS) {
-        currentRollerSpeedRPS = Math.min(Math.max(speedRPS.getAsDouble(), 0.0), ShooterCal.ROLLERS_MAX_RPS);
+        currentRollerSpeedRPM = Math.min(Math.max(speedRPS.getAsDouble(), 0.0), ShooterCal.ROLLERS_MAX_RPS);
     }
 
     public double getRollerSpeedRPS() {
-        return currentRollerSpeedRPS;
+        return currentRollerSpeedRPM;
     }
 
     public boolean atDesiredHoodPosition() {
@@ -148,5 +148,7 @@ public class Shooter extends SubsystemBase {
         
         builder.addDoubleProperty("Left Roller Amperage (amps)", () -> leftRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
         builder.addDoubleProperty("Right Roller Amperage (amps)", () -> rightRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
+
+        builder.addDoubleProperty("Shooter set roller speed rpm", ()->currentRollerSpeedRPM, null);
     }
 }

@@ -27,7 +27,7 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
-  public static boolean kUseLimelight = true;
+  public static boolean kUseLimelight = false;
 
   /**
    * This function is run when the robot is first started up and should be used
@@ -74,10 +74,8 @@ public class Robot extends TimedRobot {
       var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-turret");
       if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
         m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
-        m_robotContainer.drivetrain.resetPose(llMeasurement.pose);
         m_robotContainer.desiredHeadingDeg = m_robotContainer.drivetrain.getState().Pose.getRotation().getDegrees();
       }
-      kUseLimelight = false;
     }
   }
 

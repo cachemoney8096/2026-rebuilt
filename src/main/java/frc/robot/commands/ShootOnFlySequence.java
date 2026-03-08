@@ -29,7 +29,7 @@ public class ShootOnFlySequence extends SequentialCommandGroup{
                 new SequentialCommandGroup(
                     new InstantCommand(() -> {
                     Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(isBlue, robotPoseSupplier.get(), chassisSpeedsSupplier.get(), headingSupplier.get());
-                    shooter.setDesiredHoodPosition(results.getFirst());
+                    //shooter.setDesiredHoodPosition(results.getFirst());
                     turret.setDesiredTurretPosition(results.getSecond());
                 }),
                 new ConditionalCommand(

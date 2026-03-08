@@ -22,7 +22,7 @@ public class HoodAlignmentSequence extends SequentialCommandGroup{
             new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNING)),
             new InstantCommand(() -> {
                 Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(isBlue, robotPoseSupplier.get(), chassisSpeedsSupplier.get(), headingSupplier.get());
-                shooter.setDesiredHoodPosition(results.getFirst());
+                shooter.setDesiredHoodPosition(()->results.getFirst());
             }),
             new WaitUntilCommand(shooter::atDesiredHoodPosition),
             new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNED))
