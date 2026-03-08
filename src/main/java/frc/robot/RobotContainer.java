@@ -507,26 +507,32 @@ public class RobotContainer extends SubsystemBase {
                 }));
   }
 
-  public double getShooterPower() {
+  public Translation2d getTarget(){
     Translation2d target = new Translation2d();
     if (isBlue) {
       target = new Translation2d(4.0, 4.0);
     } else {
       target = new Translation2d(12.0, 4.0);
     }
+    return target;
+  }
+
+  public double getShooterPower() {
+    Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
     return ShooterPitchPower.getPower(dist);
   }
 
   public double getShooterPitch() {
-    Translation2d target = new Translation2d();
-    if (isBlue) {
-      target = new Translation2d(4.0, 4.0);
-    } else {
-      target = new Translation2d(12.0, 4.0);
-    }
+    Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
     return ShooterPitchPower.getPitch(dist);
+  }
+
+  public double getDistance(){
+    Translation2d target = getTarget();
+    double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
+    return dist;
   }
 
   private void configureDebugBindings() {
@@ -626,5 +632,6 @@ public class RobotContainer extends SubsystemBase {
         () -> ShootOnMoveUtil
             .calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond(),
         null);
+    builder.addDoubleProperty("distance to target", this::getDistance, null);
   }
 }
