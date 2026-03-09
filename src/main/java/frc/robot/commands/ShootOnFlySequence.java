@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.Pair;
@@ -18,26 +19,25 @@ import frc.robot.subsystems.lights.Lights.LightCode;
 public class ShootOnFlySequence extends SequentialCommandGroup{
     
 
-    public ShootOnFlySequence(Turret turret, Shooter shooter, Supplier<Pose2d> robotPoseSupplier, Supplier<Double> headingSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier, boolean isBlue, Lights lights){
+    public ShootOnFlySequence(Turret turret, Shooter shooter, Supplier<Pose2d> robotPoseSupplier, Supplier<Double> headingSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier, BooleanSupplier isBlue, Lights lights){
         addRequirements(shooter, turret);
         double heading = headingSupplier.get();
         if(heading < 0){
             heading += 360;
         }
         addCommands(
-            new RepeatCommand(
                 new SequentialCommandGroup(
                     new InstantCommand(() -> {
-                    Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(isBlue, robotPoseSupplier.get(), chassisSpeedsSupplier.get(), headingSupplier.get());
+                    Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(isBlue.getAsBoolean(), robotPoseSupplier.get(), chassisSpeedsSupplier.get(), headingSupplier.get());
                     //shooter.setDesiredHoodPosition(results.getFirst());
                     turret.setDesiredTurretPosition(results.getSecond());
                 }),
                 new ConditionalCommand(
                     new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNED)),
                     new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNING)),
-                    (() -> shooter.atDesiredHoodPosition() & turret.atDesiredTurretPosition()))
+                    (() -> shooter.atDesiredHoodPosition() & turret.atDesiredTurretPosition())
                 )
-            ).finallyDo(() -> lights.setLEDColor(LightCode.HOME))
+            )
         );
     }
 }

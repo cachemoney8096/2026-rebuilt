@@ -127,7 +127,7 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
-        // controlTurretPosition();
+        controlTurretPosition();
     }
 
     @Override

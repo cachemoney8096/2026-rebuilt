@@ -63,17 +63,12 @@ public class ShootOnMoveUtil {
         double angle = Math.toDegrees(Math.atan2(difference.getY(), difference.getX()));
 
         // Calculate the turret angle and pitch
-        System.out.println(difference.getY() < 0.0);
-        double headingDifference = 180 - (angle + ((difference.getY() < 0.0 & !isBlue) ? heading : -heading) + turretRangeDeg/2);
-        // double headingDifference = 0;
-        // if (!isBlue) {
-        //     if (difference.getX() > 0) {
-        //         headingDifference = 90+angle;
-        //     }
-        //     else {
-        //         headingDifference = 270-angle;
-        //     }
-        // }
+        // double headingDifference = 180 - (angle + ((difference.getY() < 0.0 & !isBlue) ? heading : -heading) + turretRangeDeg/2);
+        double headingDifference = (isBlue?(90 - angle):(90 + angle))-robotPose.getRotation().getDegrees();
+        if(isBlue){
+            headingDifference = Math.abs(180-headingDifference);
+        }
+        headingDifference = 180-headingDifference;
         shooterData = ShooterPitchCalcUtil.calculate(shootSpeedMPS, new Pair<Double, Double>(distance, heightDifferenceM));
         return new Pair<Double, Double>(Math.toDegrees(shooterData.getSecond())*cpitch, headingDifference*cdeg);
     }

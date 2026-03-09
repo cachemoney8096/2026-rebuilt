@@ -358,15 +358,28 @@ public class RobotContainer extends SubsystemBase {
         new RepeatCommand(
             new SequentialCommandGroup(
                 new InstantCommand(() -> shooter.setRollerSpeedRPS(this::getShooterPower)),
-                new InstantCommand(() -> shooter.setDesiredHoodPosition(this::getShooterPitch)),
+                new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitch)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
-                new InstantCommand(() -> indexer.runIndexer())))
+                new InstantCommand(() -> indexer.runIndexer()),
+                new InstantCommand(()-> {
+                  intake.runRollers();
+                  if(intake.slapdownDesiredPosition == IntakePosition.EXTENDED && intake.atDesiredSlapdownPosition()){
+                    intake.setDesiredSlapdownPosition(IntakePosition.SHOOTING);
+                  }
+                  else if(intake.slapdownDesiredPosition == IntakePosition.SHOOTING && intake.atDesiredSlapdownPosition()){
+                    intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED);
+                  }
+                })
+              )
+            )
             .finallyDo(
                 (b) -> {
                   shooter.stopRollers();
                   indexer.stopIndexer();
                   indexer.stopKicker();
+                  intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED);
+                  intake.stopRollers();
                 }));
 
     driverController.leftBumper().onTrue(
@@ -386,7 +399,7 @@ public class RobotContainer extends SubsystemBase {
 
     RepeatCommand aimTurret = new RepeatCommand(
         new ShootOnFlySequence(turret, shooter, () -> drivetrain.getState().Pose,
-            () -> drivetrain.getState().Pose.getRotation().getDegrees(), () -> drivetrain.getState().Speeds, isBlue,
+            () -> drivetrain.getState().Pose.getRotation().getDegrees(), () -> drivetrain.getState().Speeds, ()->isBlue,
             lights));
 
     driverController.rightBumper().whileTrue(
@@ -402,7 +415,7 @@ public class RobotContainer extends SubsystemBase {
   }
 
   private void configureOperatorBindings() {
-    operatorController.a().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
+    //operatorController.a().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
 
     operatorController.start().onTrue(
         new InstantCommand(() -> {
@@ -450,10 +463,10 @@ public class RobotContainer extends SubsystemBase {
         new InstantCommand(() -> shooter.setRollerSpeedRPS(()->shooter.currentRollerSpeedRPM-100)));
 
     operatorController.a().onTrue(
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(()->shooter.hoodDesiredPositionDeg - 1)));
+        new InstantCommand(() -> shooter.addHoodOneDeg()));
 
     operatorController.y().onTrue(
-        new InstantCommand(() -> shooter.setDesiredHoodPosition(()->shooter.hoodDesiredPositionDeg + 1)));
+        new InstantCommand(() -> shooter.subtractHoodOneDeg()));
 
     operatorController.leftBumper().whileTrue(
         new RepeatCommand(
@@ -490,21 +503,9 @@ public class RobotContainer extends SubsystemBase {
                   indexer.stopKicker();
                 }));
 
-    operatorController.rightBumper().whileTrue(
-        new RepeatCommand(
-            new SequentialCommandGroup(
-                new InstantCommand(() -> shooter.setRollerSpeedRPS(()->4500)),
-                new InstantCommand(() -> shooter.setDesiredHoodPosition(()->60)),
-                new InstantCommand(() -> shooter.runRollers()),
-                new InstantCommand(() -> indexer.runKicker()),
-                new WaitCommand(0.5),
-                new InstantCommand(() -> indexer.runIndexer())))
-            .finallyDo(
-                (b) -> {
-                  shooter.stopRollers();
-                  indexer.stopIndexer();
-                  indexer.stopKicker();
-                }));
+    operatorController.rightBumper().onTrue(
+      new InstantCommand(()->intake.setDesiredSlapdownPosition(IntakePosition.SHOOTING))
+    );
   }
 
   public Translation2d getTarget(){

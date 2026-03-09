@@ -34,7 +34,8 @@ public class Intake extends SubsystemBase {
 
     public enum IntakePosition {
         HOME,
-        EXTENDED
+        EXTENDED,
+        SHOOTING
     }
 
     public final TreeMap<IntakePosition, Double> intakePositions = new TreeMap<IntakePosition, Double>();
@@ -50,6 +51,7 @@ public class Intake extends SubsystemBase {
     private void initPositions() {
         intakePositions.put(IntakePosition.HOME, IntakeCal.INTAKE_POSITION_HOME_DEGREES);
         intakePositions.put(IntakePosition.EXTENDED, IntakeCal.INTAKE_POSITION_EXTENDED_DEGREES);
+        intakePositions.put(IntakePosition.SHOOTING, IntakeCal.INTAKE_POSITION_SHOOTING);
     }
 
     private void initTalons() {
@@ -118,7 +120,7 @@ public class Intake extends SubsystemBase {
     }
 
     public boolean atDesiredSlapdownPosition() {
-        return Math.abs(getRealPositionRotations() - slapdownPositionToMotorPosition(slapdownDesiredPosition)) < IntakeCal.SLAPDOWN_POSITION_MARGIN;
+        return Math.abs(slapdownMotor.getPosition().getValueAsDouble() - slapdownPositionToMotorPosition(slapdownDesiredPosition))*360 < IntakeCal.SLAPDOWN_POSITION_MARGIN;
     }
 
     private double slapdownPositionToMotorPosition(IntakePosition slapdownPosition)  {

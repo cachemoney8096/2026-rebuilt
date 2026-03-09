@@ -6,6 +6,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Test",
+      "request": "launch",
+      "mainClass": "frc.robot.utils.Test",
+      "projectName": "2026-rebuilt"
+    },
+    {
+      "type": "java",
       "name": "ShootOnMoveUtil",
       "request": "launch",
       "mainClass": "frc.robot.utils.ShootOnMoveUtil",
