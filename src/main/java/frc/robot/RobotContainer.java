@@ -397,22 +397,13 @@ public class RobotContainer extends SubsystemBase {
                 new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitch)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
-                new InstantCommand(() -> indexer.runIndexer()),
-                new InstantCommand(() -> {
-                  intake.runRollers();
-                  if (intake.slapdownDesiredPosition == IntakePosition.EXTENDED && intake.atDesiredSlapdownPosition()) {
-                    intake.setDesiredSlapdownPosition(IntakePosition.SHOOTING);
-                  } else if (intake.slapdownDesiredPosition == IntakePosition.SHOOTING
-                      && intake.atDesiredSlapdownPosition()) {
-                    intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED);
-                  }
-                })))
+                new InstantCommand(() -> indexer.runIndexer())
+              ))
             .finallyDo(
                 (b) -> {
                   shooter.stopRollers();
                   indexer.stopIndexer();
                   indexer.stopKicker();
-                  intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED);
                   intake.stopRollers();
                 }));
 
