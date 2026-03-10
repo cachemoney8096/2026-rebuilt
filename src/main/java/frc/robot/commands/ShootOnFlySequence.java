@@ -35,7 +35,7 @@ public class ShootOnFlySequence extends SequentialCommandGroup{
                 new ConditionalCommand(
                     new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNED)),
                     new InstantCommand(() -> lights.setLEDColor(LightCode.ALIGNING)),
-                    (() -> shooter.atDesiredHoodPosition() & turret.atDesiredTurretPosition())
+                    (() -> shooter.atDesiredHoodPosition() && turret.atDesiredTurretPosition())
                 )
             )
         );

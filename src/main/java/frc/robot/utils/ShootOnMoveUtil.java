@@ -64,7 +64,7 @@ public class ShootOnMoveUtil {
 
         // Calculate the turret angle and pitch
         // double headingDifference = 180 - (angle + ((difference.getY() < 0.0 & !isBlue) ? heading : -heading) + turretRangeDeg/2);
-        double headingDifference = (isBlue?(90 - angle):(90 + angle))-robotPose.getRotation().getDegrees();
+        double headingDifference = (isBlue?(90 - angle):(90 + angle))-heading; // TODO check this
         if(isBlue){
             headingDifference = Math.abs(180-headingDifference);
         }

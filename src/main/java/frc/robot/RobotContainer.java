@@ -14,6 +14,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -21,6 +22,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -30,6 +32,7 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -41,8 +44,6 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.GoHomeSequence;
-import frc.robot.commands.ShootOnFlySequence;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -50,6 +51,7 @@ import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakePosition;
 import frc.robot.subsystems.lights.Lights;
+import frc.robot.subsystems.lights.Lights.LightCode;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.utils.LimelightHelpers;
@@ -58,7 +60,9 @@ import frc.robot.utils.ShooterPitchPower;
 import frc.robot.commands.*;
 
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.photonvision.PhotonCamera;
@@ -182,19 +186,50 @@ public class RobotContainer extends SubsystemBase {
     lights = new Lights();
     shooter = new Shooter();
     turret = new Turret();
+    DoubleSupplier headingSupplier = () -> desiredHeadingDeg;
+    BooleanSupplier isBluBooleanSupplier = () -> isBlue;
+    Supplier<Pose2d> robotPoseSupplier = () -> drivetrain.getState().Pose;
+    Supplier<ChassisSpeeds> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
+    RunCommand aimTurret = new RunCommand(() -> {
+      double heading = headingSupplier.getAsDouble();
+      heading = MathUtil.inputModulus(heading, 0, 360);
+
+      Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(
+          isBluBooleanSupplier.getAsBoolean(),
+          robotPoseSupplier.get(),
+          chassisSpeedsSupplier.get(),
+          heading);
+
+      turret.setDesiredTurretPosition(results.getSecond());
+
+      if (shooter.atDesiredHoodPosition() && turret.atDesiredTurretPosition()) {
+        lights.setLEDColor(LightCode.ALIGNED);
+      } else {
+        lights.setLEDColor(LightCode.ALIGNING);
+      }
+
+    }, turret, shooter);
 
     /* Named commands must be registered immediately */
     NamedCommands.registerCommand("DEPLOY INTAKE",
         new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED)));
     NamedCommands.registerCommand("RUN INTAKE", new InstantCommand(() -> intake.runRollers()));
     NamedCommands.registerCommand("STOP INTAKE", new InstantCommand(() -> intake.stopRollers()));
-    NamedCommands.registerCommand("STOP SHOOT SEQUENCE", new InstantCommand(()->{
+    NamedCommands.registerCommand("SHOOT SEQUENCE", new InstantCommand(()->{
+
+    }));
+    NamedCommands.registerCommand("STOP SHOOT SEQUENCE", new InstantCommand(() -> {
       turret.setDesiredTurretPosition(90);
       shooter.stopRollers();
       indexer.stopIndexer();
       indexer.stopKicker();
     }));
-    // TODO REDO NAMEDCOMMANDS BASED ON MONDAY TESTING
+    NamedCommands.registerCommand("AIM TURRET", new InstantCommand(() -> {
+      CommandScheduler.getInstance().schedule(aimTurret);
+    }));
+    NamedCommands.registerCommand("STOP TURRET", new InstantCommand(()->{
+      CommandScheduler.getInstance().cancel(aimTurret);
+    }));
 
     ShooterPitchPower.init();
 
@@ -205,7 +240,8 @@ public class RobotContainer extends SubsystemBase {
     /* Field centric heading controller */
     fieldCentricFacingAngle.HeadingController.setPID(2.0, 0.0001, 0.02);
 
-    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; // TODO robot.java limelight stuff AND ODOMETRY
+    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; // TODO robot.java limelight stuff AND
+                                                                                 // ODOMETRY
 
     zeroRobot();
 
@@ -362,17 +398,15 @@ public class RobotContainer extends SubsystemBase {
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
                 new InstantCommand(() -> indexer.runIndexer()),
-                new InstantCommand(()-> {
+                new InstantCommand(() -> {
                   intake.runRollers();
-                  if(intake.slapdownDesiredPosition == IntakePosition.EXTENDED && intake.atDesiredSlapdownPosition()){
+                  if (intake.slapdownDesiredPosition == IntakePosition.EXTENDED && intake.atDesiredSlapdownPosition()) {
                     intake.setDesiredSlapdownPosition(IntakePosition.SHOOTING);
-                  }
-                  else if(intake.slapdownDesiredPosition == IntakePosition.SHOOTING && intake.atDesiredSlapdownPosition()){
+                  } else if (intake.slapdownDesiredPosition == IntakePosition.SHOOTING
+                      && intake.atDesiredSlapdownPosition()) {
                     intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED);
                   }
-                })
-              )
-            )
+                })))
             .finallyDo(
                 (b) -> {
                   shooter.stopRollers();
@@ -396,15 +430,31 @@ public class RobotContainer extends SubsystemBase {
 
     driverController.leftTrigger().onFalse(
         new InstantCommand(() -> intake.stopRollers()));
+    DoubleSupplier headingSupplier = () -> desiredHeadingDeg; // yes i know this is duplicate code i don't care for now
+        BooleanSupplier isBluBooleanSupplier = () -> isBlue;
+        Supplier<Pose2d> robotPoseSupplier = () -> drivetrain.getState().Pose;
+        Supplier<ChassisSpeeds> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
+        RunCommand aimTurret = new RunCommand(() -> {
+          double heading = headingSupplier.getAsDouble();
+          heading = MathUtil.inputModulus(heading, 0, 360);
 
-    RepeatCommand aimTurret = new RepeatCommand(
-        new ShootOnFlySequence(turret, shooter, () -> drivetrain.getState().Pose,
-            () -> drivetrain.getState().Pose.getRotation().getDegrees(), () -> drivetrain.getState().Speeds, ()->isBlue,
-            lights));
+          Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(
+              isBluBooleanSupplier.getAsBoolean(),
+              robotPoseSupplier.get(),
+              chassisSpeedsSupplier.get(),
+              heading);
 
+          turret.setDesiredTurretPosition(results.getSecond());
+
+          if (shooter.atDesiredHoodPosition() && turret.atDesiredTurretPosition()) {
+            lights.setLEDColor(LightCode.ALIGNED);
+          } else {
+            lights.setLEDColor(LightCode.ALIGNING);
+          }
+
+        }, turret, shooter);
     driverController.rightBumper().whileTrue(
-      aimTurret
-    );
+        aimTurret);
 
     driverController.povRight().onTrue(
         new GoHomeSequence(turret, intake, climb, shooter, indexer, lights));
@@ -415,7 +465,8 @@ public class RobotContainer extends SubsystemBase {
   }
 
   private void configureOperatorBindings() {
-    //operatorController.a().onTrue(new InstantCommand(() -> isManualRobotCentric = !isManualRobotCentric));
+    // operatorController.a().onTrue(new InstantCommand(() -> isManualRobotCentric =
+    // !isManualRobotCentric));
 
     operatorController.start().onTrue(
         new InstantCommand(() -> {
@@ -427,7 +478,8 @@ public class RobotContainer extends SubsystemBase {
             // drivetrain.addVisionMeasurement(llMeasurement.pose,
             // llMeasurement.timestampSeconds);
             drivetrain.resetPose(new Pose2d(llMeasurement.pose.getTranslation(),
-                Rotation2d.fromDegrees(isBlue?llMeasurement.pose.getRotation().getDegrees():llMeasurement.pose.getRotation().getDegrees()+180)));
+                Rotation2d.fromDegrees(isBlue ? llMeasurement.pose.getRotation().getDegrees()
+                    : llMeasurement.pose.getRotation().getDegrees() + 180)));
             desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
           }
         }));
@@ -452,15 +504,15 @@ public class RobotContainer extends SubsystemBase {
         new InstantCommand(() -> turret.turretDesiredPositionDeg += 10));
 
     // operatorController.povUp().onTrue(
-    //     new InstantCommand(() -> climb.setDesiredPosition(Climb.ClimbHeight.PREP)));
+    // new InstantCommand(() -> climb.setDesiredPosition(Climb.ClimbHeight.PREP)));
 
     // operatorController.povDown().onTrue(
-    //     new InstantCommand(() -> climb.setDesiredPosition(Climb.ClimbHeight.HOME)));
+    // new InstantCommand(() -> climb.setDesiredPosition(Climb.ClimbHeight.HOME)));
     operatorController.povUp().onTrue(
-        new InstantCommand(() -> shooter.setRollerSpeedRPS(()->shooter.currentRollerSpeedRPM+100)));
+        new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> shooter.currentRollerSpeedRPM + 100)));
 
     operatorController.povDown().onTrue(
-        new InstantCommand(() -> shooter.setRollerSpeedRPS(()->shooter.currentRollerSpeedRPM-100)));
+        new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> shooter.currentRollerSpeedRPM - 100)));
 
     operatorController.a().onTrue(
         new InstantCommand(() -> shooter.addHoodOneDeg()));
@@ -490,8 +542,8 @@ public class RobotContainer extends SubsystemBase {
     operatorController.rightTrigger().whileTrue(
         new RepeatCommand(
             new SequentialCommandGroup(
-                new InstantCommand(() -> shooter.setRollerSpeedRPS(()->3800)),
-                new InstantCommand(() -> shooter.setDesiredHoodPosition(()->70)),
+                new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> 3800)),
+                new InstantCommand(() -> shooter.setDesiredHoodPosition(() -> 70)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
                 new WaitCommand(0.5),
@@ -504,11 +556,10 @@ public class RobotContainer extends SubsystemBase {
                 }));
 
     operatorController.rightBumper().onTrue(
-      new InstantCommand(()->intake.setDesiredSlapdownPosition(IntakePosition.SHOOTING))
-    );
+        new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.SHOOTING)));
   }
 
-  public Translation2d getTarget(){
+  public Translation2d getTarget() {
     Translation2d target = new Translation2d();
     if (isBlue) {
       target = new Translation2d(4.0, 4.0);
@@ -530,7 +581,7 @@ public class RobotContainer extends SubsystemBase {
     return ShooterPitchPower.getPitch(dist);
   }
 
-  public double getDistance(){
+  public double getDistance() {
     Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
     return dist;
