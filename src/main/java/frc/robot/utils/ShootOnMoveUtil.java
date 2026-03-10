@@ -60,13 +60,8 @@ public class ShootOnMoveUtil {
         // Calculate the absolute field heading to the target
         Translation2d difference = robot.minus(goal);
         distance = goal.getDistance(robot);
-        System.out.println("Diff x: " + difference.getX() + " y: " + difference.getY());
-        System.out.println("dis: " + distance);
         double angle = Math.toDegrees(Math.atan2(difference.getY(), difference.getX()));
-        System.out.println("fix ang: " + (180+angle));
         // Calculate the turret angle and pitch
-        //double headingDifference = 180 - (angle + ((difference.getY() < 0.0 & !isBlue) ? heading : -heading) + turretRangeDeg/2);
-        System.out.println("ang: "+angle);
         double headingDifference = (isBlue?(90 - angle):(90 + angle))-heading; // TODO check this
         if(isBlue){
             // headingDifference = Math.abs(180-headingDifference);
@@ -74,7 +69,6 @@ public class ShootOnMoveUtil {
         } else {
             headingDifference = -headingDifference;
         }
-        System.out.println(headingDifference);
         shooterData = ShooterPitchCalcUtil.calculate(shootSpeedMPS, new Pair<Double, Double>(distance, heightDifferenceM));
         return new Pair<Double, Double>(Math.toDegrees(shooterData.getSecond())*cpitch, headingDifference*cdeg);
     }

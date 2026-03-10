@@ -39,7 +39,7 @@ public class Turret extends SubsystemBase {
         turretToApply.Slot0.kI = TurretCal.TURRET_I;
         turretToApply.Slot0.kD = TurretCal.TURRET_D;
         turretToApply.Slot0.kS = TurretCal.TURRET_FF;
-        turretToApply.Slot0.kV = 0.0; 
+        turretToApply.Slot0.kV = TurretCal.TURRET_FF;
 
         TalonFXConfigurator turretConfig = turretMotor.getConfigurator();
         turretConfig.apply(turretToApply);
@@ -52,8 +52,8 @@ public class Turret extends SubsystemBase {
     }
 
     public void setDesiredTurretPosition(double newPositionDegrees) {
-        if(!Double.isNaN(newPositionDegrees) && newPositionDegrees < 180 && newPositionDegrees > 0){
-            turretDesiredPositionDeg = Math.max(TurretCal.TURRET_MIN_DEGREES, Math.min(TurretCal.TURRET_MAX_DEGREES, newPositionDegrees));
+        if(!Double.isNaN(newPositionDegrees)){
+            turretDesiredPositionDeg = MathUtil.clamp(newPositionDegrees, 70.0, 110.0);
         }
     }
 
@@ -92,7 +92,7 @@ public class Turret extends SubsystemBase {
             turretMotor.set(0.0);
         }
         else{
-            turretMotor.set(Math.signum(errorDeg)*MathUtil.clamp(0.13 + Math.abs(errorDeg)*0.001, 0.13, 0.20));
+            turretMotor.set(Math.signum(errorDeg)*0.10);
         }
         // TrapezoidProfile.State goal = new TrapezoidProfile.State(
         //     turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);

@@ -7,6 +7,18 @@
         {
           "type": "named",
           "data": {
+            "name": "PREP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
             "name": "SHOOT SEQUENCE"
           }
         },
@@ -19,7 +31,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
+            "waitTime": 3.0
           }
         },
         {
@@ -73,7 +85,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.0
+            "waitTime": 4.0
           }
         },
         {
@@ -86,6 +98,12 @@
           "type": "named",
           "data": {
             "name": "STOP INTAKE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT PREP SEQUENCE"
           }
         }
       ]
