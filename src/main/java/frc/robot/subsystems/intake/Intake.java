@@ -120,7 +120,7 @@ public class Intake extends SubsystemBase {
     }
 
     public boolean atDesiredSlapdownPosition() {
-        return Math.abs(slapdownMotor.getPosition().getValueAsDouble() - slapdownPositionToMotorPosition(slapdownDesiredPosition))*360 < IntakeCal.SLAPDOWN_POSITION_MARGIN;
+        return Math.abs(((slapdownMotor.getPosition().getValueAsDouble() * 360) / IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO) - intakePositions.get(slapdownDesiredPosition)) < IntakeCal.SLAPDOWN_POSITION_MARGIN;
     }
 
     private double slapdownPositionToMotorPosition(IntakePosition slapdownPosition)  {
