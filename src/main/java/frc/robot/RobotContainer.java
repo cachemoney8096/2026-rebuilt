@@ -215,6 +215,7 @@ public class RobotContainer extends SubsystemBase {
         new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED)));
     NamedCommands.registerCommand("RUN INTAKE", new InstantCommand(() -> intake.runRollers()));
     NamedCommands.registerCommand("STOP INTAKE", new InstantCommand(() -> intake.stopRollers()));
+    NamedCommands.registerCommand("STOW INTAKE", new InstantCommand(()->intake.setDesiredSlapdownPosition(IntakePosition.HOME)));
     NamedCommands.registerCommand("SHOOT SEQUENCE", new InstantCommand(()->{
 
     }));

@@ -1,0 +1,121 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "AIM TURRET"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "DEPLOY INTAKE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP TURRET"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Trench to Start Intaking"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "RUN INTAKE"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Start Intaking to Mid"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Mid to Trench"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "AIM TURRET"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOW INTAKE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP TURRET"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP INTAKE"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

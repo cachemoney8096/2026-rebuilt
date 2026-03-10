@@ -7,7 +7,7 @@
         {
           "type": "named",
           "data": {
-            "name": "SHOOT SEQUENCE AIM LEFT TRENCH"
+            "name": "SHOOT SEQUENCE"
           }
         },
         {
@@ -17,15 +17,63 @@
           }
         },
         {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Trench NT to Start Intaking"
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "RUN INTAKE"
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "Start Intaking to Mid"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Mid to Trench NT"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SHOOT SEQUENCE"
+          }
+        },
+        {
           "type": "wait",
           "data": {
-            "waitTime": 0.5
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOW INTAKE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
           }
         },
         {
@@ -35,45 +83,9 @@
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "Go to mid left trench"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Go to shoot left trench"
-          }
-        },
-        {
           "type": "named",
           "data": {
-            "name": "SHOOT SEQUENCE AIM LEFT TRENCH"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 7.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "STOP SHOOT SEQUENCE"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Go to mid left trench"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Go to shoot left trench"
+            "name": "STOP INTAKE"
           }
         }
       ]
