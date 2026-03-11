@@ -250,7 +250,7 @@ public class RobotContainer extends SubsystemBase {
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
     /* Field centric heading controller */
-    fieldCentricFacingAngle.HeadingController.setPID(2.0, 0.0001, 0.02);
+    fieldCentricFacingAngle.HeadingController.setPID(4.0, 0.0001, 0.02);
 
     isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; // TODO robot.java limelight stuff AND
                                                                                  // ODOMETRY
@@ -457,25 +457,21 @@ public class RobotContainer extends SubsystemBase {
 
     }, turret, shooter);
 
-    RunCommand aim = new RunCommand(() -> {
+    InstantCommand aim = new InstantCommand(() -> {
           Translation2d target = new Translation2d();
-          boolean isBlue = true;
           if (isBlue) {
             target = new Translation2d(4.0, 4.0); // TODO this may be wrong
           } else {
             target = new Translation2d(12.0, 4.0);
           }
-          Translation2d botPose = new Translation2d(2.0, 6.0);
+          Translation2d botPose = drivetrain.getState().Pose.getTranslation();
           Translation2d difference = target.minus(botPose);
           double angle = Math.atan2(difference.getY(), difference.getX());
           desiredHeadingDeg = MathUtil.inputModulus(Math.toDegrees(angle), 0.0, 360.0);
         });
     
     driverController.rightBumper().onTrue(
-        new SequentialCommandGroup(
-          new ConditionalCommand(aim, new InstantCommand(()->aim.cancel()), ()->isAiming),
-          new InstantCommand(()->isAiming = !isAiming)
-        )
+        aim
     );
 
     driverController.povRight().onTrue(
