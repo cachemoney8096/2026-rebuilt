@@ -168,6 +168,7 @@ public class RobotContainer extends SubsystemBase {
   public String autoPathCmd = "";
 
   private boolean turretActive = false;
+  private boolean isAiming = false;
 
   // photonvision testing
   PhotonCamera camera = new PhotonCamera("photonvision");
@@ -215,30 +216,30 @@ public class RobotContainer extends SubsystemBase {
         new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.EXTENDED)));
     NamedCommands.registerCommand("RUN INTAKE", new InstantCommand(() -> intake.runRollers()));
     NamedCommands.registerCommand("STOP INTAKE", new InstantCommand(() -> intake.stopRollers()));
-    NamedCommands.registerCommand("STOW INTAKE", new InstantCommand(()->intake.setDesiredSlapdownPosition(IntakePosition.HOME)));
-    NamedCommands.registerCommand("SHOOT INTAKE", new InstantCommand(()->intake.setDesiredSlapdownPosition(IntakePosition.SHOOTING)));
+    NamedCommands.registerCommand("STOW INTAKE",
+        new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.HOME)));
+    NamedCommands.registerCommand("SHOOT INTAKE",
+        new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.SHOOTING)));
     NamedCommands.registerCommand("PREP SHOOT SEQUENCE",
-      new SequentialCommandGroup(
-                new InstantCommand(() -> shooter.setRollerSpeedRPS(this::getShooterPowerAuto)),
-                new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitch)),
-                new InstantCommand(() -> shooter.runRollers())
-              ));
+        new SequentialCommandGroup(
+            new InstantCommand(() -> shooter.setRollerSpeedRPS(this::getShooterPowerAuto)),
+            new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitch)),
+            new InstantCommand(() -> shooter.runRollers())));
     NamedCommands.registerCommand("SHOOT SEQUENCE", new SequentialCommandGroup(
-      new InstantCommand(() -> indexer.runKicker()),
-      new InstantCommand(() -> indexer.runIndexer())
-    ));
+        new InstantCommand(() -> indexer.runKicker()),
+        new InstantCommand(() -> indexer.runIndexer())));
     NamedCommands.registerCommand("STOP SHOOT SEQUENCE", new InstantCommand(() -> {
       turret.setDesiredTurretPosition(90);
       indexer.stopIndexer();
       indexer.stopKicker();
     }));
-    NamedCommands.registerCommand("STOP SHOOT PREP SEQUENCE", new InstantCommand(()->{
+    NamedCommands.registerCommand("STOP SHOOT PREP SEQUENCE", new InstantCommand(() -> {
       shooter.stopRollers();
     }));
     NamedCommands.registerCommand("AIM TURRET", new InstantCommand(() -> {
       CommandScheduler.getInstance().schedule(aimTurret);
     }));
-    NamedCommands.registerCommand("STOP TURRET", new InstantCommand(()->{
+    NamedCommands.registerCommand("STOP TURRET", new InstantCommand(() -> {
       CommandScheduler.getInstance().cancel(aimTurret);
     }));
 
@@ -408,8 +409,7 @@ public class RobotContainer extends SubsystemBase {
                 new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitch)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
-                new InstantCommand(() -> indexer.runIndexer())
-              ))
+                new InstantCommand(() -> indexer.runIndexer())))
             .finallyDo(
                 (b) -> {
                   shooter.stopRollers();
@@ -434,30 +434,49 @@ public class RobotContainer extends SubsystemBase {
         new InstantCommand(() -> intake.stopRollers()));
 
     DoubleSupplier headingSupplier = () -> desiredHeadingDeg; // yes i know this is duplicate code i don't care for now
-        BooleanSupplier isBlueBooleanSupplier = () -> isBlue;
-        Supplier<Pose2d> robotPoseSupplier = () -> drivetrain.getState().Pose;
-        Supplier<ChassisSpeeds> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
-        RunCommand aimTurret = new RunCommand(() -> {
-          double heading = headingSupplier.getAsDouble();
-          heading = MathUtil.inputModulus(heading, 0, 360);
+    BooleanSupplier isBlueBooleanSupplier = () -> isBlue;
+    Supplier<Pose2d> robotPoseSupplier = () -> drivetrain.getState().Pose;
+    Supplier<ChassisSpeeds> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
+    RunCommand aimTurret = new RunCommand(() -> {
+      double heading = headingSupplier.getAsDouble();
+      heading = MathUtil.inputModulus(heading, 0, 360);
 
-          Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(
-              isBlueBooleanSupplier.getAsBoolean(),
-              robotPoseSupplier.get(),
-              chassisSpeedsSupplier.get(),
-              heading);
+      Pair<Double, Double> results = ShootOnMoveUtil.calcTurret(
+          isBlueBooleanSupplier.getAsBoolean(),
+          robotPoseSupplier.get(),
+          chassisSpeedsSupplier.get(),
+          heading);
 
-          turret.setDesiredTurretPosition(results.getSecond());
+      turret.setDesiredTurretPosition(results.getSecond());
 
-          if (shooter.atDesiredHoodPosition() && turret.atDesiredTurretPosition()) {
-            lights.setLEDColor(LightCode.ALIGNED);
+      if (shooter.atDesiredHoodPosition() && turret.atDesiredTurretPosition()) {
+        lights.setLEDColor(LightCode.ALIGNED);
+      } else {
+        lights.setLEDColor(LightCode.ALIGNING);
+      }
+
+    }, turret, shooter);
+
+    RunCommand aim = new RunCommand(() -> {
+          Translation2d target = new Translation2d();
+          boolean isBlue = true;
+          if (isBlue) {
+            target = new Translation2d(4.0, 4.0); // TODO this may be wrong
           } else {
-            lights.setLEDColor(LightCode.ALIGNING);
+            target = new Translation2d(12.0, 4.0);
           }
-
-        }, turret, shooter);
-    driverController.rightBumper().whileTrue(
-        aimTurret);
+          Translation2d botPose = new Translation2d(2.0, 6.0);
+          Translation2d difference = target.minus(botPose);
+          double angle = Math.atan2(difference.getY(), difference.getX());
+          desiredHeadingDeg = MathUtil.inputModulus(Math.toDegrees(angle), 0.0, 360.0);
+        });
+    
+    driverController.rightBumper().onTrue(
+        new SequentialCommandGroup(
+          new ConditionalCommand(aim, new InstantCommand(()->aim.cancel()), ()->isAiming),
+          new InstantCommand(()->isAiming = !isAiming)
+        )
+    );
 
     driverController.povRight().onTrue(
         new GoHomeSequence(turret, intake, climb, shooter, indexer, lights));
@@ -556,7 +575,7 @@ public class RobotContainer extends SubsystemBase {
                   shooter.stopRollers();
                   indexer.stopIndexer();
                   indexer.stopKicker();
-                  shooter.setDesiredHoodPosition(()->70);
+                  shooter.setDesiredHoodPosition(() -> 70);
                 }));
 
     operatorController.rightBumper().onTrue(
@@ -566,7 +585,7 @@ public class RobotContainer extends SubsystemBase {
   public Translation2d getTarget() {
     Translation2d target = new Translation2d();
     if (isBlue) {
-      target = new Translation2d(4.0, 4.0);
+      target = new Translation2d(4.0, 4.0); // TODO this may be wrong
     } else {
       target = new Translation2d(12.0, 4.0);
     }
@@ -579,7 +598,7 @@ public class RobotContainer extends SubsystemBase {
     return ShooterPitchPower.getPower(dist);
   }
 
-  public double getShooterPowerAuto(){
+  public double getShooterPowerAuto() {
     Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
     return ShooterPitchPower.getPower(dist) + 200;
