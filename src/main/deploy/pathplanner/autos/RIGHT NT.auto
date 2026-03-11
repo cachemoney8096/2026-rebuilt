@@ -7,7 +7,13 @@
         {
           "type": "named",
           "data": {
-            "name": "AIM TURRET"
+            "name": "PREP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
           }
         },
         {
@@ -25,13 +31,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 1.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "STOP TURRET"
+            "waitTime": 3.0
           }
         },
         {
@@ -43,7 +43,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Trench to Start Intaking"
+            "pathName": "RIGHT Trench NT to Start Intaking"
           }
         },
         {
@@ -55,19 +55,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Start Intaking to Mid"
+            "pathName": "RIGHT Start Intaking to Mid"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Mid to Trench"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "AIM TURRET"
+            "pathName": "RIGHT Mid to Trench NT"
           }
         },
         {
@@ -91,13 +85,7 @@
         {
           "type": "wait",
           "data": {
-            "waitTime": 2.0
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "STOP TURRET"
+            "waitTime": 4.0
           }
         },
         {
@@ -110,6 +98,12 @@
           "type": "named",
           "data": {
             "name": "STOP INTAKE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT PREP SEQUENCE"
           }
         }
       ]

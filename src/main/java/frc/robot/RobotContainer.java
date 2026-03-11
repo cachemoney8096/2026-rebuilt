@@ -246,7 +246,7 @@ public class RobotContainer extends SubsystemBase {
     ShooterPitchPower.init();
 
     /* Auto chooser */
-    autoChooser = AutoBuilder.buildAutoChooser("Mid");
+    autoChooser = AutoBuilder.buildAutoChooser("LEFT NT");
     SmartDashboard.putData("Auto Chooser", autoChooser);
 
     /* Field centric heading controller */
