@@ -601,7 +601,7 @@ public class RobotContainer extends SubsystemBase {
   public double getShooterPowerAuto() {
     Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
-    return ShooterPitchPower.getPower(dist) + 200;
+    return ShooterPitchPower.getPower(dist) + 150;
   }
 
   public double getShooterPitch() {
