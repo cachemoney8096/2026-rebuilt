@@ -548,8 +548,14 @@ public class RobotContainer extends SubsystemBase {
                   indexer.stopKicker();
                   intake.stopRollers();
                 }));
+    
+    operatorController.rightBumper().onTrue(
+      new InstantCommand(()->{
+        desiredHeadingDeg -= LimelightHelpers.getTX("limelight-turret");
+      })
+    );
 
-   operatorController.rightTrigger().whileTrue(
+    operatorController.rightTrigger().whileTrue(
         new RepeatCommand(
             new SequentialCommandGroup(
                 new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> 5000)),
@@ -566,7 +572,7 @@ public class RobotContainer extends SubsystemBase {
                   shooter.setDesiredHoodPosition(() -> 70);
                 }));
 
-    operatorController.rightTrigger().whileTrue(
+    operatorController.leftBumper().whileTrue(
         new RepeatCommand(
             new SequentialCommandGroup(
                 new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> 4200)),
@@ -614,7 +620,7 @@ public class RobotContainer extends SubsystemBase {
   }
 
   private double getRelativeDistanceToTarget(){
-    double[] pose = LimelightHelpers.getBotPose_TargetSpace("limelight-front");
+    double[] pose = LimelightHelpers.getBotPose_TargetSpace("limelight-turret");
     double x = pose[0];
     double z = pose[2];
     return Math.sqrt(x*x + z*z);
@@ -726,7 +732,7 @@ public class RobotContainer extends SubsystemBase {
     builder.addStringProperty(
         "Current selected auto", () -> this.getAutonomousCommand().getName(), null);
     builder.addBooleanProperty("is blue", () -> isBlue, null);
-    builder.addDoubleProperty("limelight tx", () -> LimelightHelpers.getTX("limelight-front"), null);
+    builder.addDoubleProperty("limelight tx", () -> LimelightHelpers.getTX("limelight-turret"), null);
     builder.addDoubleProperty("turret calc heading",
         () -> ShootOnMoveUtil
             .calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond(),
