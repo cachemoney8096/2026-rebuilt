@@ -738,5 +738,6 @@ public class RobotContainer extends SubsystemBase {
             .calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond(),
         null);
     builder.addDoubleProperty("distance to target", this::getDistance, null);
+    builder.addDoubleProperty("relative distance to target", this::getRelativeDistanceToTarget, null);
   }
 }
