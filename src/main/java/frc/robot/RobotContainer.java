@@ -575,8 +575,8 @@ public class RobotContainer extends SubsystemBase {
     operatorController.leftBumper().whileTrue(
         new RepeatCommand(
             new SequentialCommandGroup(
-                new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> 4200)),
-                new InstantCommand(() -> shooter.setDesiredHoodPosition(() -> 65)),
+                new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> 4700)),
+                new InstantCommand(() -> shooter.setDesiredHoodPosition(() -> 57)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
                 new WaitCommand(0.5),

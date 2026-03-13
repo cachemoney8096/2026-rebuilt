@@ -28,7 +28,7 @@ public class IntakeCal {
     public static final double SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO = (75.0/1.0)*(54.0/42.0)*(14.0/42.0);
 
     public static final double SLAPDOWN_POSITION_MARGIN = 5.0; 
-    public static final double ROLLERS_RUNNING_SPEED = 0.45; 
+    public static final double ROLLERS_RUNNING_SPEED = 0.65; 
 
     public static final double INTAKE_CANCODER_MAGNET_OFFSET = 0.0; 
 }
