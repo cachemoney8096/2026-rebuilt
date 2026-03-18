@@ -182,6 +182,8 @@ public class RobotContainer extends SubsystemBase {
 
   // photonvision testing
   PhotonCamera camera = new PhotonCamera("photonvision");
+  PhotonCamera lowAI = new PhotonCamera("AI-Low");
+  PhotonCamera highAI = new PhotonCamera("AI-High");
 
   public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
   public static final Transform3d kRobotToCam = new Transform3d(new Translation3d(0.5, 0.0, 0.5),
@@ -538,8 +540,9 @@ public class RobotContainer extends SubsystemBase {
               indexer.stopIndexer();
             })));
 
-    operatorController.povUp().onTrue(
-        new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> shooter.currentRollerSpeedRPM + 100)));
+    // operatorController.povUp().onTrue(
+    // new InstantCommand(() -> shooter.setRollerSpeedRPS(() ->
+    // shooter.currentRollerSpeedRPM + 100)));
 
     // operatorController.povDown().onTrue(
     // new InstantCommand(() -> shooter.setRollerSpeedRPS(() ->
@@ -613,32 +616,55 @@ public class RobotContainer extends SubsystemBase {
                 }));
 
     operatorController.povDown().onTrue(
-        // new InstantCommand(() -> {
-        // var results = camera.getAllUnreadResults();
-        // if (!results.isEmpty()) {
-        // var result = results.get(results.size() - 1);
-        // if (result.hasTargets()) {
-        // //desiredHeadingDeg -= result.getTargets().get(0).getYaw();
-        // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
-        // }
-        // }
-        // })
         new InstantCommand(() -> {
           var result = camera.getLatestResult();
           if (result.hasTargets()) {
             try {
               AprilTagFieldLayout fieldLayout = new AprilTagFieldLayout(
                   Filesystem.getDeployDirectory().toPath().resolve("2026-rebuilt-welded.json"));
-                  Pose3d robotPose = PhotonUtils.estimateFieldToRobotAprilTag(result.getBestTarget().getBestCameraToTarget(), fieldLayout.getTagPose(result.getBestTarget().getFiducialId()).get(), new Transform3d(0.5, 0.0, 0.5, new Rotation3d(0,Math.toRadians(20),0)));
-                  Pose2d rp = robotPose.toPose2d();
-                  drivetrain.resetPose(rp);
-                  desiredHeadingDeg = rp.getRotation().getDegrees();
+              Pose3d robotPose = PhotonUtils.estimateFieldToRobotAprilTag(
+                  result.getBestTarget().getBestCameraToTarget(),
+                  fieldLayout.getTagPose(result.getBestTarget().getFiducialId()).get(),
+                  new Transform3d(0.5, 0.0, 0.5, new Rotation3d(0, Math.toRadians(20), 0)));
+              Pose2d rp = robotPose.toPose2d();
+              drivetrain.resetPose(rp);
+              desiredHeadingDeg = rp.getRotation().getDegrees();
             } catch (Exception e) {
 
             }
           }
         }));
-
+    operatorController.povUp().onTrue(
+        // new InstantCommand(() -> {
+        // var results = camera.getAllUnreadResults();
+        // if (!results.isEmpty()) {
+        // var result = results.get(results.size() - 1);
+        // if (result.hasTargets()) {
+        // desiredHeadingDeg -= result.getTargets().get(0).getYaw();
+        // //
+        // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
+        // }
+        // }
+        // })
+        new InstantCommand(() -> {
+          var lowResults = lowAI.getAllUnreadResults();
+          if (!lowResults.isEmpty()) {
+            var result = lowResults.get(lowResults.size() - 1);
+            if (result.hasTargets()) {
+              desiredHeadingDeg -= result.getTargets().get(0).getYaw();
+              // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
+            }
+          } else {
+            var highResults = highAI.getAllUnreadResults();
+            if (!highResults.isEmpty()) {
+              var result = highResults.get(highResults.size() - 1);
+              if (result.hasTargets()) {
+                desiredHeadingDeg -= result.getTargets().get(0).getYaw();
+                // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
+              }
+            }
+          }
+        }));
   }
 
   public Translation2d getTarget() {
