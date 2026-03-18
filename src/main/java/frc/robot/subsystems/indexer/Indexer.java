@@ -75,7 +75,7 @@ public class Indexer extends SubsystemBase {
   }
 
   public void reverseIndexer(){
-    rotatorMotor.set(-0.2);
+    rotatorMotor.set(0.5);
   }
 
   @Override

@@ -13,6 +13,9 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
+
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
@@ -21,12 +24,15 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -59,13 +65,17 @@ import frc.robot.utils.ShootOnMoveUtil;
 import frc.robot.utils.ShooterPitchPower;
 import frc.robot.commands.*;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonUtils;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -173,6 +183,12 @@ public class RobotContainer extends SubsystemBase {
   // photonvision testing
   PhotonCamera camera = new PhotonCamera("photonvision");
 
+  public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+  public static final Transform3d kRobotToCam = new Transform3d(new Translation3d(0.5, 0.0, 0.5),
+      new Rotation3d(0, 0, 0));
+
+  public static PhotonPoseEstimator photonEstimator = new PhotonPoseEstimator(kTagLayout, kRobotToCam);
+
   /**
    * The container for the robot. Contains subsystems, IO devices, and commands.
    */
@@ -252,8 +268,8 @@ public class RobotContainer extends SubsystemBase {
     /* Field centric heading controller */
     fieldCentricFacingAngle.HeadingController.setPID(6.0, 0.0001, 0.02);
 
-    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue; 
-                                                                                 
+    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+
     zeroRobot();
 
     /* Configure controller bindings */
@@ -402,20 +418,26 @@ public class RobotContainer extends SubsystemBase {
     driverController.start().onTrue(new InstantCommand(() -> zeroRobot()));
 
     driverController.rightTrigger().whileTrue(
-        new RepeatCommand(
+        new SequentialCommandGroup(
             new SequentialCommandGroup(
                 new InstantCommand(() -> shooter.setRollerSpeedRPS(this::getShooterPower)),
                 new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitch)),
-                new InstantCommand(() -> shooter.runRollers()),
-                new InstantCommand(() -> indexer.runKicker()),
-                new InstantCommand(() -> indexer.runIndexer())))
-            .finallyDo(
-                (b) -> {
-                  shooter.stopRollers();
-                  indexer.stopIndexer();
-                  indexer.stopKicker();
-                  intake.stopRollers();
-                }));
+                new InstantCommand(() -> shooter.runRollers())),
+            new WaitCommand(0.5),
+            new RepeatCommand(
+                new SequentialCommandGroup(
+                    new InstantCommand(() -> shooter.setRollerSpeedRPS(this::getShooterPower)),
+                    new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitch)),
+                    new InstantCommand(() -> shooter.runRollers()),
+                    new InstantCommand(() -> indexer.runKicker()),
+                    new InstantCommand(() -> indexer.runIndexer())))
+                .finallyDo(
+                    (b) -> {
+                      shooter.stopRollers();
+                      indexer.stopIndexer();
+                      indexer.stopKicker();
+                      intake.stopRollers();
+                    })));
 
     driverController.leftBumper().onTrue(
         new InstantCommand(() -> {
@@ -457,28 +479,28 @@ public class RobotContainer extends SubsystemBase {
     }, turret, shooter);
 
     InstantCommand aim = new InstantCommand(() -> {
-          Translation2d target = new Translation2d();
-          if (isBlue) {
-            target = new Translation2d(4.0, 4.0); // TODO this may be wrong
-          } else {
-            target = new Translation2d(12.0, 4.0);
-          }
-          Translation2d botPose = drivetrain.getState().Pose.getTranslation();
-          Translation2d difference = target.minus(botPose);
-          double angle = Math.atan2(difference.getY(), difference.getX());
-          desiredHeadingDeg = MathUtil.inputModulus(Math.toDegrees(angle), 0.0, 360.0);
-        });
-    
+      Translation2d target = new Translation2d();
+      if (isBlue) {
+        target = new Translation2d(5.0, 4.0); // TODO this may be wrong
+      } else {
+        target = new Translation2d(14.4, 4.0);
+      }
+      Translation2d botPose = drivetrain.getState().Pose.getTranslation();
+      Translation2d difference = target.minus(botPose);
+      double angle = Math.atan2(difference.getY(), difference.getX());
+      desiredHeadingDeg = MathUtil.inputModulus(Math.toDegrees(angle), 0.0, 360.0);
+    });
+
     driverController.rightBumper().onTrue(
-        aim
-    );
+        aim);
 
     // driverController.povRight().onTrue(
-    //     new GoHomeSequence(turret, intake, climb, shooter, indexer, lights));
+    // new GoHomeSequence(turret, intake, climb, shooter, indexer, lights));
 
     // driverController.povLeft().onTrue(
-    //     new FeedSequence(turret, () -> drivetrain.getState().Pose.getRotation().getDegrees(), isBlue,
-    //         driverController.povLeft()));
+    // new FeedSequence(turret, () ->
+    // drivetrain.getState().Pose.getRotation().getDegrees(), isBlue,
+    // driverController.povLeft()));
   }
 
   private void configureOperatorBindings() {
@@ -490,14 +512,16 @@ public class RobotContainer extends SubsystemBase {
           var driveState = drivetrain.getState();
           double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
 
-          var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-turret"); // TODO megatag1 check
-          // var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-turret");
+          var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-turret"); // TODO megatag1
+                                                                                                        // check
+          // var llMeasurement =
+          // LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-turret");
           if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
             // drivetrain.addVisionMeasurement(llMeasurement.pose,
             // llMeasurement.timestampSeconds);
             drivetrain.resetPose(new Pose2d(llMeasurement.pose.getTranslation(),
-                Rotation2d.fromDegrees(isBlue ? llMeasurement.pose.getRotation().getDegrees()
-                    : llMeasurement.pose.getRotation().getDegrees() + 180)));
+                Rotation2d.fromDegrees(isBlue ? 0.0
+                    : 180.0)));
             desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
           }
         }));
@@ -507,19 +531,19 @@ public class RobotContainer extends SubsystemBase {
             new InstantCommand(() -> {
               shooter.stopRollers();
               indexer.reverseIndexer();
-              indexer.reverseKicker();
+              indexer.stopKicker();
             }),
             new WaitCommand(0.5),
             new InstantCommand(() -> {
               indexer.stopIndexer();
-              indexer.stopKicker();
             })));
 
     operatorController.povUp().onTrue(
         new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> shooter.currentRollerSpeedRPM + 100)));
 
-    operatorController.povDown().onTrue(
-        new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> shooter.currentRollerSpeedRPM - 100)));
+    // operatorController.povDown().onTrue(
+    // new InstantCommand(() -> shooter.setRollerSpeedRPS(() ->
+    // shooter.currentRollerSpeedRPM - 100)));
 
     operatorController.a().onTrue(
         new InstantCommand(() -> shooter.addHoodOneDeg()));
@@ -548,12 +572,11 @@ public class RobotContainer extends SubsystemBase {
                   indexer.stopKicker();
                   intake.stopRollers();
                 }));
-    
+
     operatorController.rightBumper().onTrue(
-      new InstantCommand(()->{
-        desiredHeadingDeg -= LimelightHelpers.getTX("limelight-turret");
-      })
-    );
+        new InstantCommand(() -> {
+          desiredHeadingDeg -= LimelightHelpers.getTX("limelight-turret");
+        }));
 
     operatorController.rightTrigger().whileTrue(
         new RepeatCommand(
@@ -589,6 +612,33 @@ public class RobotContainer extends SubsystemBase {
                   shooter.setDesiredHoodPosition(() -> 70);
                 }));
 
+    operatorController.povDown().onTrue(
+        // new InstantCommand(() -> {
+        // var results = camera.getAllUnreadResults();
+        // if (!results.isEmpty()) {
+        // var result = results.get(results.size() - 1);
+        // if (result.hasTargets()) {
+        // //desiredHeadingDeg -= result.getTargets().get(0).getYaw();
+        // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
+        // }
+        // }
+        // })
+        new InstantCommand(() -> {
+          var result = camera.getLatestResult();
+          if (result.hasTargets()) {
+            try {
+              AprilTagFieldLayout fieldLayout = new AprilTagFieldLayout(
+                  Filesystem.getDeployDirectory().toPath().resolve("2026-rebuilt-welded.json"));
+                  Pose3d robotPose = PhotonUtils.estimateFieldToRobotAprilTag(result.getBestTarget().getBestCameraToTarget(), fieldLayout.getTagPose(result.getBestTarget().getFiducialId()).get(), new Transform3d(0.5, 0.0, 0.5, new Rotation3d(0,Math.toRadians(20),0)));
+                  Pose2d rp = robotPose.toPose2d();
+                  drivetrain.resetPose(rp);
+                  desiredHeadingDeg = rp.getRotation().getDegrees();
+            } catch (Exception e) {
+
+            }
+          }
+        }));
+
   }
 
   public Translation2d getTarget() {
@@ -596,7 +646,7 @@ public class RobotContainer extends SubsystemBase {
     if (isBlue) {
       target = new Translation2d(4.0, 4.0); // TODO this may be wrong
     } else {
-      target = new Translation2d(12.0, 4.0);
+      target = new Translation2d(12.4, 4.0);
     }
     return target;
   }
@@ -610,7 +660,7 @@ public class RobotContainer extends SubsystemBase {
   public double getShooterPowerAuto() {
     Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
-    return ShooterPitchPower.getPower(dist) + 150;
+    return ShooterPitchPower.getPower(dist);
   }
 
   public double getShooterPitch() {
@@ -619,18 +669,18 @@ public class RobotContainer extends SubsystemBase {
     return ShooterPitchPower.getPitch(dist);
   }
 
-  private double getRelativeDistanceToTarget(){
+  private double getRelativeDistanceToTarget() {
     double[] pose = LimelightHelpers.getBotPose_TargetSpace("limelight-turret");
     double x = pose[0];
     double z = pose[2];
-    return Math.sqrt(x*x + z*z);
+    return Math.sqrt(x * x + z * z);
   }
 
-  public double getShooterPowerRelativeDist(){
+  public double getShooterPowerRelativeDist() {
     return ShooterPitchPower.getPower(getRelativeDistanceToTarget());
   }
 
-  public double getShooterPitchRelativeDist(){
+  public double getShooterPitchRelativeDist() {
     return ShooterPitchPower.getPitch(getRelativeDistanceToTarget());
   }
 
@@ -739,5 +789,7 @@ public class RobotContainer extends SubsystemBase {
         null);
     builder.addDoubleProperty("distance to target", this::getDistance, null);
     builder.addDoubleProperty("relative distance to target", this::getRelativeDistanceToTarget, null);
+    // builder.addIntegerProperty("pv detections",
+    // ()->camera.getAllUnreadResults().size(), null);
   }
 }
