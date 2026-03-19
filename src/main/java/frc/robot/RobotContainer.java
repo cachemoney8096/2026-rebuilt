@@ -181,9 +181,9 @@ public class RobotContainer extends SubsystemBase {
   private boolean isAiming = false;
 
   // photonvision testing
-  PhotonCamera camera = new PhotonCamera("photonvision");
-  PhotonCamera lowAI = new PhotonCamera("AI-Low");
-  PhotonCamera highAI = new PhotonCamera("AI-High");
+  PhotonCamera camera = new PhotonCamera("Up");
+  PhotonCamera lowAI = new PhotonCamera("Down");
+  PhotonCamera highAI = new PhotonCamera("Middle");
 
   public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
   public static final Transform3d kRobotToCam = new Transform3d(new Translation3d(0.5, 0.0, 0.5),
@@ -350,9 +350,9 @@ public class RobotContainer extends SubsystemBase {
     } else if (isManualRobotCentric) {
       /* Is robot centric */
       return robotCentric
-          .withVelocityX(xVelocity)
-          .withVelocityY(yVelocity)
-          .withRotationalRate(rotationVelocity);
+          .withVelocityX(xVelocity);
+          // .withVelocityY(yVelocity)
+          // .withRotationalRate(rotationVelocity);
     } else if (rotationalJoystickInput.get()) {
       /* If rotation stick is being used */
       desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
@@ -503,6 +503,29 @@ public class RobotContainer extends SubsystemBase {
     // new FeedSequence(turret, () ->
     // drivetrain.getState().Pose.getRotation().getDegrees(), isBlue,
     // driverController.povLeft()));
+    driverController.povLeft().onTrue(new InstantCommand(() -> {
+      if (isManualRobotCentric) {
+        isManualRobotCentric = false;
+      } else {
+        isManualRobotCentric = true;
+        var lowResults = lowAI.getAllUnreadResults();
+        if (!lowResults.isEmpty()) {
+          var result = lowResults.get(lowResults.size() - 1);
+          if (result.hasTargets()) {
+            desiredHeadingDeg -= result.getTargets().get(0).getYaw();
+          }
+        } else {
+          var highResults = highAI.getAllUnreadResults();
+          if (!highResults.isEmpty()) {
+            var result = highResults.get(highResults.size() - 1);
+            if (result.hasTargets()) {
+              desiredHeadingDeg -= result.getTargets().get(0).getYaw();
+            }
+          }
+        }
+      }
+
+    }));
   }
 
   private void configureOperatorBindings() {
