@@ -28,10 +28,10 @@ public class ShooterPitchPower {
     }
     
     public static double getPitch(double distance){
-        return pitch.get(distance+1.7);
+        return pitch.get(distance);
     }
 
     public static double getPower(double distance){
-        return power.get(distance+1.7); 
+        return power.get(distance); 
     }
 }
