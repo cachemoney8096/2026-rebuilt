@@ -65,6 +65,7 @@ import frc.robot.utils.ShootOnMoveUtil;
 import frc.robot.utils.ShooterPitchPower;
 import frc.robot.commands.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
@@ -76,6 +77,7 @@ import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonUtils;
+import org.photonvision.targeting.TargetCorner;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -520,6 +522,7 @@ public class RobotContainer extends SubsystemBase {
             var result = highResults.get(highResults.size() - 1);
             if (result.hasTargets()) {
               desiredHeadingDeg -= result.getTargets().get(0).getYaw();
+              List<TargetCorner> l = result.getTargets().get(0).detectedCorners;
             }
           }
         }
