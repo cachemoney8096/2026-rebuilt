@@ -1,0 +1,115 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Push Back"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "PREP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "DEPLOY INTAKE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "RUN INTAKE"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Intake from Depot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Score from Depot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "PREP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.5
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SHOOT INTAKE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 5.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP INTAKE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT SEQUENCE"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}
