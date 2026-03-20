@@ -60,11 +60,14 @@ import frc.robot.subsystems.lights.Lights;
 import frc.robot.subsystems.lights.Lights.LightCode;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.utils.BallClusterDetection;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.ShootOnMoveUtil;
 import frc.robot.utils.ShooterPitchPower;
 import frc.robot.commands.*;
 
+import java.lang.annotation.Target;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -506,28 +509,54 @@ public class RobotContainer extends SubsystemBase {
     // drivetrain.getState().Pose.getRotation().getDegrees(), isBlue,
     // driverController.povLeft()));
     driverController.povLeft().onTrue(new InstantCommand(() -> {
-      if (isManualRobotCentric) {
-        isManualRobotCentric = false;
-      } else {
-        isManualRobotCentric = true;
         var lowResults = lowAI.getAllUnreadResults();
-        if (!lowResults.isEmpty()) {
-          var result = lowResults.get(lowResults.size() - 1);
-          if (result.hasTargets()) {
-            desiredHeadingDeg -= result.getTargets().get(0).getYaw();
-          }
-        } else {
-          var highResults = highAI.getAllUnreadResults();
-          if (!highResults.isEmpty()) {
-            var result = highResults.get(highResults.size() - 1);
-            if (result.hasTargets()) {
-              desiredHeadingDeg -= result.getTargets().get(0).getYaw();
-              List<TargetCorner> l = result.getTargets().get(0).detectedCorners;
+        var highResults = highAI.getAllUnreadResults();
+        LinkedList<LinkedList<Pair<Integer, Integer>>> coordsList = new LinkedList<LinkedList<Pair<Integer, Integer>>>();
+        LinkedList<Double> headingsList = new LinkedList<Double>();
+        if(!highResults.isEmpty()){
+          for(var result : highResults){
+            if(result.hasTargets()){
+              for(var target : result.getTargets()){
+                LinkedList<Pair<Integer, Integer>> box = new LinkedList<>();
+                List<TargetCorner> corners = target.detectedCorners;
+                for(TargetCorner corner : corners){
+                  box.add(new Pair<Integer, Integer>((int)(corner.x), (int)(corner.y)));
+                }
+                coordsList.add(box);
+                headingsList.add(target.getYaw());
+              }
             }
           }
         }
-      }
-
+        if(!lowResults.isEmpty()){
+          for(var result : lowResults){
+            if(result.hasTargets()){
+              for(var target : result.getTargets()){
+                LinkedList<Pair<Integer, Integer>> box = new LinkedList<>();
+                List<TargetCorner> corners = target.detectedCorners;
+                for(TargetCorner corner : corners){
+                  box.add(new Pair<Integer, Integer>((int)(corner.x), (int)(corner.y+240)));
+                }
+                coordsList.add(box);
+                headingsList.add(target.getYaw());
+              }
+            }
+          }
+        }
+        int[][][] detections = new int[coordsList.size()][4][2];
+        int i = 0;
+        for(var box : coordsList){
+          int j = 0;
+          for(var coords : box){
+            detections[i][j][0] = coords.getFirst();
+            detections[i][j][1] = coords.getSecond();
+            j++;
+          }
+          i++;
+        }
+        int index = BallClusterDetection.detectBallCluster(detections);
+        double heading = headingsList.get(index);
+        desiredHeadingDeg -= heading;
     }));
   }
 
