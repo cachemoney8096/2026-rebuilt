@@ -115,6 +115,10 @@ public class Intake extends SubsystemBase {
         rollerMotor.set(0.0);
     }
 
+    public void runRollersFast(){
+        rollerMotor.set(1.0);
+    }
+
     public void reverseRollers(){
         rollerMotor.set(-0.6);
     }

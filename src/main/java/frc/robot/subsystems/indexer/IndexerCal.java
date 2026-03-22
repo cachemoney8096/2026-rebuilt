@@ -17,5 +17,5 @@ public class IndexerCal {
   public static final double KICKER_I = 0.0;
   public static final double KICKER_D = 0.0;
   public static final double KICKER_FF = 0.0;
-  public static final double KICKER_SPEED = -1.0; // TODO TUNE THIS
+  public static final double KICKER_SPEED = -0.9; // TODO TUNE THIS
 }

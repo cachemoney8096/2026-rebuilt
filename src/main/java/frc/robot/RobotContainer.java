@@ -246,7 +246,7 @@ public class RobotContainer extends SubsystemBase {
     NamedCommands.registerCommand("PREP SHOOT SEQUENCE",
         new SequentialCommandGroup(
             new InstantCommand(() -> shooter.setRollerSpeedRPS(this::getShooterPowerAuto)),
-            new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitch)),
+            new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitchAuto)),
             new InstantCommand(() -> shooter.runRollers())));
     NamedCommands.registerCommand("SHOOT SEQUENCE", new SequentialCommandGroup(
         new InstantCommand(() -> indexer.runKicker()),
@@ -488,9 +488,9 @@ public class RobotContainer extends SubsystemBase {
     InstantCommand aim = new InstantCommand(() -> {
       Translation2d target = new Translation2d();
       if (isBlue) {
-        target = new Translation2d(5.0, 4.0); // TODO this may be wrong
+        target = new Translation2d(4.0, 4.3); // TODO this may be wrong
       } else {
-        target = new Translation2d(14.4, 4.0);
+        target = new Translation2d(12.0, 4.3);
       }
       Translation2d botPose = drivetrain.getState().Pose.getTranslation();
       Translation2d difference = target.minus(botPose);
@@ -516,8 +516,8 @@ public class RobotContainer extends SubsystemBase {
         var highResults = highAI.getAllUnreadResults();
         LinkedList<LinkedList<Pair<Integer, Integer>>> coordsList = new LinkedList<LinkedList<Pair<Integer, Integer>>>();
         LinkedList<Double> headingsList = new LinkedList<Double>();
-        if(!highResults.isEmpty()){
-          for(var result : highResults){
+        if(!lowResults.isEmpty()){
+          for(var result : lowResults){
             if(result.hasTargets()){
               for(var target : result.getTargets()){
                 LinkedList<Pair<Integer, Integer>> box = new LinkedList<>();
@@ -531,8 +531,8 @@ public class RobotContainer extends SubsystemBase {
             }
           }
         }
-        if(!lowResults.isEmpty()){
-          for(var result : lowResults){
+        if(!highResults.isEmpty()){
+          for(var result : highResults){
             if(result.hasTargets()){
               for(var target : result.getTargets()){
                 LinkedList<Pair<Integer, Integer>> box = new LinkedList<>();
@@ -558,8 +558,10 @@ public class RobotContainer extends SubsystemBase {
           i++;
         }
         int index = BallClusterDetection.detectBallCluster(detections);
-        double heading = headingsList.get(index);
-        desiredHeadingDeg -= heading;
+        if(index != -1){
+          double heading = headingsList.get(index);
+          desiredHeadingDeg -= heading;
+        }
     })));
   }
 
@@ -598,6 +600,18 @@ public class RobotContainer extends SubsystemBase {
               indexer.stopIndexer();
             })));
 
+    operatorController.x().onTrue(
+      new InstantCommand(()->{
+        isManualRobotCentric = !isManualRobotCentric;
+      })
+    );
+
+    operatorController.a().onTrue(
+        new InstantCommand(() -> intake.runRollersFast()));
+
+    operatorController.a().onFalse(
+        new InstantCommand(() -> intake.stopRollers()));
+
     // operatorController.povUp().onTrue(
     // new InstantCommand(() -> shooter.setRollerSpeedRPS(() ->
     // shooter.currentRollerSpeedRPM + 100)));
@@ -606,11 +620,7 @@ public class RobotContainer extends SubsystemBase {
     // new InstantCommand(() -> shooter.setRollerSpeedRPS(() ->
     // shooter.currentRollerSpeedRPM - 100)));
 
-    operatorController.a().onTrue(
-        new InstantCommand(() -> shooter.addHoodOneDeg()));
-
-    operatorController.y().onTrue(
-        new InstantCommand(() -> shooter.subtractHoodOneDeg()));
+    
 
     operatorController.leftTrigger().onTrue(
         new SequentialCommandGroup(
@@ -659,7 +669,7 @@ public class RobotContainer extends SubsystemBase {
     operatorController.leftBumper().whileTrue(
         new RepeatCommand(
             new SequentialCommandGroup(
-                new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> 4800)),
+                new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> 4800)), //4800
                 new InstantCommand(() -> shooter.setDesiredHoodPosition(() -> 57)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
@@ -730,7 +740,7 @@ public class RobotContainer extends SubsystemBase {
     if (isBlue) {
       target = new Translation2d(4.0, 4.0); // TODO this may be wrong
     } else {
-      target = new Translation2d(12.4, 4.0);
+      target = new Translation2d(12.0, 4.0);
     }
     return target;
   }
@@ -744,7 +754,13 @@ public class RobotContainer extends SubsystemBase {
   public double getShooterPowerAuto() {
     Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
-    return ShooterPitchPower.getPower(dist);
+    return ShooterPitchPower.getPower(dist-1.8);
+  }
+
+  public double getShooterPitchAuto(){
+    Translation2d target = getTarget();
+    double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
+    return ShooterPitchPower.getPitch(dist-1.8);
   }
 
   public double getShooterPitch() {
