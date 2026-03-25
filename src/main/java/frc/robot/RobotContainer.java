@@ -585,11 +585,26 @@ public class RobotContainer extends SubsystemBase {
     // .onTrue(new InstantCommand(() ->
     // turret.setDesiredTurretPosition(turret.getDesiredPositionDeg() + 10)));
 
+    // operatorController.y().whileTrue(
+    //   new RunCommand(()->{
+    //     turret.setDesiredTurretPosition(TurretUtil.turretTargetHeading(isBlueBooleanSupplier, robotPoseSupplier, headingSupplier));
+    //   })
+    // ); // TODO bring this back
+
     operatorController.y().whileTrue(
-      new RunCommand(()->{
-        turret.setDesiredTurretPosition(TurretUtil.turretTargetHeading(isBlueBooleanSupplier, robotPoseSupplier, headingSupplier));
-      })
-    );
+        new RepeatCommand(
+            new SequentialCommandGroup(
+                new InstantCommand(() -> shooter.runRollers()),
+                new InstantCommand(() -> indexer.runKicker()),
+                new WaitCommand(0.5),
+                new InstantCommand(() -> indexer.runIndexer())))
+            .finallyDo(
+                (b) -> {
+                  shooter.stopRollers();
+                  indexer.stopIndexer();
+                  indexer.stopKicker();
+                  shooter.setDesiredHoodPosition(() -> 70);
+                }));
 
     operatorController.a().whileTrue(
       new RunCommand(()->{
@@ -860,7 +875,7 @@ public class RobotContainer extends SubsystemBase {
         () -> ShootOnMoveUtil
             .calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond(),
         null);
-    builder.addDoubleProperty("distance to target", this::getDistance, null);
+    builder.addDoubleProperty("TUNING distance to target", this::getDistance, null);
     builder.addDoubleProperty("TUNING target x", ()->tx, (x)->tx=x);
     builder.addDoubleProperty("TUNING target y", ()->ty, (y)->ty=y);
     builder.addDoubleProperty("angle to target turret", () -> {
