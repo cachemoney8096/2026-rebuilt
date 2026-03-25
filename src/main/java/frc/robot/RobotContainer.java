@@ -553,30 +553,30 @@ public class RobotContainer extends SubsystemBase {
     Supplier<Pose2d> robotPoseSupplier = () -> drivetrain.getState().Pose;
     Supplier<ChassisSpeeds> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
 
-    operatorController.povRight().whileTrue(new RepeatCommand(
-        new InstantCommand(
-            () -> {
-              if (isBlueBooleanSupplier.getAsBoolean()) {
-                double angle = Math.toDegrees(
-                    Math.atan2(drivetrain.getState().Pose.getY() - 4.0, drivetrain.getState().Pose.getX() - 4.0));
-                if (angle >= 0) {
-                  angle = 90 + (180 - angle);
-                } else {
-                  angle = 90 - (180 + angle);
-                }
-                turret.setDesiredTurretPosition(angle + desiredHeadingDeg);
-              } else {
-                double angle = Math.toDegrees(
-                    Math.atan2(drivetrain.getState().Pose.getY() - 4.0, drivetrain.getState().Pose.getX() - 12.0));
-                if (angle >= 0) {
-                  angle = 90 + (180 - angle);
-                } else {
-                  angle = 90 - (180 + angle);
-                }
-                turret.setDesiredTurretPosition(MathUtil.inputModulus(
-                    MathUtil.inputModulus(angle + 180.0, 0.0, 360.0) + desiredHeadingDeg % 360 + 180.0, 0.0, 360.0));
-              }
-            })));
+    // operatorController.povRight().whileTrue(new RepeatCommand(
+    //     new InstantCommand(
+    //         () -> {
+    //           if (isBlueBooleanSupplier.getAsBoolean()) {
+    //             double angle = Math.toDegrees(
+    //                 Math.atan2(drivetrain.getState().Pose.getY() - 4.0, drivetrain.getState().Pose.getX() - 4.0));
+    //             if (angle >= 0) {
+    //               angle = 90 + (180 - angle);
+    //             } else {
+    //               angle = 90 - (180 + angle);
+    //             }
+    //             turret.setDesiredTurretPosition(angle + desiredHeadingDeg);
+    //           } else {
+    //             double angle = Math.toDegrees(
+    //                 Math.atan2(drivetrain.getState().Pose.getY() - 4.0, drivetrain.getState().Pose.getX() - 12.0));
+    //             if (angle >= 0) {
+    //               angle = 90 + (180 - angle);
+    //             } else {
+    //               angle = 90 - (180 + angle);
+    //             }
+    //             turret.setDesiredTurretPosition(MathUtil.inputModulus(
+    //                 MathUtil.inputModulus(angle + 180.0, 0.0, 360.0) + desiredHeadingDeg % 360 + 180.0, 0.0, 360.0));
+    //           }
+    //         })));
 
     // operatorController.a() // TODO bring this back
     // .onTrue(new InstantCommand(() ->
@@ -639,8 +639,8 @@ public class RobotContainer extends SubsystemBase {
     operatorController.rightTrigger().whileTrue(
         new RepeatCommand(
             new SequentialCommandGroup(
-                new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> 5000)),
-                new InstantCommand(() -> shooter.setDesiredHoodPosition(() -> 45)),
+                new InstantCommand(() -> shooter.setRollerSpeedRPS(this::getShooterPower)),
+                new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitch)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
                 new WaitCommand(0.5),
@@ -670,7 +670,7 @@ public class RobotContainer extends SubsystemBase {
                   shooter.setDesiredHoodPosition(() -> 70);
                 }));
 
-    operatorController.povDown().onTrue(
+    operatorController.start().onTrue(
         new InstantCommand(() -> {
           var result = camera.getLatestResult();
           if (result.hasTargets()) {
