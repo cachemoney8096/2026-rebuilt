@@ -39,7 +39,6 @@ public class Turret extends SubsystemBase {
         turretToApply.Slot0.kI = TurretCal.TURRET_I;
         turretToApply.Slot0.kD = TurretCal.TURRET_D;
         turretToApply.Slot0.kS = TurretCal.TURRET_FF;
-        turretToApply.Slot0.kV = TurretCal.TURRET_FF;
 
         TalonFXConfigurator turretConfig = turretMotor.getConfigurator();
         turretConfig.apply(turretToApply);
@@ -53,7 +52,7 @@ public class Turret extends SubsystemBase {
 
     public void setDesiredTurretPosition(double newPositionDegrees) {
         if(!Double.isNaN(newPositionDegrees)){
-            turretDesiredPositionDeg = MathUtil.clamp(newPositionDegrees, 70.0, 110.0);
+            turretDesiredPositionDeg = MathUtil.clamp(newPositionDegrees, TurretCal.TURRET_MIN_DEGREES, TurretCal.TURRET_MAX_DEGREES);
         }
     }
 
@@ -76,34 +75,34 @@ public class Turret extends SubsystemBase {
     private boolean holding = true;
 
     private void controlTurretPosition() {
-        double errorDeg = turretDesiredPositionDeg - (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO;
-        if(holding){
-            if(Math.abs(errorDeg) > 5.0){
-                holding = false;
-            }
-        }
-        else{
-            if(Math.abs(errorDeg) < 2.0){
-                holding = true;
-            }
-        }
+        // double errorDeg = turretDesiredPositionDeg - (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO;
+        // if(holding){
+        //     if(Math.abs(errorDeg) > 5.0){
+        //         holding = false;
+        //     }
+        // }
+        // else{
+        //     if(Math.abs(errorDeg) < 2.0){
+        //         holding = true;
+        //     }
+        // }
 
-        if(holding){
-            turretMotor.set(0.0);
-        }
-        else{
-            turretMotor.set(Math.signum(errorDeg)*0.10);
-        }
-        // TrapezoidProfile.State goal = new TrapezoidProfile.State(
-        //     turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
-        // TrapezoidProfile.State start = new TrapezoidProfile.State(
-        //     turretMotor.getPosition().getValueAsDouble(), turretMotor.getVelocity().getValueAsDouble());
-        // PositionDutyCycle request = new PositionDutyCycle(0.0).withSlot(0);
-        // TrapezoidProfile.State setpoint = turretTrapezoidProfile.calculate(0.020, start, goal);
+        // if(holding){
+        //     turretMotor.set(0.0);
+        // }
+        // else{
+        //     turretMotor.set(Math.signum(errorDeg)*0.10);
+        // }
+        TrapezoidProfile.State goal = new TrapezoidProfile.State(
+            turretPositionToMotorPosition(turretDesiredPositionDeg), 0.0);
+        TrapezoidProfile.State start = new TrapezoidProfile.State(
+            turretMotor.getPosition().getValueAsDouble(), turretMotor.getVelocity().getValueAsDouble());
+        PositionDutyCycle request = new PositionDutyCycle(0.0).withSlot(0);
+        TrapezoidProfile.State setpoint = turretTrapezoidProfile.calculate(0.020, start, goal);
         
-        // request.Position = setpoint.position;
-        // request.Velocity = setpoint.velocity;
-        // turretMotor.setControl(request);
+        request.Position = setpoint.position;
+        request.Velocity = setpoint.velocity;
+        turretMotor.setControl(request);
         
         // final PositionDutyCycle m_request = new PositionDutyCycle(0).withSlot(0);
         // double error = turretPositionToMotorPosition(turretDesiredPositionDeg)
@@ -127,7 +126,9 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
-        controlTurretPosition();
+        if(!atDesiredTurretPosition()){
+            controlTurretPosition();
+        }
     }
 
     @Override

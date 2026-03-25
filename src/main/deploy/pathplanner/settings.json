@@ -3,9 +3,10 @@
   "robotLength": 0.9,
   "holonomicMode": true,
   "pathFolders": [
+    "CENTER NO TURRET",
     "LEFT NO TURRET",
     "LEFT TURRET",
-    "CENTER NO TURRET",
+    "BLUE LEFT AI NO TURRET",
     "RIGHT NO TURRET"
   ],
   "autoFolders": [],

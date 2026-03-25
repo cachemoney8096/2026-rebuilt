@@ -32,12 +32,11 @@ public class ShootOnMoveUtil {
             double heading) {
 
         // Initialize stuff
-        Translation2d blueGoal = new Translation2d(4.6, 4);
-        Translation2d redGoal = new Translation2d(11.9, 4);
+        Translation2d blueGoal = new Translation2d(4.0, 4.0);
+        Translation2d redGoal = new Translation2d(12.0, 4.0);
         Translation2d robot = robotPose.getTranslation();
-        double shootSpeedMPS = 7.5; // TODO this
+        double shootSpeedMPS = 7.5; 
         Translation2d goal = isBlue?blueGoal:redGoal;
-        double turretRangeDeg = 180;
         double heightDifferenceM = 1.8;
 
         // Emperical calibration constants (linear multiplier)

@@ -142,13 +142,21 @@ public class Shooter extends SubsystemBase {
         controlHoodPosition();
     }
 
+    public void setSpeedShuffleboard(double d){
+        this.setRollerSpeedRPS(()->d);
+    }
+
+    public void setHoodShuffleboard(double d){
+        this.setDesiredHoodPosition(()->d);
+    }
+
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
 
         /* Hood */
         builder.addDoubleProperty("Hood Actual Position (deg.)", () -> ((hoodMotor.getPosition().getValueAsDouble()) / ShooterCal.HOOD_MOTOR_TO_HOOD_RATIO) * 360.0, null);
-        builder.addDoubleProperty("Hood Desired Position (deg.)", () -> hoodDesiredPositionDeg, null);
+        builder.addDoubleProperty("TUNING Hood Desired Position (deg.)", () -> hoodDesiredPositionDeg, this::setHoodShuffleboard);
 
         builder.addBooleanProperty("Hood at Desired Position", this::atDesiredHoodPosition, null);
 
@@ -161,6 +169,6 @@ public class Shooter extends SubsystemBase {
         builder.addDoubleProperty("Left Roller Amperage (amps)", () -> leftRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
         builder.addDoubleProperty("Right Roller Amperage (amps)", () -> rightRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
 
-        builder.addDoubleProperty("Shooter set roller speed rpm", ()->currentRollerSpeedRPM, null);
+        builder.addDoubleProperty("TUNING Shooter set roller speed rpm", ()->currentRollerSpeedRPM, this::setSpeedShuffleboard);
     }
 }

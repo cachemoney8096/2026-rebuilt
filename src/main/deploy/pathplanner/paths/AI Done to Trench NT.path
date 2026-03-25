@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5728228476821196,
-        "y": 7.468948675496688
+        "x": 7.040827389443652,
+        "y": 7.6125392296718974
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.8632201986754966,
-        "y": 7.592367549668873
+        "x": 5.52700427960057,
+        "y": 7.5996005706134095
       },
       "isLocked": false,
-      "linkedName": "LEFT NT TRENCH"
+      "linkedName": null
     },
     {
       "anchor": {
@@ -20,36 +20,31 @@
         "y": 7.570587748344371
       },
       "prevControl": {
-        "x": 4.15072414038057,
-        "y": 7.558996850732728
+        "x": 4.650455273981894,
+        "y": 7.570697364378683
       },
       "nextControl": {
-        "x": 6.121059602649007,
-        "y": 7.650447019867549
+        "x": 4.150455322044596,
+        "y": 7.570478132310059
       },
       "isLocked": false,
       "linkedName": "LEFT NT TRENCH ROTATION CHECK"
     },
     {
       "anchor": {
-        "x": 7.6166059602649,
-        "y": 7.164031456953642
+        "x": 3.5728228476821196,
+        "y": 7.468948675496688
       },
       "prevControl": {
-        "x": 7.014031456953642,
-        "y": 7.650447019867549
+        "x": 4.155506419400855,
+        "y": 7.586661911554922
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "LEFT START INTAKING"
+      "linkedName": "LEFT NT TRENCH"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.7239709443099074,
-      "rotationDegrees": -90.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -63,13 +58,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -89.04515874612778
+    "rotation": -75.9637565320736
   },
   "reversed": false,
   "folder": "BLUE LEFT AI NO TURRET",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -75.9637565320736
+    "rotation": -89.74033653888755
   },
   "useDefaultConstraints": true
 }
