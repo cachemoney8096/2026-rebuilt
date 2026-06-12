@@ -255,7 +255,6 @@ public class RobotContainer extends SubsystemBase {
         new InstantCommand(() -> indexer.runKicker()),
         new InstantCommand(() -> indexer.runIndexer())));
     NamedCommands.registerCommand("STOP SHOOT SEQUENCE", new InstantCommand(() -> {
-      turret.setDesiredTurretPosition(90);
       indexer.stopIndexer();
       indexer.stopKicker();
     }));
@@ -494,9 +493,9 @@ public class RobotContainer extends SubsystemBase {
     InstantCommand aim = new InstantCommand(() -> {
       Translation2d target = new Translation2d();
       if (isBlue) {
-        target = new Translation2d(4.0, 4.3); // TODO this may be wrong
+        target = new Translation2d(5.3, 3.5); // TODO this may be wrong
       } else {
-        target = new Translation2d(12.0, 4.3);
+        target = new Translation2d(12.7, 4.0);
       }
       Translation2d botPose = drivetrain.getState().Pose.getTranslation();
       Translation2d difference = target.minus(botPose);
@@ -594,6 +593,8 @@ public class RobotContainer extends SubsystemBase {
     operatorController.y().whileTrue(
         new RepeatCommand(
             new SequentialCommandGroup(
+                new InstantCommand(() -> shooter.setRollerSpeedRPS(this::getShooterPowerPointBlank)),
+                new InstantCommand(() -> shooter.setDesiredHoodPositionAbsolute(this::getShooterPitchPointBlank)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
                 new WaitCommand(0.5),
@@ -608,8 +609,7 @@ public class RobotContainer extends SubsystemBase {
 
     operatorController.a().whileTrue(
       new RunCommand(()->{
-        Translation2d t = new Translation2d(tx, ty);
-        turret.setDesiredTurretPosition(TurretUtil.turretTargetHeading(isBlueBooleanSupplier, robotPoseSupplier, headingSupplier, t));
+        turret.setDesiredTurretPosition(MathUtil.inputModulus(TurretUtil.turretTargetHeadingConsidersRobotVelocity(isBlueBooleanSupplier, robotPoseSupplier, headingSupplier, chassisSpeedsSupplier), 0.0, 360.0));
       })
     );
 
@@ -636,6 +636,22 @@ public class RobotContainer extends SubsystemBase {
             new WaitCommand(0.5),
             new InstantCommand(() -> intake.stopRollers())));
 
+    operatorController.povLeft().onTrue(
+      new InstantCommand(()->{
+        turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg+45);
+      })
+    );
+
+    operatorController.povRight().onTrue(
+      new InstantCommand(()->{
+        turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg-45);
+      })
+    );
+
+    operatorController.povDown().onTrue(
+      new InstantCommand(()->turret.turretDesiredPositionDeg = 90)
+    );
+
     operatorController.rightTrigger().whileTrue(
         new RepeatCommand(
             new SequentialCommandGroup(
@@ -656,7 +672,7 @@ public class RobotContainer extends SubsystemBase {
     operatorController.leftBumper().whileTrue(
         new RepeatCommand(
             new SequentialCommandGroup(
-                new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> 4800)), // 4800
+                new InstantCommand(() -> shooter.setRollerSpeedRPS(() -> 4750)), // 4800
                 new InstantCommand(() -> shooter.setDesiredHoodPosition(() -> 57)),
                 new InstantCommand(() -> shooter.runRollers()),
                 new InstantCommand(() -> indexer.runKicker()),
@@ -689,45 +705,51 @@ public class RobotContainer extends SubsystemBase {
             }
           }
         }));
-    operatorController.povUp().onTrue(
-        // new InstantCommand(() -> {
-        // var results = camera.getAllUnreadResults();
-        // if (!results.isEmpty()) {
-        // var result = results.get(results.size() - 1);
-        // if (result.hasTargets()) {
-        // desiredHeadingDeg -= result.getTargets().get(0).getYaw();
-        // //
-        // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
-        // }
-        // }
-        // })
-        new InstantCommand(() -> {
-          var lowResults = lowAI.getAllUnreadResults();
-          if (!lowResults.isEmpty()) {
-            var result = lowResults.get(lowResults.size() - 1);
-            if (result.hasTargets()) {
-              desiredHeadingDeg -= result.getTargets().get(0).getYaw();
-              // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
-            }
-          } else {
-            var highResults = highAI.getAllUnreadResults();
-            if (!highResults.isEmpty()) {
-              var result = highResults.get(highResults.size() - 1);
-              if (result.hasTargets()) {
-                desiredHeadingDeg -= result.getTargets().get(0).getYaw();
-                // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
-              }
-            }
-          }
-        }));
+    // operatorController.povUp().onTrue(
+    //     // new InstantCommand(() -> {
+    //     // var results = camera.getAllUnreadResults();
+    //     // if (!results.isEmpty()) {
+    //     // var result = results.get(results.size() - 1);
+    //     // if (result.hasTargets()) {
+    //     // desiredHeadingDeg -= result.getTargets().get(0).getYaw();
+    //     // //
+    //     // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
+    //     // }
+    //     // }
+    //     // })
+    //     new InstantCommand(() -> {
+    //       var lowResults = lowAI.getAllUnreadResults();
+    //       if (!lowResults.isEmpty()) {
+    //         var result = lowResults.get(lowResults.size() - 1);
+    //         if (result.hasTargets()) {
+    //           desiredHeadingDeg -= result.getTargets().get(0).getYaw();
+    //           // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
+    //         }
+    //       } else {
+    //         var highResults = highAI.getAllUnreadResults();
+    //         if (!highResults.isEmpty()) {
+    //           var result = highResults.get(highResults.size() - 1);
+    //           if (result.hasTargets()) {
+    //             desiredHeadingDeg -= result.getTargets().get(0).getYaw();
+    //             // System.out.println(result.getTargets().get(0).bestCameraToTarget.getTranslation().getNorm());
+    //           }
+    //         }
+    //       }
+    //     }));
+    operatorController.povUp().onTrue(new InstantCommand(()->{
+      shooter.addHoodOneDeg();
+    }));
+    operatorController.povDown().onTrue(new InstantCommand(()->{
+      shooter.subtractHoodOneDeg();
+    }));
   }
 
   public Translation2d getTarget() {
     Translation2d target = new Translation2d();
     if (isBlue) {
-      target = new Translation2d(4.0, 4.0); // TODO this may be wrong
+      target = new Translation2d(5.0, 4.0); // TODO this may be wrong
     } else {
-      target = new Translation2d(12.0, 4.0);
+      target = new Translation2d(11.3, 4.0);
     }
     return target;
   }
@@ -735,25 +757,34 @@ public class RobotContainer extends SubsystemBase {
   public double getShooterPower() {
     Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
-    return ShooterPitchPower.getPower(dist);
+    // return ShooterPitchPower.getPower(dist-0.2);
+    return 4000;
   }
 
   public double getShooterPowerAuto() {
     Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
-    return ShooterPitchPower.getPower(dist - 1.8);
+    return ShooterPitchPower.getPower(dist-0.3);
   }
 
   public double getShooterPitchAuto() {
     Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
-    return ShooterPitchPower.getPitch(dist - 1.8);
+    return ShooterPitchPower.getPitch(dist-0.4);
+  }
+
+  public double getShooterPowerPointBlank(){
+    return ShooterPitchPower.getPower(0.6);
+  }
+
+  public double getShooterPitchPointBlank(){
+    return ShooterPitchPower.getPitch(0.6);
   }
 
   public double getShooterPitch() {
     Translation2d target = getTarget();
     double dist = drivetrain.getState().Pose.getTranslation().getDistance(target);
-    return ShooterPitchPower.getPitch(dist);
+    return ShooterPitchPower.getPitch(dist-0.2);
   }
 
   // private double getRelativeDistanceToTarget() {

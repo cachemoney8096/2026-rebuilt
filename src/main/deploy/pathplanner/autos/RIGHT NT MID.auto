@@ -1,0 +1,97 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "DEPLOY INTAKE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 1.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RIGHT Trench NT to Start Intaking"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "RUN INTAKE"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RIGHT Start Intaking to Mid"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "PREP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "RIGHT Mid to Trench NT"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 2.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "SHOOT INTAKE"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 8.0
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT SEQUENCE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP INTAKE"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "STOP SHOOT PREP SEQUENCE"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": null,
+  "choreoAuto": false
+}

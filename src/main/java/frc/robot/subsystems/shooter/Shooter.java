@@ -147,7 +147,7 @@ public class Shooter extends SubsystemBase {
     }
 
     public void setHoodShuffleboard(double d){
-        this.setDesiredHoodPosition(()->d);
+        this.hoodDesiredPositionDeg = d;
     }
 
     @Override
@@ -169,6 +169,6 @@ public class Shooter extends SubsystemBase {
         builder.addDoubleProperty("Left Roller Amperage (amps)", () -> leftRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
         builder.addDoubleProperty("Right Roller Amperage (amps)", () -> rightRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
 
-        builder.addDoubleProperty("TUNING Shooter set roller speed rpm", ()->currentRollerSpeedRPM, this::setSpeedShuffleboard);
+        builder.addDoubleProperty("TUNINGShooter set roller speed rpm", ()->currentRollerSpeedRPM, this::setSpeedShuffleboard);
     }
 }

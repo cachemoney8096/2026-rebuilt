@@ -31,7 +31,7 @@ public class Turret extends SubsystemBase {
     private void initTalons() {
         TalonFXConfiguration turretToApply = new TalonFXConfiguration();
         turretToApply.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        turretToApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+        turretToApply.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         turretToApply.CurrentLimits.SupplyCurrentLimit = TurretCal.TURRET_SUPPLY_CURRENT_LIMIT_AMPS;
         turretToApply.CurrentLimits.StatorCurrentLimit = TurretCal.TURRET_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
         turretToApply.CurrentLimits.StatorCurrentLimitEnable = true;
@@ -127,7 +127,7 @@ public class Turret extends SubsystemBase {
     @Override
     public void periodic() {
         if(!atDesiredTurretPosition()){
-            controlTurretPosition();
+            //controlTurretPosition();
         }
     }
 

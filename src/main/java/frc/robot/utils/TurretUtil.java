@@ -10,8 +10,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
 public class TurretUtil {
-    public static Translation2d blueTarget = new Translation2d(5.5, 3.0);
-    public static Translation2d redTarget = new Translation2d(12.0, 4.0);
+    public static Translation2d blueTarget = new Translation2d(5.3, 3.5);
+    public static Translation2d redTarget = new Translation2d(11.7, 4.0);
 
     public static double turretTargetHeading(BooleanSupplier isBlueBooleanSupplier, Supplier<Pose2d> robotPoseSupplier,
             DoubleSupplier headingSupplier){
@@ -56,7 +56,7 @@ public class TurretUtil {
         Translation2d target = isBlueBooleanSupplier.getAsBoolean()?blueTarget:redTarget;
         Translation2d robot = robotPoseSupplier.get().getTranslation();
         double distance = Math.abs(target.getDistance(robot));
-        double time = ShotTimeUtil.getTimeFromDistance(distance);
+        double time = 1.2;
         double xOffset = -speeds.get().vxMetersPerSecond*time;
         double yOffset = -speeds.get().vyMetersPerSecond*time;
         if(isBlueBooleanSupplier.getAsBoolean()){
