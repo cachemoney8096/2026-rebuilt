@@ -3,32 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.0,
-        "y": 7.0
+        "x": 4.0,
+        "y": 7.541548013245032
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0,
-        "y": 7.0
+        "x": 6.730894039735098,
+        "y": 7.490728476821191
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "LEFT TRENCH"
     },
     {
       "anchor": {
-        "x": 4.0,
-        "y": 6.0
+        "x": 7.6166059602649,
+        "y": 7.164031456953642
       },
       "prevControl": {
-        "x": 3.0,
-        "y": 6.0
+        "x": 6.672814569536423,
+        "y": 7.686746688741721
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "LEFT START INTAKING"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": -178.3467794223126
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -41,14 +46,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 2.0,
+    "rotation": -89.04515874612778
   },
   "reversed": false,
-  "folder": null,
+  "folder": "LEFT TURRET",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -179.01788283677584
   },
   "useDefaultConstraints": true
 }

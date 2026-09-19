@@ -19,25 +19,28 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotMap;
 
 public class Intake extends SubsystemBase {
-    private final TalonFX slapdownMotor = new TalonFX(RobotMap.INTAKE_SLAPDOWN_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    // TODO this subsystem should probably actually offer use of absolute encoder it declares
+    private boolean allowIntakeMovement = true;
+
+    private final TalonFX slapdownMotor = new TalonFX(RobotMap.INTAKE_SLAPDOWN_MOTOR_CAN_ID, RobotMap.SWERVE_CAN_BUS);
 
     private final TrapezoidProfile slapdownTrapezoidProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(
         IntakeCal.SLAPDOWN_MAX_VELOCITY_RPS, 
         IntakeCal.SLAPDOWN_MAX_ACCELERATION_RPS_SQUARED));
 
-    private final TalonFX leftRollerMotor = new TalonFX(RobotMap.INTAKE_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
-    private final TalonFX rightRollerMotor = new TalonFX(RobotMap.INTAKE_RIGHT_ROLLER_MOTOR_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final TalonFX rollerMotor = new TalonFX(RobotMap.INTAKE_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.SWERVE_CAN_BUS);
 
-    private final CANcoder absoluteEncoder = new CANcoder(RobotMap.INTAKE_CANCODER_CAN_ID, RobotMap.RIO_CAN_BUS);
+    private final CANcoder absoluteEncoder = new CANcoder(RobotMap.INTAKE_CANCODER_CAN_ID, RobotMap.MAIN_CAN_BUS);
 
     public enum IntakePosition {
         HOME,
-        EXTENDED
+        EXTENDED,
+        SHOOTING
     }
 
     public final TreeMap<IntakePosition, Double> intakePositions = new TreeMap<IntakePosition, Double>();
 
-    private IntakePosition slapdownDesiredPosition = IntakePosition.HOME;
+    public IntakePosition slapdownDesiredPosition = IntakePosition.HOME;
 
     public Intake(){
         initPositions();
@@ -48,12 +51,13 @@ public class Intake extends SubsystemBase {
     private void initPositions() {
         intakePositions.put(IntakePosition.HOME, IntakeCal.INTAKE_POSITION_HOME_DEGREES);
         intakePositions.put(IntakePosition.EXTENDED, IntakeCal.INTAKE_POSITION_EXTENDED_DEGREES);
+        intakePositions.put(IntakePosition.SHOOTING, IntakeCal.INTAKE_POSITION_SHOOTING);
     }
 
     private void initTalons() {
         /* Init rollers */
         TalonFXConfiguration rollersToApply = new TalonFXConfiguration();
-        rollersToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
+        rollersToApply.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         rollersToApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         rollersToApply.CurrentLimits.SupplyCurrentLimit = IntakeCal.ROLLERS_SUPPLY_CURRENT_LIMIT_AMPS;
         rollersToApply.CurrentLimits.StatorCurrentLimit = IntakeCal.ROLLERS_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
@@ -63,15 +67,12 @@ public class Intake extends SubsystemBase {
         rollersToApply.Slot0.kD = IntakeCal.ROLLERS_D;
         rollersToApply.Slot0.kV = IntakeCal.ROLLERS_FF;
 
-        TalonFXConfigurator leftRollerConfig = leftRollerMotor.getConfigurator();
+        TalonFXConfigurator leftRollerConfig = rollerMotor.getConfigurator();
         leftRollerConfig.apply(rollersToApply);
-
-        Follower master = new Follower(leftRollerMotor.getDeviceID(), MotorAlignmentValue.Opposed);
-        rightRollerMotor.setControl(master);
 
         /* Init slapdown */
         TalonFXConfiguration slapdownToApply = new TalonFXConfiguration();
-        slapdownToApply.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        slapdownToApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         slapdownToApply.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         slapdownToApply.CurrentLimits.SupplyCurrentLimit = IntakeCal.SLAPDOWN_SUPPLY_CURRENT_LIMIT_AMPS;
         slapdownToApply.CurrentLimits.StatorCurrentLimit = IntakeCal.SLAPDOWN_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;
@@ -94,7 +95,7 @@ public class Intake extends SubsystemBase {
 
     public void zeroSlapdown() {
         slapdownMotor.setPosition(
-            (IntakeCal.SLAPDOWN_HOME_DEGREES / 360.0) * IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO);
+            (IntakeCal.INTAKE_POSITION_HOME_DEGREES / 360.0) * IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO); 
         slapdownDesiredPosition = IntakePosition.HOME;
     }
 
@@ -107,19 +108,31 @@ public class Intake extends SubsystemBase {
     }
 
     public void runRollers() {
-        leftRollerMotor.set(IntakeCal.ROLLERS_RUNNING_SPEED);
+        rollerMotor.set(IntakeCal.ROLLERS_RUNNING_SPEED);
     }
 
     public void stopRollers() {
-        leftRollerMotor.set(0.0);
+        rollerMotor.set(0.0);
+    }
+
+    public void runRollersFast(){
+        rollerMotor.set(1.0);
+    }
+
+    public void reverseRollers(){
+        rollerMotor.set(-0.6);
     }
 
     public boolean atDesiredSlapdownPosition() {
-        return Math.abs(slapdownMotor.getPosition().getValueAsDouble() - slapdownPositionToMotorPosition(slapdownDesiredPosition)) < IntakeCal.SLAPDOWN_POSITION_MARGIN;
+        return Math.abs(((slapdownMotor.getPosition().getValueAsDouble() * 360) / IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO) - intakePositions.get(slapdownDesiredPosition)) < IntakeCal.SLAPDOWN_POSITION_MARGIN;
     }
 
     private double slapdownPositionToMotorPosition(IntakePosition slapdownPosition)  {
         return (intakePositions.get(slapdownPosition) / 360.0) * IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO;
+    }
+
+    public void setIntakeMovementAllowed(boolean allowed) {
+        allowIntakeMovement = allowed;
     }
 
     private void controlSlapdownPosition() {
@@ -139,7 +152,9 @@ public class Intake extends SubsystemBase {
 
     @Override
     public void periodic() {
-        controlSlapdownPosition();
+        if (allowIntakeMovement) {
+            controlSlapdownPosition();
+        }
     }
 
     @Override
@@ -147,7 +162,7 @@ public class Intake extends SubsystemBase {
         super.initSendable(builder);
 
         /* Slapdown */
-        builder.addDoubleProperty("Position (deg.)", () -> (slapdownMotor.getPosition().getValueAsDouble() / 360.0) * IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO, null);
+        builder.addDoubleProperty("Position (deg.)", () -> (slapdownMotor.getPosition().getValueAsDouble() * 360) / IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO, null);
         builder.addDoubleProperty("Real Position (rot.)", this::getRealPositionRotations, null);
         builder.addDoubleProperty("Slapdown Desired Position (deg.)", () -> intakePositions.get(slapdownDesiredPosition), null);
         builder.addStringProperty("Slapdown Desired Position", () -> slapdownDesiredPosition.toString(), null);
@@ -156,12 +171,12 @@ public class Intake extends SubsystemBase {
 
         builder.addDoubleProperty("Slapdown Amperage (amps)", () -> slapdownMotor.getTorqueCurrent().getValueAsDouble(), null);
         builder.addDoubleProperty("Slapdown Commanded Voltage (volts)", () -> slapdownMotor.getMotorVoltage().getValueAsDouble(), null);
+        builder.addBooleanProperty("Allow Intake Movement", () -> allowIntakeMovement, null);
 
         /* Rollers */
-        builder.addDoubleProperty("Rollers Speed (percent)", () -> leftRollerMotor.get(), null);
+        builder.addDoubleProperty("Rollers Speed (percent)", () -> rollerMotor.get(), null);
         
-        builder.addDoubleProperty("Left roller Amperage (amps)", () -> leftRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
-        builder.addDoubleProperty("Right roller Amperage (amps)", () -> rightRollerMotor.getTorqueCurrent().getValueAsDouble(), null);
+        builder.addDoubleProperty("Left roller Amperage (amps)", () -> rollerMotor.getTorqueCurrent().getValueAsDouble(), null);
     }
 
 }
