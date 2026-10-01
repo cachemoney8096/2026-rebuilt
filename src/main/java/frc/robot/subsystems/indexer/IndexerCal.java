@@ -1,7 +1,5 @@
 package frc.robot.subsystems.indexer;
 
-import frc.robot.Constants;
-
 public class IndexerCal {
 
   public static final double INDEXER_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;

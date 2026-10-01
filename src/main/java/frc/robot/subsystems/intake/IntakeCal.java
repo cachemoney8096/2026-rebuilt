@@ -1,7 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import frc.robot.Constants;
-
 public class IntakeCal {
     public static final double INTAKE_POSITION_HOME_DEGREES = 0.0; 
     public static final double INTAKE_POSITION_EXTENDED_DEGREES = 175.0; 

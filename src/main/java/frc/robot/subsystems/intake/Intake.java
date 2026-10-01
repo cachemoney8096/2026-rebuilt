@@ -1,25 +1,23 @@
 package frc.robot.subsystems.intake;
 import java.util.TreeMap;
 
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.CANcoderConfigurator;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import org.wpilib.math.trajectory.TrapezoidProfile;
-import org.wpilib.util.sendable.SendableBuilder;
+import org.wpilib.telemetry.Telemetry;
+import org.wpilib.telemetry.TelemetryTable;
 import org.wpilib.command2.SubsystemBase;
 import frc.robot.RobotMap;
 
 public class Intake extends SubsystemBase {
-    // TODO this subsystem should probably actually offer use of absolute encoder it declares
+    private final TelemetryTable intakeTelemetry =
+        Telemetry.getTable("Intake");
+    
     private boolean allowIntakeMovement = true;
 
     private final TalonFX slapdownMotor = new TalonFX(RobotMap.INTAKE_SLAPDOWN_MOTOR_CAN_ID, RobotMap.SWERVE_CAN_BUS);
@@ -29,8 +27,6 @@ public class Intake extends SubsystemBase {
         IntakeCal.SLAPDOWN_MAX_ACCELERATION_RPS_SQUARED));
 
     private final TalonFX rollerMotor = new TalonFX(RobotMap.INTAKE_LEFT_ROLLER_MOTOR_CAN_ID, RobotMap.SWERVE_CAN_BUS);
-
-    private final CANcoder absoluteEncoder = new CANcoder(RobotMap.INTAKE_CANCODER_CAN_ID, RobotMap.MAIN_CAN_BUS);
 
     public enum IntakePosition {
         HOME,
@@ -84,13 +80,6 @@ public class Intake extends SubsystemBase {
 
         TalonFXConfigurator slapdownConfig = slapdownMotor.getConfigurator();
         slapdownConfig.apply(slapdownToApply);
-
-        CANcoderConfiguration canCoderToApply = new CANcoderConfiguration();
-        canCoderToApply.MagnetSensor.MagnetOffset = IntakeCal.INTAKE_CANCODER_MAGNET_OFFSET; 
-        canCoderToApply.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1;
-
-        CANcoderConfigurator canCoderConfig = absoluteEncoder.getConfigurator();
-        canCoderConfig.apply(canCoderToApply);
     }
 
     public void zeroSlapdown() {
@@ -103,24 +92,20 @@ public class Intake extends SubsystemBase {
         slapdownDesiredPosition = newPosition;
     }
 
-    public double getRealPositionRotations() {
-        return absoluteEncoder.getAbsolutePosition().getValueAsDouble();
-    }
-
     public void runRollers() {
-        rollerMotor.set(IntakeCal.ROLLERS_RUNNING_SPEED);
+        rollerMotor.setThrottle(IntakeCal.ROLLERS_RUNNING_SPEED);
     }
 
     public void stopRollers() {
-        rollerMotor.set(0.0);
+        rollerMotor.setThrottle(0.0);
     }
 
     public void runRollersFast(){
-        rollerMotor.set(1.0);
+        rollerMotor.setThrottle(1.0);
     }
 
     public void reverseRollers(){
-        rollerMotor.set(-0.6);
+        rollerMotor.setThrottle(-0.6);
     }
 
     public boolean atDesiredSlapdownPosition() {
@@ -155,28 +140,22 @@ public class Intake extends SubsystemBase {
         if (allowIntakeMovement) {
             controlSlapdownPosition();
         }
+
+        sendTelemetry();
     }
 
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
+    private void sendTelemetry() {
+        intakeTelemetry.log("Intake Position (deg)", (slapdownMotor.getPosition().getValueAsDouble() * 360) / IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO);
+        intakeTelemetry.log("Intake Position (deg)", (slapdownMotor.getPosition().getValueAsDouble() * 360) / IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO);
+        intakeTelemetry.log("Slapdown Desired Position (deg)", intakePositions.get(slapdownDesiredPosition)); 
+        intakeTelemetry.log("Slapdown Desired Position (enum)", slapdownDesiredPosition.toString()); 
+        intakeTelemetry.log("Slapdown At Desired Postion (bool)", atDesiredSlapdownPosition());
+        intakeTelemetry.log("Slapdown Current (A)", slapdownMotor.getTorqueCurrent());
+        intakeTelemetry.log("Slapdown Commanded Volatage (V)", slapdownMotor.getMotorVoltage());
 
-        /* Slapdown */
-        builder.addDoubleProperty("Position (deg.)", () -> (slapdownMotor.getPosition().getValueAsDouble() * 360) / IntakeCal.SLAPDOWN_MOTOR_TO_SLAPDOWN_RATIO, null);
-        builder.addDoubleProperty("Real Position (rot.)", this::getRealPositionRotations, null);
-        builder.addDoubleProperty("Slapdown Desired Position (deg.)", () -> intakePositions.get(slapdownDesiredPosition), null);
-        builder.addStringProperty("Slapdown Desired Position", () -> slapdownDesiredPosition.toString(), null);
+        intakeTelemetry.log("Intake Allowed (bool)", allowIntakeMovement);
 
-        builder.addBooleanProperty("Slapdown at Desired Position", this::atDesiredSlapdownPosition, null);
-
-        builder.addDoubleProperty("Slapdown Amperage (amps)", () -> slapdownMotor.getTorqueCurrent().getValueAsDouble(), null);
-        builder.addDoubleProperty("Slapdown Commanded Voltage (volts)", () -> slapdownMotor.getMotorVoltage().getValueAsDouble(), null);
-        builder.addBooleanProperty("Allow Intake Movement", () -> allowIntakeMovement, null);
-
-        /* Rollers */
-        builder.addDoubleProperty("Rollers Speed (percent)", () -> rollerMotor.get(), null);
-        
-        builder.addDoubleProperty("Left roller Amperage (amps)", () -> rollerMotor.getTorqueCurrent().getValueAsDouble(), null);
+        intakeTelemetry.log("Rollers Throttle (%)", rollerMotor.getThrottle());
+        intakeTelemetry.log("Roller Current (A)", rollerMotor.getThrottle());
     }
-
 }

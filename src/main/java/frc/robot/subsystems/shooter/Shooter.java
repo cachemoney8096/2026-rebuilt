@@ -12,7 +12,6 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import org.wpilib.math.trajectory.TrapezoidProfile;
-import org.wpilib.util.sendable.SendableBuilder;
 import org.wpilib.command2.SubsystemBase;
 import frc.robot.RobotMap;
 
@@ -92,11 +91,11 @@ public class Shooter extends SubsystemBase {
     }
 
     public void runRollers() {
-        leftRollerMotor.set(currentRollerSpeedRPM / ShooterCal.ROLLERS_MAX_RPS);
+        leftRollerMotor.setThrottle(currentRollerSpeedRPM / ShooterCal.ROLLERS_MAX_RPS);
     }
 
     public void stopRollers() {
-        leftRollerMotor.set(0.0);
+        leftRollerMotor.setThrottle(0.0);
     }
 
     public void setRollerSpeedRPS(DoubleSupplier speedRPS) {
@@ -137,17 +136,17 @@ public class Shooter extends SubsystemBase {
         hoodMotor.setControl(request);
     }
 
-    @Override
-    public void periodic() {
-        controlHoodPosition();
-    }
-
     public void setSpeedShuffleboard(double d){
         this.setRollerSpeedRPS(()->d);
     }
 
     public void setHoodShuffleboard(double d){
         this.hoodDesiredPositionDeg = d;
+    }
+
+    @Override
+    public void periodic() {
+        controlHoodPosition();
     }
 
     @Override

@@ -1,15 +1,21 @@
 package frc.robot.subsystems.indexer;
 
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.telemetry.Telemetry;
+import org.wpilib.telemetry.TelemetryTable;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import org.wpilib.util.sendable.SendableBuilder;
-import org.wpilib.command2.SubsystemBase;
+
 import frc.robot.RobotMap;
 
 public class Indexer extends SubsystemBase {
+
+  private final TelemetryTable indexerTelemetry =
+    Telemetry.getTable("Indexer");
 
   private final TalonFX rotatorMotor =
       new TalonFX(RobotMap.INDEXER_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
@@ -23,7 +29,6 @@ public class Indexer extends SubsystemBase {
   private void initTalons() {
     TalonFXConfiguration toApply = new TalonFXConfiguration();
 
-    // adjust direction if needed
     toApply.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
     toApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     toApply.CurrentLimits.SupplyCurrentLimit = IndexerCal.INDEXER_SUPPLY_CURRENT_LIMIT_AMPS;
@@ -48,8 +53,9 @@ public class Indexer extends SubsystemBase {
   }
 
   public void runIndexer() {
-    rotatorMotor.set(IndexerCal.INDEXER_SPEED);
+    rotatorMotor.setThrottle(IndexerCal.INDEXER_SPEED);
   }
+  
   public boolean indexerIsOn() {
     return Math.abs(rotatorMotor.getVelocity().getValueAsDouble()) > 0.0;
   }
@@ -59,34 +65,34 @@ public class Indexer extends SubsystemBase {
   }
 
   public void stopIndexer() {
-    rotatorMotor.set(0.0);
+    rotatorMotor.setThrottle(0.0);
   }
 
   public void runKicker() {
-    kickerMotor.set(IndexerCal.KICKER_SPEED);
+    kickerMotor.setThrottle(IndexerCal.KICKER_SPEED);
   }
 
   public void stopKicker() {
-    kickerMotor.set(0.0);
+    kickerMotor.setThrottle(0.0);
   }
 
   public void reverseKicker(){
-    kickerMotor.set(-0.5);
+    kickerMotor.setThrottle(-0.5);
   }
 
   public void reverseIndexer(){
-    rotatorMotor.set(0.5);
+    rotatorMotor.setThrottle(0.5);
   }
 
   @Override
-  public void initSendable(SendableBuilder builder) {
+  public void periodic() {
+    sendTelemetry();
+  }
 
-    super.initSendable(builder);
-    builder.addDoubleProperty("Indexer Speed (RPM)", () -> rotatorMotor.getVelocity().getValueAsDouble(), null);
-    builder.addDoubleProperty(
-        "Indexer Amperage (amps)", () -> rotatorMotor.getTorqueCurrent().getValueAsDouble(), null);
-    builder.addDoubleProperty("Kicker Speed (RPM)", () -> kickerMotor.getVelocity().getValueAsDouble(), null);
-    builder.addDoubleProperty(
-        "Kicker Amperage (amps)", () -> kickerMotor.getTorqueCurrent().getValueAsDouble(), null);
+  private void sendTelemetry() {
+    indexerTelemetry.log("Indexer Speed (RPM)", rotatorMotor.getVelocity().getValueAsDouble());
+    indexerTelemetry.log("Indexer Current (A)", rotatorMotor.getTorqueCurrent().getValueAsDouble());
+    indexerTelemetry.log("Kicker Speed (RPM)", kickerMotor.getVelocity().getValueAsDouble());
+    indexerTelemetry.log("Kicker Current (A)", kickerMotor.getTorqueCurrent().getValueAsDouble());
   }
 }
