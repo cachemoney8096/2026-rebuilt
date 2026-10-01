@@ -1,9 +1,9 @@
 package frc.robot.subsystems.climb;
 
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Servo;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.wpilib.math.trajectory.TrapezoidProfile;
+import org.wpilib.util.sendable.SendableBuilder;
+import org.wpilib.hardware.servo.Servo;
+import org.wpilib.command2.SubsystemBase;
 import frc.robot.RobotMap;
 
 import java.util.TreeMap;

@@ -1,8 +1,8 @@
 package frc.robot.commands;
 
 
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.SequentialCommandGroup;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.ShooterCal;
 import frc.robot.subsystems.turret.Turret;
@@ -14,7 +14,7 @@ import frc.robot.subsystems.intake.Intake.IntakePosition;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.Climb.ClimbHeight;
 import frc.robot.subsystems.indexer.Indexer;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import org.wpilib.command2.WaitUntilCommand;
 
 
 public class GoHomeSequence extends SequentialCommandGroup{

@@ -6,14 +6,18 @@ package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.util.Units;
+import org.wpilib.system.DataLogManager;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchType;
+import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.framework.TimedRobot;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
 import frc.robot.utils.LimelightHelpers;
 
 /**
@@ -69,7 +73,7 @@ public class Robot extends TimedRobot {
     CommandScheduler.getInstance().run();
     if (kUseLimelight) {
       var driveState = m_robotContainer.drivetrain.getState();
-      double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
+      double omegaRps = Units.radiansToRotations(driveState.Speeds.omega);
 
       var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-turret");
       if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
@@ -86,13 +90,13 @@ public class Robot extends TimedRobot {
 
   @Override
   public void disabledPeriodic() {
-    if (DriverStation.getAlliance().isPresent()) {
-      if (DriverStation.getAlliance().get() == DriverStation.Alliance.Blue && !m_robotContainer.isBlue) {
+    if (MatchState.getAlliance().isPresent()) {
+      if (MatchState.getAlliance().get() == Alliance.BLUE && !m_robotContainer.isBlue) {
         m_robotContainer.drivetrain.resetPose(new Pose2d(m_robotContainer.drivetrain.getState().Pose.getX(),
             m_robotContainer.drivetrain.getState().Pose.getY(), Rotation2d.fromDegrees(0.0)));
         m_robotContainer.desiredHeadingDeg = 0.0;
         m_robotContainer.isBlue = true;
-      } else if (DriverStation.getAlliance().get() == DriverStation.Alliance.Red && m_robotContainer.isBlue) {
+      } else if (MatchState.getAlliance().get() == Alliance.RED && m_robotContainer.isBlue) {
         m_robotContainer.drivetrain.resetPose(new Pose2d(m_robotContainer.drivetrain.getState().Pose.getX(),
             m_robotContainer.drivetrain.getState().Pose.getY(), Rotation2d.fromDegrees(180.0)));
         m_robotContainer.desiredHeadingDeg = 180.0;
@@ -137,14 +141,14 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void testInit() {
+  public void utilityInit() {
     // Cancels all running commands at the start of test mode.
     CommandScheduler.getInstance().cancelAll();
   }
 
   /** This function is called periodically during test mode. */
   @Override
-  public void testPeriodic() {
+  public void utilityPeriodic() {
   }
 
   /** This function is called once when the robot is first started up. */

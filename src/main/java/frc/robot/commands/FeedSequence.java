@@ -2,10 +2,10 @@ package frc.robot.commands;
 
 import java.util.function.Supplier;
 
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.RepeatCommand;
+import org.wpilib.command2.SequentialCommandGroup;
+import org.wpilib.command2.button.Trigger;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretCal;
 

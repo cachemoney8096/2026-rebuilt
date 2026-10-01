@@ -4,9 +4,9 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static org.wpilib.units.Units.MetersPerSecond;
+import static org.wpilib.units.Units.RadiansPerSecond;
+import static org.wpilib.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -14,42 +14,46 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import org.wpilib.vision.apriltag.AprilTagFieldLayout;
+import org.wpilib.vision.apriltag.AprilTagFields;
+import org.wpilib.math.util.MathUtil;
+import org.wpilib.math.util.Pair;
+import org.wpilib.math.controller.PIDController;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Pose3d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Rotation3d;
+import org.wpilib.math.geometry.Transform2d;
+import org.wpilib.math.geometry.Transform3d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.geometry.Translation3d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.math.util.Units;
+import org.wpilib.util.sendable.SendableBuilder;
+import org.wpilib.driverstation.MatchState;
+import org.wpilib.driverstation.RobotState;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.driverstation.MatchType;
+import org.wpilib.driverstation.DriverStationErrors;
+import org.wpilib.driverstation.Alliance;
+import org.wpilib.system.Filesystem;
+import org.wpilib.driverstation.GenericHID.RumbleType;
+import org.wpilib.shuffleboard.Shuffleboard;
+import org.wpilib.smartdashboard.SendableChooser;
+import org.wpilib.smartdashboard.SmartDashboard;
+import org.wpilib.command2.Command;
+import org.wpilib.command2.CommandScheduler;
+import org.wpilib.command2.ConditionalCommand;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.ParallelCommandGroup;
+import org.wpilib.command2.RepeatCommand;
+import org.wpilib.command2.RunCommand;
+import org.wpilib.command2.SequentialCommandGroup;
+import org.wpilib.command2.SubsystemBase;
+import org.wpilib.command2.WaitCommand;
+import org.wpilib.command2.WaitUntilCommand;
+import org.wpilib.command2.button.CommandXboxController;
+import org.wpilib.command2.button.Trigger;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -216,7 +220,7 @@ public class RobotContainer extends SubsystemBase {
     DoubleSupplier headingSupplier = () -> desiredHeadingDeg;
     BooleanSupplier isBluBooleanSupplier = () -> isBlue;
     Supplier<Pose2d> robotPoseSupplier = () -> drivetrain.getState().Pose;
-    Supplier<ChassisSpeeds> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
+    Supplier<ChassisVelocities> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
     RunCommand aimTurret = new RunCommand(() -> {
       double heading = headingSupplier.getAsDouble();
       heading = MathUtil.inputModulus(heading, 0, 360);
@@ -302,7 +306,7 @@ public class RobotContainer extends SubsystemBase {
     /* Field centric heading controller */
     fieldCentricFacingAngle.HeadingController.setPID(6.0, 0.0001, 0.02);
 
-    isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+    isBlue = MatchState.getAlliance().orElse(Alliance.BLUE) == Alliance.BLUE;
 
     zeroRobot();
 
@@ -366,7 +370,7 @@ public class RobotContainer extends SubsystemBase {
       double kP = 7;
       double output = -kP * targetYawRad;
 
-      output = MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
+      output = Math.clamp(output, -MaxAngularRate, MaxAngularRate);
       desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
       if (Math.abs(targetYawRad) > Math.toRadians(1.0)) {
         return drive
@@ -408,12 +412,12 @@ public class RobotContainer extends SubsystemBase {
    * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with
    * an arbitrary
    * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for
+   * org.wpilib.command2.button.CommandGenericHID}'s subclasses for
    * {@link
    * CommandXboxController
-   * Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
+   * Xbox}/{@link org.wpilib.command2.button.CommandPS4Controller
    * PS4} controllers or
-   * {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
+   * {@link org.wpilib.command2.button.CommandJoystick Flight
    * joysticks}.
    */
 
@@ -528,7 +532,7 @@ public class RobotContainer extends SubsystemBase {
     // new InstantCommand(() -> {
     // var driveState = drivetrain.getState();
     // double omegaRps =
-    // Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
+    // Units.radiansToRotations(driveState.Speeds.omega);
 
     // var llMeasurement =
     // LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-turret"); //
@@ -550,7 +554,7 @@ public class RobotContainer extends SubsystemBase {
     DoubleSupplier headingSupplier = () -> desiredHeadingDeg;
     BooleanSupplier isBlueBooleanSupplier = () -> isBlue;
     Supplier<Pose2d> robotPoseSupplier = () -> drivetrain.getState().Pose;
-    Supplier<ChassisSpeeds> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
+    Supplier<ChassisVelocities> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
 
     // operatorController.povRight().whileTrue(new RepeatCommand(
     //     new InstantCommand(
@@ -857,8 +861,8 @@ public class RobotContainer extends SubsystemBase {
               double yOutput = visionYController.calculate(
                   robotPoseFieldSpace.getY(), targetPoseFieldSpace.getY());
 
-              xOutput = MathUtil.clamp(xOutput, -1.5, 1.5);
-              yOutput = MathUtil.clamp(yOutput, -1.5, 1.5);
+              xOutput = Math.clamp(xOutput, -1.5, 1.5);
+              yOutput = Math.clamp(yOutput, -1.5, 1.5);
 
               if (this.isBlue) {
                 visionVelocitySetter.accept(xOutput, yOutput);

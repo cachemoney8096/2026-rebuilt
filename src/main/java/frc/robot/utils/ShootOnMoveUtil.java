@@ -1,10 +1,10 @@
 package frc.robot.utils;
 
-import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import org.wpilib.math.util.Pair;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.geometry.Rotation2d;
+import org.wpilib.math.geometry.Translation2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
 
 public class ShootOnMoveUtil {
     /*
@@ -28,7 +28,7 @@ public class ShootOnMoveUtil {
      * @return Pair of (turret pitch, turret heading)
      */
 
-    public static Pair<Double, Double> calcTurret(boolean isBlue, Pose2d robotPose, ChassisSpeeds speeds,
+    public static Pair<Double, Double> calcTurret(boolean isBlue, Pose2d robotPose, ChassisVelocities speeds,
             double heading) {
 
         // Initialize stuff
@@ -49,8 +49,8 @@ public class ShootOnMoveUtil {
         double timeS = shooterData.getFirst();
 
         // Calculate the target offset
-        double xVelocityFactor = -speeds.vxMetersPerSecond; 
-        double yVelocityFactor = -speeds.vyMetersPerSecond;
+        double xVelocityFactor = -speeds.vx; 
+        double yVelocityFactor = -speeds.vy;
         double targetOffsetX = xVelocityFactor*timeS;
         double targetOffsetY = yVelocityFactor*timeS;
         Translation2d targetOffsetTranslation = new Translation2d(targetOffsetX, targetOffsetY);
@@ -76,7 +76,7 @@ public class ShootOnMoveUtil {
     public static void main(String args[]){
         boolean isBlue = false;
         Pose2d robotPose = new Pose2d(15.0, 5.0, new Rotation2d());
-        ChassisSpeeds speeds = new ChassisSpeeds(0.0, 0.0, 0.0);
+        ChassisVelocities speeds = new ChassisVelocities(0.0, 0.0, 0.0);
         double heading = 180.0;
 
         Pair<Double, Double> calcResult = calcTurret(isBlue, robotPose, speeds, heading);

@@ -3,13 +3,13 @@ package frc.robot.commands;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import org.wpilib.math.util.Pair;
+import org.wpilib.math.geometry.Pose2d;
+import org.wpilib.math.kinematics.ChassisVelocities;
+import org.wpilib.command2.ConditionalCommand;
+import org.wpilib.command2.InstantCommand;
+import org.wpilib.command2.RepeatCommand;
+import org.wpilib.command2.SequentialCommandGroup;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.utils.ShootOnMoveUtil;
@@ -19,7 +19,7 @@ import frc.robot.subsystems.lights.Lights.LightCode;
 public class ShootOnFlySequence extends SequentialCommandGroup{
     
 
-    public ShootOnFlySequence(Turret turret, Shooter shooter, Supplier<Pose2d> robotPoseSupplier, Supplier<Double> headingSupplier, Supplier<ChassisSpeeds> chassisSpeedsSupplier, BooleanSupplier isBlue, Lights lights){
+    public ShootOnFlySequence(Turret turret, Shooter shooter, Supplier<Pose2d> robotPoseSupplier, Supplier<Double> headingSupplier, Supplier<ChassisVelocities> chassisSpeedsSupplier, BooleanSupplier isBlue, Lights lights){
         addRequirements(shooter, turret);
         double heading = headingSupplier.get();
         if(heading < 0){

@@ -9,10 +9,10 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.wpilib.math.util.MathUtil;
+import org.wpilib.math.trajectory.TrapezoidProfile;
+import org.wpilib.util.sendable.SendableBuilder;
+import org.wpilib.command2.SubsystemBase;
 import frc.robot.RobotMap;
 
 public class Turret extends SubsystemBase {
@@ -52,7 +52,7 @@ public class Turret extends SubsystemBase {
 
     public void setDesiredTurretPosition(double newPositionDegrees) {
         if(!Double.isNaN(newPositionDegrees)){
-            turretDesiredPositionDeg = MathUtil.clamp(newPositionDegrees, TurretCal.TURRET_MIN_DEGREES, TurretCal.TURRET_MAX_DEGREES);
+            turretDesiredPositionDeg = Math.clamp(newPositionDegrees, TurretCal.TURRET_MIN_DEGREES, TurretCal.TURRET_MAX_DEGREES);
         }
     }
 

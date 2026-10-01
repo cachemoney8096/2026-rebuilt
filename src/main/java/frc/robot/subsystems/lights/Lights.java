@@ -8,7 +8,7 @@ import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.RGBWColor;
 import com.ctre.phoenix6.signals.StripTypeValue;
 
-import edu.wpi.first.wpilibj.util.Color;
+import org.wpilib.util.Color;
 import frc.robot.RobotMap;
 import java.util.TreeMap;
 
@@ -48,18 +48,18 @@ public class Lights {
     candle.getConfigurator().apply(config);
 
     lightOptionsMap = new TreeMap<LightCode, RGBWColor>();
-    lightOptionsMap.put(LightCode.OFF, new RGBWColor(Color.kBlack));
-    lightOptionsMap.put(LightCode.HOME, new RGBWColor(Color.kPurple));
-    lightOptionsMap.put(LightCode.HOMING, new RGBWColor(Color.kPurple));
-    lightOptionsMap.put(LightCode.ALIGNING, new RGBWColor(Color.kGreen));
-    lightOptionsMap.put(LightCode.SHOOT_PREPPED, new RGBWColor(Color.kGreen));
-    lightOptionsMap.put(LightCode.SHOOT_PREPPING, new RGBWColor(Color.kGreen));
-    lightOptionsMap.put(LightCode.CLIMB_PREPPING, new RGBWColor(Color.kBlue));
-    lightOptionsMap.put(LightCode.CLIMB_PREPPED, new RGBWColor(Color.kBlue));
-    lightOptionsMap.put(LightCode.INTAKING, new RGBWColor(Color.kOrange));
-    lightOptionsMap.put(LightCode.AUTO_INTAKING, new RGBWColor(Color.kOrange));
-    lightOptionsMap.put(LightCode.FEEDING_PREPPED, new RGBWColor(Color.kGreen));
-    lightOptionsMap.put(LightCode.FEEDING_PREPPING, new RGBWColor(Color.kGreen));
+    lightOptionsMap.put(LightCode.OFF, new RGBWColor(Color.BLACK));
+    lightOptionsMap.put(LightCode.HOME, new RGBWColor(Color.PURPLE));
+    lightOptionsMap.put(LightCode.HOMING, new RGBWColor(Color.PURPLE));
+    lightOptionsMap.put(LightCode.ALIGNING, new RGBWColor(Color.GREEN));
+    lightOptionsMap.put(LightCode.SHOOT_PREPPED, new RGBWColor(Color.GREEN));
+    lightOptionsMap.put(LightCode.SHOOT_PREPPING, new RGBWColor(Color.GREEN));
+    lightOptionsMap.put(LightCode.CLIMB_PREPPING, new RGBWColor(Color.BLUE));
+    lightOptionsMap.put(LightCode.CLIMB_PREPPED, new RGBWColor(Color.BLUE));
+    lightOptionsMap.put(LightCode.INTAKING, new RGBWColor(Color.ORANGE));
+    lightOptionsMap.put(LightCode.AUTO_INTAKING, new RGBWColor(Color.ORANGE));
+    lightOptionsMap.put(LightCode.FEEDING_PREPPED, new RGBWColor(Color.GREEN));
+    lightOptionsMap.put(LightCode.FEEDING_PREPPING, new RGBWColor(Color.GREEN));
   }
 
   public void setLEDColor(LightCode light) {
