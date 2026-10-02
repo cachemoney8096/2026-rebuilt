@@ -8,7 +8,6 @@ import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.command2.ConditionalCommand;
 import org.wpilib.command2.InstantCommand;
-import org.wpilib.command2.RepeatCommand;
 import org.wpilib.command2.SequentialCommandGroup;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
