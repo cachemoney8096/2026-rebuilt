@@ -17,7 +17,7 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 import org.wpilib.vision.apriltag.AprilTagFieldLayout;
 import org.wpilib.vision.apriltag.AprilTagFields;
 import org.wpilib.math.util.MathUtil;
-import org.wpilib.math.util.Pair;
+import org.wpilib.util.Pair;
 import org.wpilib.math.controller.PIDController;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.geometry.Pose3d;
@@ -55,7 +55,6 @@ import org.wpilib.command2.WaitUntilCommand;
 import org.wpilib.command2.button.CommandXboxController;
 import org.wpilib.command2.button.Trigger;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
@@ -180,7 +179,6 @@ public class RobotContainer extends SubsystemBase {
   public boolean isBlue = true;
 
   /* Subsystems */
-  public Climb climb;
   public Indexer indexer;
   public Intake intake;
   public Lights lights;

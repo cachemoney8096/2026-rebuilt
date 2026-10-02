@@ -10,12 +10,17 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import org.wpilib.math.util.MathUtil;
+import org.wpilib.telemetry.Telemetry;
+import org.wpilib.telemetry.TelemetryTable;
+import org.wpilib.tunable.TunableTable;
 import org.wpilib.math.trajectory.TrapezoidProfile;
-import org.wpilib.util.sendable.SendableBuilder;
 import org.wpilib.command2.SubsystemBase;
 import frc.robot.RobotMap;
 
 public class Turret extends SubsystemBase {
+    private final TelemetryTable turretTelemetry =
+        Telemetry.getTable("Turret");  
+
     public final TalonFX turretMotor = new TalonFX(RobotMap.TURRET_MOTOR_CAN_ID, RobotMap.MAIN_CAN_BUS);
     public double turretDesiredPositionDeg = TurretCal.TURRET_HOME_DEGREES; 
 
@@ -129,20 +134,15 @@ public class Turret extends SubsystemBase {
         if(!atDesiredTurretPosition()){
             //controlTurretPosition();
         }
+
+        sendTelemetry();
     }
 
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
-
-        builder.addDoubleProperty("Turret Actual Position (deg.)", () -> (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO, null);
-        builder.addDoubleProperty("Turret maybe fake position (rotations)", () -> (turretPositionToMotorPosition(turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO), null);
-        builder.addDoubleProperty("Turret Desired Position (deg.)", () -> turretDesiredPositionDeg, null);
-        builder.addDoubleProperty("Turret pos rotations", ()->turretMotor.getPosition().getValueAsDouble(), null);
-
-        builder.addBooleanProperty("Turret at Desired Position", this::atDesiredTurretPosition, null);
-
-        builder.addDoubleProperty("Turret Amperage (amps)", () -> turretMotor.getTorqueCurrent().getValueAsDouble(), null);
-        builder.addDoubleProperty("Turret Commanded Voltage (volts)", () -> turretMotor.getMotorVoltage().getValueAsDouble(), null);
+    private void sendTelemetry() {
+        turretTelemetry.log("Turret Position (deg)", (turretMotor.getPosition().getValueAsDouble() * 360.0) / TurretCal.TURRET_MOTOR_TO_TURRET_RATIO);
+        turretTelemetry.log("Turret Desired Position (deg)", turretDesiredPositionDeg);
+        turretTelemetry.log("Turret at Desired Position (bool)", atDesiredTurretPosition());
+        turretTelemetry.log("Turret Current (A)", turretMotor.getTorqueCurrent().getValueAsDouble());
+        turretTelemetry.log("Turret Command Voltage (V)", turretMotor.getMotorVoltage().getValueAsDouble());
     }
 }

@@ -3,7 +3,7 @@ package frc.robot.commands;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-import org.wpilib.math.util.Pair;
+import org.wpilib.util.Pair;
 import org.wpilib.math.geometry.Pose2d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.command2.ConditionalCommand;

@@ -1,6 +1,6 @@
 package frc.robot.utils;
 
-import org.wpilib.math.util.Pair;
+import org.wpilib.util.Pair;
 
 public class ShooterPitchCalcUtil {
     private static final double GRAVITY = 9.80665;

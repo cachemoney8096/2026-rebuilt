@@ -11,21 +11,16 @@ import frc.robot.subsystems.lights.Lights;
 import frc.robot.subsystems.lights.Lights.LightCode;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakePosition;
-import frc.robot.subsystems.climb.Climb;
-import frc.robot.subsystems.climb.Climb.ClimbHeight;
 import frc.robot.subsystems.indexer.Indexer;
-import org.wpilib.command2.WaitUntilCommand;
-
 
 public class GoHomeSequence extends SequentialCommandGroup{
-    public GoHomeSequence(Turret turret, Intake intake, Climb climb, Shooter shooter, Indexer indexer, Lights lights) {
-        addRequirements(turret, intake, climb, shooter, indexer);
+    public GoHomeSequence(Turret turret, Intake intake, Shooter shooter, Indexer indexer, Lights lights) {
+        addRequirements(turret, intake, shooter, indexer);
         addCommands(
             new InstantCommand(() -> lights.setLEDColor(LightCode.HOMING)),
             new InstantCommand(() -> shooter.setDesiredHoodPosition(()->ShooterCal.HOOD_HOME_DEGREES)),
             new InstantCommand(() -> intake.stopRollers()),
             new InstantCommand(() -> intake.setDesiredSlapdownPosition(IntakePosition.HOME)),
-            new InstantCommand(() -> climb.setDesiredPosition(ClimbHeight.HOME)),
             new InstantCommand(() -> turret.setDesiredTurretPosition(TurretCal.TURRET_HOME_DEGREES)),
             new InstantCommand(() -> indexer.stopKicker()),
             new InstantCommand(() -> indexer.stopIndexer()),

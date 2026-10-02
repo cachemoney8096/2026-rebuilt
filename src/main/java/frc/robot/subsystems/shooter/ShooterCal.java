@@ -1,7 +1,5 @@
 package frc.robot.subsystems.shooter;
 
-import frc.robot.Constants;
-
 public class ShooterCal {    
     /* Rollers */
     public static final double ROLLERS_SUPPLY_CURRENT_LIMIT_AMPS = 40.0;

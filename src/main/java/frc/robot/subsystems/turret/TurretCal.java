@@ -1,7 +1,5 @@
 package frc.robot.subsystems.turret;
 
-import frc.robot.Constants;
-
 public class TurretCal {
     public static final double TURRET_SUPPLY_CURRENT_LIMIT_AMPS = 80;
     public static final double TURRET_STATOR_SUPPLY_CURRENT_LIMIT_AMPS = 80;

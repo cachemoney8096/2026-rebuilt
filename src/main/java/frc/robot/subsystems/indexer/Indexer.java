@@ -90,9 +90,9 @@ public class Indexer extends SubsystemBase {
   }
 
   private void sendTelemetry() {
-    indexerTelemetry.log("Indexer Speed (RPM)", rotatorMotor.getVelocity().getValueAsDouble());
+    indexerTelemetry.log("Indexer Speed (RPM)", rotatorMotor.getVelocity().getValueAsDouble() * 60);
     indexerTelemetry.log("Indexer Current (A)", rotatorMotor.getTorqueCurrent().getValueAsDouble());
-    indexerTelemetry.log("Kicker Speed (RPM)", kickerMotor.getVelocity().getValueAsDouble());
+    indexerTelemetry.log("Kicker Speed (RPM)", kickerMotor.getVelocity().getValueAsDouble() * 60);
     indexerTelemetry.log("Kicker Current (A)", kickerMotor.getTorqueCurrent().getValueAsDouble());
   }
 }
