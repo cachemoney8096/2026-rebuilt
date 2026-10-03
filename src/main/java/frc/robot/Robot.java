@@ -18,7 +18,6 @@ import org.wpilib.driverstation.DriverStationErrors;
 import org.wpilib.framework.TimedRobot;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
-import frc.robot.utils.LimelightHelpers;
 
 /**
  * The methods in this class are called automatically corresponding to each
@@ -31,7 +30,6 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
-  public static boolean kUseLimelight = false; // TODO filter tags
 
   /**
    * This function is run when the robot is first started up and should be used
@@ -45,7 +43,7 @@ public class Robot extends TimedRobot {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
     DataLogManager.start();
-    DriverStation.startDataLog(DataLogManager.getLog()); // log joystick data
+    // DriverStation.startDataLog(DataLogManager.getLog()); // log joystick data
     // URL.start();
     SignalLogger.setPath("/u/logs/");
     SignalLogger.start();
@@ -71,15 +69,6 @@ public class Robot extends TimedRobot {
     // robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
-    if (kUseLimelight) {
-      var driveState = m_robotContainer.drivetrain.getState();
-      double omegaRps = Units.radiansToRotations(driveState.Speeds.omega);
-
-      var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-turret");
-      if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
-        m_robotContainer.drivetrain.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
-      }
-    }
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

@@ -14,8 +14,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
-import org.wpilib.vision.apriltag.AprilTagFieldLayout;
-import org.wpilib.vision.apriltag.AprilTagFields;
 import org.wpilib.math.util.MathUtil;
 import org.wpilib.util.Pair;
 import org.wpilib.math.controller.PIDController;
@@ -29,18 +27,18 @@ import org.wpilib.math.geometry.Translation2d;
 import org.wpilib.math.geometry.Translation3d;
 import org.wpilib.math.kinematics.ChassisVelocities;
 import org.wpilib.math.util.Units;
-import org.wpilib.util.sendable.SendableBuilder;
+import org.wpilib.vision.camera.CvSink;
+import org.wpilib.vision.camera.UsbCamera;
+import org.wpilib.vision.stream.CameraServer;
 import org.wpilib.driverstation.MatchState;
 import org.wpilib.driverstation.RobotState;
 import org.wpilib.driverstation.Alliance;
 import org.wpilib.driverstation.MatchType;
 import org.wpilib.driverstation.DriverStationErrors;
-import org.wpilib.driverstation.Alliance;
 import org.wpilib.system.Filesystem;
+import org.wpilib.tunable.Selectable;
 import org.wpilib.driverstation.GenericHID.RumbleType;
-import org.wpilib.shuffleboard.Shuffleboard;
-import org.wpilib.smartdashboard.SendableChooser;
-import org.wpilib.smartdashboard.SmartDashboard;
+import org.wpilib.fields.Fields;
 import org.wpilib.command2.Command;
 import org.wpilib.command2.CommandScheduler;
 import org.wpilib.command2.ConditionalCommand;
@@ -64,7 +62,6 @@ import frc.robot.subsystems.lights.Lights.LightCode;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.utils.BallClusterDetection;
-import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.ShootOnMoveUtil;
 import frc.robot.utils.ShooterPitchPower;
 import frc.robot.utils.ShotTimeUtil;
@@ -81,12 +78,6 @@ import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
-
-import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonUtils;
-import org.photonvision.targeting.TargetCorner;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -120,7 +111,7 @@ public class RobotContainer extends SubsystemBase {
   };
 
   /* Auto chooser */
-  private final SendableChooser<Command> autoChooser;
+  private final Selectable<Command> autoChooser;
 
   /* Drive control */
   private Supplier<SwerveRequest> driveController = this::driveCommand;
@@ -162,6 +153,10 @@ public class RobotContainer extends SubsystemBase {
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
   /* Vision variables */
+  private CvSink cameraTop = CameraServer.getVideo(CameraServer.startAutomaticCapture());
+  private CvSink cameraMiddle = CameraServer.getVideo(CameraServer.startAutomaticCapture());
+  private CvSink cameraBottom = CameraServer.getVideo(CameraServer.startAutomaticCapture());
+
   private double visionOffsetX = 0.0;
   private double visionOffsetY = 0.0;
 
@@ -190,26 +185,20 @@ public class RobotContainer extends SubsystemBase {
   private boolean turretActive = false;
   private boolean isAiming = false;
 
-  // photonvision testing
-  PhotonCamera camera = new PhotonCamera("Up");
-  PhotonCamera lowAI = new PhotonCamera("Down");
-  PhotonCamera highAI = new PhotonCamera("Middle");
-
-  public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+  // public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+  
   public static final Transform3d kRobotToCam = new Transform3d(new Translation3d(0.5, 0.0, 0.5),
       new Rotation3d(0, 0, 0));
 
-  public static PhotonPoseEstimator photonEstimator = new PhotonPoseEstimator(kTagLayout, kRobotToCam);
 
   /**
    * The container for the robot. Contains subsystems, IO devices, and commands.
    */
   public RobotContainer() {
     /* Warmup PathPlanner to avoid Java pauses */
-    FollowPathCommand.warmupCommand().schedule();
+    CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
 
     /* Init subsystems */
-    climb = new Climb();
     indexer = new Indexer();
     intake = new Intake();
     lights = new Lights();
@@ -218,7 +207,7 @@ public class RobotContainer extends SubsystemBase {
     DoubleSupplier headingSupplier = () -> desiredHeadingDeg;
     BooleanSupplier isBluBooleanSupplier = () -> isBlue;
     Supplier<Pose2d> robotPoseSupplier = () -> drivetrain.getState().Pose;
-    Supplier<ChassisVelocities> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
+    Supplier<ChassisVelocities> chassisSpeedsSupplier = () -> drivetrain.getState().Velocity;
     RunCommand aimTurret = new RunCommand(() -> {
       double heading = headingSupplier.getAsDouble();
       heading = MathUtil.inputModulus(heading, 0, 360);
@@ -269,7 +258,7 @@ public class RobotContainer extends SubsystemBase {
     NamedCommands.registerCommand("STOP TURRET", new InstantCommand(() -> {
       CommandScheduler.getInstance().cancel(aimTurret);
     }));
-    NamedCommands.registerCommand("SET HEADING AI", new AISetHeading(lowAI, highAI, headingSupplier, headingSetter));
+    // NamedCommands.registerCommand("SET HEADING AI", new AISetHeading(lowAI, highAI, headingSupplier, headingSetter));
     NamedCommands.registerCommand("START DRIVING FORWARD", new InstantCommand(() -> {
       this.visionBasedX = 0.3;
     }));
@@ -299,7 +288,7 @@ public class RobotContainer extends SubsystemBase {
 
     /* Auto chooser */
     autoChooser = AutoBuilder.buildAutoChooser("LEFT NT");
-    SmartDashboard.putData("Auto Chooser", autoChooser);
+    //TODO
 
     /* Field centric heading controller */
     fieldCentricFacingAngle.HeadingController.setPID(6.0, 0.0001, 0.02);
@@ -312,17 +301,6 @@ public class RobotContainer extends SubsystemBase {
     configureDriverBindings();
     configureOperatorBindings();
     // configureDebugBindings();
-
-    driverController.getHID().setRumble(RumbleType.kBothRumble, 0.0);
-    operatorController.getHID().setRumble(RumbleType.kBothRumble, 0.0);
-
-    /* Shuffleboard */
-    Shuffleboard.getTab("Subsystems").add("RobotContainer", this);
-    Shuffleboard.getTab("Subsystems").add("Turret", turret);
-    Shuffleboard.getTab("Subsystems").add("Intake", intake);
-    Shuffleboard.getTab("Subsystems").add("Climb", climb);
-    Shuffleboard.getTab("Subsystems").add("Spindexer/Kicker", indexer);
-    Shuffleboard.getTab("Subsystems").add("Shooter", shooter);
   }
 
   private void zeroRobot() {
@@ -355,33 +333,33 @@ public class RobotContainer extends SubsystemBase {
 
     /* Rotational veloity based on right stick */
     double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
-    if (lookForNote) {
-      double targetYaw = 0.0;
-      var results = camera.getAllUnreadResults();
-      if (!results.isEmpty()) {
-        var result = results.get(results.size() - 1);
-        if (result.hasTargets()) {
-          targetYaw = result.getTargets().get(0).getYaw();
-        }
-      }
-      double targetYawRad = Math.toRadians(targetYaw);
-      double kP = 7;
-      double output = -kP * targetYawRad;
+    // if (lookForNote) {
+    //   double targetYaw = 0.0;
+    //   var results = camera.getAllUnreadResults();
+    //   if (!results.isEmpty()) {
+    //     var result = results.get(results.size() - 1);
+    //     if (result.hasTargets()) {
+    //       targetYaw = result.getTargets().get(0).getYaw();
+    //     }
+    //   }
+    //   double targetYawRad = Math.toRadians(targetYaw);
+    //   double kP = 7;
+    //   double output = -kP * targetYawRad;
 
-      output = Math.clamp(output, -MaxAngularRate, MaxAngularRate);
-      desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
-      if (Math.abs(targetYawRad) > Math.toRadians(1.0)) {
-        return drive
-            .withVelocityX(xVelocity)
-            .withVelocityY(yVelocity)
-            .withRotationalRate(output);
-      } else {
-        return drive
-            .withVelocityX(xVelocity)
-            .withVelocityY(yVelocity)
-            .withRotationalRate(rotationVelocity);
-      }
-    } else if (isManualRobotCentric) {
+    //   output = Math.clamp(output, -MaxAngularRate, MaxAngularRate);
+    //   desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
+    //   if (Math.abs(targetYawRad) > Math.toRadians(1.0)) {
+    //     return drive
+    //         .withVelocityX(xVelocity)
+    //         .withVelocityY(yVelocity)
+    //         .withRotationalRate(output);
+    //   } else {
+    //     return drive
+    //         .withVelocityX(xVelocity)
+    //         .withVelocityY(yVelocity)
+    //         .withRotationalRate(rotationVelocity);
+    //   }
+    if (isManualRobotCentric) {
       /* Is robot centric */
       return robotCentric
           .withVelocityX(xVelocity);
@@ -425,17 +403,6 @@ public class RobotContainer extends SubsystemBase {
     drivetrain.setDefaultCommand(
         drivetrain.applyRequest(driveController));
 
-    Command rumbleBriefly = new SequentialCommandGroup(
-        new InstantCommand(
-            () -> {
-              driverController.getHID().setRumble(RumbleType.kBothRumble, 1.0);
-            }),
-        new WaitCommand(0.25),
-        new InstantCommand(
-            () -> {
-              driverController.getHID().setRumble(RumbleType.kBothRumble, 0.0);
-            }));
-
     /* Cardinals */ // TODO make these correct
     driverController
         .a()
@@ -453,7 +420,7 @@ public class RobotContainer extends SubsystemBase {
         .y()
         .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
 
-    driverController.start().onTrue(new InstantCommand(() -> zeroRobot()));
+    driverController.menu().onTrue(new InstantCommand(() -> zeroRobot()));
 
     driverController.rightTrigger().whileTrue(
         new SequentialCommandGroup(
@@ -515,8 +482,8 @@ public class RobotContainer extends SubsystemBase {
     // new FeedSequence(turret, () ->
     // drivetrain.getState().Pose.getRotation().getDegrees(), isBlue,
     // driverController.povLeft()));
-    driverController.povLeft().onTrue(
-        new AISetHeading(lowAI, highAI, () -> desiredHeadingDeg, headingSetter));
+    // driverController.dpadLeft().onTrue(
+    //     new AISetHeading(lowAI, highAI, () -> desiredHeadingDeg, headingSetter));
   }
 
   public double tx = 0.0;
@@ -552,7 +519,7 @@ public class RobotContainer extends SubsystemBase {
     DoubleSupplier headingSupplier = () -> desiredHeadingDeg;
     BooleanSupplier isBlueBooleanSupplier = () -> isBlue;
     Supplier<Pose2d> robotPoseSupplier = () -> drivetrain.getState().Pose;
-    Supplier<ChassisVelocities> chassisSpeedsSupplier = () -> drivetrain.getState().Speeds;
+    Supplier<ChassisVelocities> chassisSpeedsSupplier = () -> drivetrain.getState().Velocity;
 
     // operatorController.povRight().whileTrue(new RepeatCommand(
     //     new InstantCommand(
@@ -638,19 +605,19 @@ public class RobotContainer extends SubsystemBase {
             new WaitCommand(0.5),
             new InstantCommand(() -> intake.stopRollers())));
 
-    operatorController.povLeft().onTrue(
+    operatorController.dpadLeft().onTrue(
       new InstantCommand(()->{
         turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg+45);
       })
     );
 
-    operatorController.povRight().onTrue(
+    operatorController.dpadRight().onTrue(
       new InstantCommand(()->{
         turret.setDesiredTurretPosition(turret.turretDesiredPositionDeg-45);
       })
     );
 
-    operatorController.povDown().onTrue(
+    operatorController.dpadDown().onTrue(
       new InstantCommand(()->turret.turretDesiredPositionDeg = 90)
     );
 
@@ -688,25 +655,25 @@ public class RobotContainer extends SubsystemBase {
                   shooter.setDesiredHoodPosition(() -> 70);
                 }));
 
-    operatorController.start().onTrue(
-        new InstantCommand(() -> {
-          var result = camera.getLatestResult();
-          if (result.hasTargets()) {
-            try {
-              AprilTagFieldLayout fieldLayout = new AprilTagFieldLayout(
-                  Filesystem.getDeployDirectory().toPath().resolve("2026-rebuilt-welded.json"));
-              Pose3d robotPose = PhotonUtils.estimateFieldToRobotAprilTag(
-                  result.getBestTarget().getBestCameraToTarget(),
-                  fieldLayout.getTagPose(result.getBestTarget().getFiducialId()).get(),
-                  new Transform3d(0.5, 0.0, 0.5, new Rotation3d(0, Math.toRadians(20), 0)));
-              Pose2d rp = robotPose.toPose2d();
-              drivetrain.resetPose(rp);
-              desiredHeadingDeg = rp.getRotation().getDegrees();
-            } catch (Exception e) {
+    // operatorController.start().onTrue(
+    //     new InstantCommand(() -> {
+    //       var result = camera.getLatestResult();
+    //       if (result.hasTargets()) {
+    //         try {
+    //           AprilTagFieldLayout fieldLayout = new AprilTagFieldLayout(
+    //               Filesystem.getDeployDirectory().toPath().resolve("2026-rebuilt-welded.json"));
+    //           Pose3d robotPose = PhotonUtils.estimateFieldToRobotAprilTag(
+    //               result.getBestTarget().getBestCameraToTarget(),
+    //               fieldLayout.getTagPose(result.getBestTarget().getFiducialId()).get(),
+    //               new Transform3d(0.5, 0.0, 0.5, new Rotation3d(0, Math.toRadians(20), 0)));
+    //           Pose2d rp = robotPose.toPose2d();
+    //           drivetrain.resetPose(rp);
+    //           desiredHeadingDeg = rp.getRotation().getDegrees();
+    //         } catch (Exception e) {
 
-            }
-          }
-        }));
+    //         }
+    //       }
+    //     }));
     // operatorController.povUp().onTrue(
     //     // new InstantCommand(() -> {
     //     // var results = camera.getAllUnreadResults();
@@ -738,10 +705,10 @@ public class RobotContainer extends SubsystemBase {
     //         }
     //       }
     //     }));
-    operatorController.povUp().onTrue(new InstantCommand(()->{
+    operatorController.dpadUp().onTrue(new InstantCommand(()->{
       shooter.addHoodOneDeg();
     }));
-    operatorController.povDown().onTrue(new InstantCommand(()->{
+    operatorController.dpadDown().onTrue(new InstantCommand(()->{
       shooter.subtractHoodOneDeg();
     }));
   }
@@ -812,69 +779,69 @@ public class RobotContainer extends SubsystemBase {
 
   private void configureDebugBindings() {
     /* Tests vision */
-    driverController.povUp().onTrue(
-        /* Vision command */
-        new SequentialCommandGroup(
-            new InstantCommand(() -> {
-              visionXController.reset();
-              visionYController.reset();
+    // driverController.dpadUp().onTrue(
+    //     /* Vision command */
+    //     new SequentialCommandGroup(
+    //         new InstantCommand(() -> {
+    //           visionXController.reset();
+    //           visionYController.reset();
 
-              /* According to the Limelight, Y rotation is yaw */
-              final Rotation3d tagRot = LimelightHelpers.getTargetPose3d_RobotSpace(Constants.LIMELIGHT_FRONT_NAME)
-                  .getRotation();
-              this.desiredHeadingDeg -= Math.toDegrees(tagRot.getY());
-            }),
-            new WaitUntilCommand(
-                () -> Math.abs(drivetrain.getState().Pose.getRotation().getDegrees() - desiredHeadingDeg) < 10.0),
-            new InstantCommand(() ->
-            /* According to the Limelight, XZ plane is floor */
-            tagPoseRobotSpaceInstance = LimelightHelpers.getTargetPose3d_RobotSpace(Constants.LIMELIGHT_FRONT_NAME)),
-            new WaitUntilCommand(() -> {
-              if (tagPoseRobotSpaceInstance.getZ() == 0.0 && tagPoseRobotSpaceInstance.getX() == 0.0) {
-                /* If no inital April Tag is seen, cancel command */
-                return true;
-              }
+    //           /* According to the Limelight, Y rotation is yaw */
+    //           final Rotation3d tagRot = LimelightHelpers.getTargetPose3d_RobotSpace(Constants.LIMELIGHT_FRONT_NAME)
+    //               .getRotation();
+    //           this.desiredHeadingDeg -= Math.toDegrees(tagRot.getY());
+    //         }),
+    //         new WaitUntilCommand(
+    //             () -> Math.abs(drivetrain.getState().Pose.getRotation().getDegrees() - desiredHeadingDeg) < 10.0),
+    //         new InstantCommand(() ->
+    //         /* According to the Limelight, XZ plane is floor */
+    //         tagPoseRobotSpaceInstance = LimelightHelpers.getTargetPose3d_RobotSpace(Constants.LIMELIGHT_FRONT_NAME)),
+    //         new WaitUntilCommand(() -> {
+    //           if (tagPoseRobotSpaceInstance.getZ() == 0.0 && tagPoseRobotSpaceInstance.getX() == 0.0) {
+    //             /* If no inital April Tag is seen, cancel command */
+    //             return true;
+    //           }
 
-              final Pose3d tagPoseRobotSpace = LimelightHelpers
-                  .getTargetPose3d_RobotSpace(Constants.LIMELIGHT_FRONT_NAME);
+    //           final Pose3d tagPoseRobotSpace = LimelightHelpers
+    //               .getTargetPose3d_RobotSpace(Constants.LIMELIGHT_FRONT_NAME);
 
-              if (tagPoseRobotSpaceCurrent.getZ() != 0.0 && tagPoseRobotSpace.getY() != 0.0) {
-                /* If April Tag is still in sight, update instance pose */
-                tagPoseRobotSpaceInstance = tagPoseRobotSpaceCurrent;
-              }
+    //           if (tagPoseRobotSpaceCurrent.getZ() != 0.0 && tagPoseRobotSpace.getY() != 0.0) {
+    //             /* If April Tag is still in sight, update instance pose */
+    //             tagPoseRobotSpaceInstance = tagPoseRobotSpaceCurrent;
+    //           }
 
-              /* Converts from Limelight Pose3d to WPI conventional Pose2d */
-              Pose2d tagPoseRobotSpaceWPIConvention = new Pose2d(
-                  tagPoseRobotSpaceInstance.getZ() - this.visionOffsetX,
-                  -tagPoseRobotSpaceInstance.getX() + this.visionOffsetY,
-                  Rotation2d.fromDegrees(tagPoseRobotSpaceInstance.getRotation().getY()));
+    //           /* Converts from Limelight Pose3d to WPI conventional Pose2d */
+    //           Pose2d tagPoseRobotSpaceWPIConvention = new Pose2d(
+    //               tagPoseRobotSpaceInstance.getZ() - this.visionOffsetX,
+    //               -tagPoseRobotSpaceInstance.getX() + this.visionOffsetY,
+    //               Rotation2d.fromDegrees(tagPoseRobotSpaceInstance.getRotation().getY()));
 
-              /* Get fieldspace poses */
-              final Pose2d robotPoseFieldSpace = drivetrain.getState().Pose;
-              final Pose2d targetPoseFieldSpace = robotPoseFieldSpace
-                  .plus(new Transform2d(new Pose2d(), tagPoseRobotSpaceWPIConvention));
+    //           /* Get fieldspace poses */
+    //           final Pose2d robotPoseFieldSpace = drivetrain.getState().Pose;
+    //           final Pose2d targetPoseFieldSpace = robotPoseFieldSpace
+    //               .plus(new Transform2d(new Pose2d(), tagPoseRobotSpaceWPIConvention));
 
-              double xOutput = visionXController.calculate(
-                  robotPoseFieldSpace.getX(), targetPoseFieldSpace.getX());
-              double yOutput = visionYController.calculate(
-                  robotPoseFieldSpace.getY(), targetPoseFieldSpace.getY());
+    //           double xOutput = visionXController.calculate(
+    //               robotPoseFieldSpace.getX(), targetPoseFieldSpace.getX());
+    //           double yOutput = visionYController.calculate(
+    //               robotPoseFieldSpace.getY(), targetPoseFieldSpace.getY());
 
-              xOutput = Math.clamp(xOutput, -1.5, 1.5);
-              yOutput = Math.clamp(yOutput, -1.5, 1.5);
+    //           xOutput = Math.clamp(xOutput, -1.5, 1.5);
+    //           yOutput = Math.clamp(yOutput, -1.5, 1.5);
 
-              if (this.isBlue) {
-                visionVelocitySetter.accept(xOutput, yOutput);
-              } else {
-                visionVelocitySetter.accept(-xOutput, -yOutput);
-              }
+    //           if (this.isBlue) {
+    //             visionVelocitySetter.accept(xOutput, yOutput);
+    //           } else {
+    //             visionVelocitySetter.accept(-xOutput, -yOutput);
+    //           }
 
-              return (Math.abs(visionXController.getPositionError()) < 0.01
-                  && Math.abs(visionYController.getPositionError()) < 0.01);
+    //           return (Math.abs(visionXController.getPositionError()) < 0.01
+    //               && Math.abs(visionYController.getPositionError()) < 0.01);
 
-            })).until(
-                /* Break vision if joystick input */
-                () -> joystickInput.get())
-            .finallyDo(() -> visionVelocitySetter.accept(0.0, 0.0)));
+    //         })).until(
+    //             /* Break vision if joystick input */
+    //             () -> joystickInput.get())
+    //         .finallyDo(() -> visionVelocitySetter.accept(0.0, 0.0)));
   }
 
   /**
@@ -886,46 +853,45 @@ public class RobotContainer extends SubsystemBase {
     return autoChooser.getSelected();
   }
 
-  @Override
-  public void initSendable(SendableBuilder builder) {
-    super.initSendable(builder);
-    builder.addBooleanProperty("robot centric enabled", () -> isManualRobotCentric, null);
-    builder.addDoubleProperty("pose heading", () -> drivetrain.getState().Pose.getRotation().getDegrees(), null);
-    builder.addStringProperty("path CMD", () -> autoPathCmd, null);
-    builder.addDoubleProperty("odometry X", () -> drivetrain.getState().Pose.getX(), null);
-    builder.addDoubleProperty("odometry Y", () -> drivetrain.getState().Pose.getY(), null);
-    builder.addDoubleProperty(
-        "odometry rotation deg", () -> drivetrain.getState().Pose.getRotation().getDegrees(), null);
-    builder.addDoubleProperty("desired heading deg", () -> this.desiredHeadingDeg, null);
-    builder.addDoubleProperty(
-        "gyro rotation deg", () -> drivetrain.getPigeon2().getRotation2d().getDegrees() % 360, null);
-    builder.addStringProperty(
-        "Current selected auto", () -> this.getAutonomousCommand().getName(), null);
-    builder.addBooleanProperty("is blue", () -> isBlue, null);
-    // builder.addDoubleProperty("limelight tx", () ->
-    // LimelightHelpers.getTX("limelight-turret"), null);
-    builder.addDoubleProperty("turret calc heading",
-        () -> ShootOnMoveUtil
-            .calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond(),
-        null);
-    builder.addDoubleProperty("TUNING distance to target", this::getDistance, null);
-    builder.addDoubleProperty("TUNING target x", ()->tx, (x)->tx=x);
-    builder.addDoubleProperty("TUNING target y", ()->ty, (y)->ty=y);
-    builder.addDoubleProperty("angle to target turret", () -> {
-      double angle = Math.toDegrees(
-          Math.atan2(drivetrain.getState().Pose.getY() - 4.0, drivetrain.getState().Pose.getX() - 12.0));
-      if (angle >= 0) {
-        angle = 90 + (180 - angle);
-      } else {
-        angle = 90 - (180 + angle);
-      }
-      ;
-      return MathUtil.inputModulus(MathUtil.inputModulus(angle + 180.0, 0.0, 360.0) + desiredHeadingDeg % 360 + 180.0,
-          0.0, 360.0);
-    }, null);
-    // builder.addDoubleProperty("relative distance to target",
-    // this::getRelativeDistanceToTarget, null);
-    // builder.addIntegerProperty("pv detections",
-    // ()->camera.getAllUnreadResults().size(), null);
-  }
+  // public void sendTelemetry(SendableBuilder builder) {
+  //   super.initSendable(builder);
+  //   builder.addBooleanProperty("robot centric enabled", () -> isManualRobotCentric, null);
+  //   builder.addDoubleProperty("pose heading", () -> drivetrain.getState().Pose.getRotation().getDegrees(), null);
+  //   builder.addStringProperty("path CMD", () -> autoPathCmd, null);
+  //   builder.addDoubleProperty("odometry X", () -> drivetrain.getState().Pose.getX(), null);
+  //   builder.addDoubleProperty("odometry Y", () -> drivetrain.getState().Pose.getY(), null);
+  //   builder.addDoubleProperty(
+  //       "odometry rotation deg", () -> drivetrain.getState().Pose.getRotation().getDegrees(), null);
+  //   builder.addDoubleProperty("desired heading deg", () -> this.desiredHeadingDeg, null);
+  //   builder.addDoubleProperty(
+  //       "gyro rotation deg", () -> drivetrain.getPigeon2().getRotation2d().getDegrees() % 360, null);
+  //   builder.addStringProperty(
+  //       "Current selected auto", () -> this.getAutonomousCommand().getName(), null);
+  //   builder.addBooleanProperty("is blue", () -> isBlue, null);
+  //   // builder.addDoubleProperty("limelight tx", () ->
+  //   // LimelightHelpers.getTX("limelight-turret"), null);
+  //   builder.addDoubleProperty("turret calc heading",
+  //       () -> ShootOnMoveUtil
+  //           .calcTurret(true, drivetrain.getState().Pose, drivetrain.getState().Speeds, desiredHeadingDeg).getSecond(),
+  //       null);
+  //   builder.addDoubleProperty("TUNING distance to target", this::getDistance, null);
+  //   builder.addDoubleProperty("TUNING target x", ()->tx, (x)->tx=x);
+  //   builder.addDoubleProperty("TUNING target y", ()->ty, (y)->ty=y);
+  //   builder.addDoubleProperty("angle to target turret", () -> {
+  //     double angle = Math.toDegrees(
+  //         Math.atan2(drivetrain.getState().Pose.getY() - 4.0, drivetrain.getState().Pose.getX() - 12.0));
+  //     if (angle >= 0) {
+  //       angle = 90 + (180 - angle);
+  //     } else {
+  //       angle = 90 - (180 + angle);
+  //     }
+  //     ;
+  //     return MathUtil.inputModulus(MathUtil.inputModulus(angle + 180.0, 0.0, 360.0) + desiredHeadingDeg % 360 + 180.0,
+  //         0.0, 360.0);
+  //   }, null);
+  //   // builder.addDoubleProperty("relative distance to target",
+  //   // this::getRelativeDistanceToTarget, null);
+  //   // builder.addIntegerProperty("pv detections",
+  //   // ()->camera.getAllUnreadResults().size(), null);
+  // }
 }
