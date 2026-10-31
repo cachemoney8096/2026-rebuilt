@@ -336,6 +336,7 @@ public class RobotContainer extends SubsystemBase {
   }
 
   private SwerveRequest driveCommand() {
+    drivetrain.getCurrentCommand().cancel();
     double stickX = MathUtil.applyDeadband(-driverController.getLeftY(), joystickDeadband);
     double stickY = MathUtil.applyDeadband(-driverController.getLeftX(), joystickDeadband);
 
