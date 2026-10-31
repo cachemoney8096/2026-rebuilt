@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -331,75 +332,31 @@ public class RobotContainer extends SubsystemBase {
     drivetrain.resetPose(new Pose2d(
         drivetrain.getState().Pose.getX(),
         drivetrain.getState().Pose.getY(),
-        Rotation2d.fromDegrees(isBlue ? 0.0 : 180)));
+        Rotation2d.fromDegrees(isBlue ? 0.0 : 180.0)));
   }
 
   private SwerveRequest driveCommand() {
-    double visionX = MathUtil.applyDeadband(visionBasedX, joystickDeadband);
-    double visionY = MathUtil.applyDeadband(visionBasedY, joystickDeadband);
+    double stickX = MathUtil.applyDeadband(-driverController.getLeftY(), joystickDeadband);
+    double stickY = MathUtil.applyDeadband(-driverController.getLeftX(), joystickDeadband);
 
-    double xVelocity;
-    double yVelocity;
-
-    if (Math.abs(visionX) > 0.0 || Math.abs(visionY) > 0.0) {
-      /* If vision is present, set velocities to vision */
-      xVelocity = visionX;
-      yVelocity = visionY;
-    } else {
-      /* Else set velocity based on left stick */
-      xVelocity = -driverController.getLeftY() * MaxSpeed;
-      yVelocity = -driverController.getLeftX() * MaxSpeed;
-    }
+    double stickRotation = MathUtil.applyDeadband(-driverController.getRightX(), joystickDeadband);
 
     /* Rotational veloity based on right stick */
-    double rotationVelocity = -driverController.getRightX() * MaxAngularRate;
-    if (lookForNote) {
-      double targetYaw = 0.0;
-      var results = camera.getAllUnreadResults();
-      if (!results.isEmpty()) {
-        var result = results.get(results.size() - 1);
-        if (result.hasTargets()) {
-          targetYaw = result.getTargets().get(0).getYaw();
-        }
-      }
-      double targetYawRad = Math.toRadians(targetYaw);
-      double kP = 7;
-      double output = -kP * targetYawRad;
+    return drive
+        .withVelocityX(stickX * MaxSpeed)
+        .withVelocityY(stickY * MaxSpeed)
+        .withRotationalRate(stickRotation * MaxAngularRate);
+  }
 
-      output = MathUtil.clamp(output, -MaxAngularRate, MaxAngularRate);
-      desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
-      if (Math.abs(targetYawRad) > Math.toRadians(1.0)) {
-        return drive
-            .withVelocityX(xVelocity)
-            .withVelocityY(yVelocity)
-            .withRotationalRate(output);
-      } else {
-        return drive
-            .withVelocityX(xVelocity)
-            .withVelocityY(yVelocity)
-            .withRotationalRate(rotationVelocity);
-      }
-    } else if (isManualRobotCentric) {
-      /* Is robot centric */
-      return robotCentric
-          .withVelocityX(xVelocity);
-      // .withVelocityY(yVelocity)
-      // .withRotationalRate(rotationVelocity);
-    } else if (rotationalJoystickInput.get()) {
-      /* If rotation stick is being used */
-      desiredHeadingDeg = drivetrain.getState().Pose.getRotation().getDegrees();
+  private Command turnToDegree(double degrees, boolean isColorRelative) {
+    FieldCentricFacingAngle request = fieldCentricFacingAngle 
+      .withTargetDirection(Rotation2d.fromDegrees(isColorRelative & !isBlue ? degrees + 180.0 : degrees));
 
-      return drive
-          .withVelocityX(xVelocity)
-          .withVelocityY(yVelocity)
-          .withRotationalRate(rotationVelocity);
-    } else {
-      return fieldCentricFacingAngle
-          .withVelocityX(xVelocity)
-          .withVelocityY(yVelocity)
-          .withTargetDirection(
-              Rotation2d.fromDegrees(isBlue ? desiredHeadingDeg : (desiredHeadingDeg + 180)));
-    }
+    return drivetrain.applyRequest(() -> request);
+  }
+
+  private Command turnToDegree(double degrees) {
+    return turnToDegree(degrees, false);
   }
 
   /**
@@ -434,22 +391,22 @@ public class RobotContainer extends SubsystemBase {
               driverController.getHID().setRumble(RumbleType.kBothRumble, 0.0);
             }));
 
-    /* Cardinals */ // TODO make these correct
+    /* Cardinals */ 
     driverController
         .a()
-        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 180.0 : 0.0));
+        .onTrue(turnToDegree(180.0, true));
 
     driverController
         .b()
-        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 270.0 : 90.0));
+        .onTrue(turnToDegree(270.0, true));
 
     driverController
         .x()
-        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 90.0 : 270.0));
+        .onTrue(turnToDegree(90.0, true));
 
     driverController
         .y()
-        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
+        .onTrue(turnToDegree(0.0, true));
 
     driverController.start().onTrue(new InstantCommand(() -> zeroRobot()));
 
