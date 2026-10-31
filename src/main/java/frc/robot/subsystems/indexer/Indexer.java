@@ -24,7 +24,7 @@ public class Indexer extends SubsystemBase {
     TalonFXConfiguration toApply = new TalonFXConfiguration();
 
     // adjust direction if needed
-    toApply.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+    toApply.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     toApply.MotorOutput.NeutralMode = NeutralModeValue.Coast;
     toApply.CurrentLimits.SupplyCurrentLimit = IndexerCal.INDEXER_SUPPLY_CURRENT_LIMIT_AMPS;
     toApply.CurrentLimits.StatorCurrentLimit = IndexerCal.INDEXER_STATOR_SUPPLY_CURRENT_LIMIT_AMPS;

@@ -93,6 +93,7 @@ public class Shooter extends SubsystemBase {
 
     public void runRollers() {
         leftRollerMotor.set(currentRollerSpeedRPM / ShooterCal.ROLLERS_MAX_RPS);
+        // leftRollerMotor.set(0.25);
     }
 
     public void stopRollers() {

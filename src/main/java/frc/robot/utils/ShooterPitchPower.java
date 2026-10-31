@@ -24,4 +24,9 @@ public class ShooterPitchPower {
     public static double getPower(double distance){
         return power.get(distance); 
     }
+
+    public static void main(String[] args) {
+        System.out.println(getPitch(0.6));
+        System.out.println(getPower(0.6));
+    }
 }
