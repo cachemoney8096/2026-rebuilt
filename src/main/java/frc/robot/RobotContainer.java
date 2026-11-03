@@ -8,9 +8,20 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
+
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonUtils;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
+import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
@@ -29,7 +40,6 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -40,9 +50,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -51,6 +59,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.AISetHeading;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -61,30 +70,11 @@ import frc.robot.subsystems.lights.Lights;
 import frc.robot.subsystems.lights.Lights.LightCode;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.turret.Turret;
-import frc.robot.utils.BallClusterDetection;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.ShootOnMoveUtil;
 import frc.robot.utils.ShooterPitchPower;
 import frc.robot.utils.ShotTimeUtil;
 import frc.robot.utils.TurretUtil;
-import frc.robot.commands.*;
-
-import java.lang.annotation.Target;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.DoubleConsumer;
-import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
-
-import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonUtils;
-import org.photonvision.targeting.TargetCorner;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -335,7 +325,7 @@ public class RobotContainer extends SubsystemBase {
         Rotation2d.fromDegrees(isBlue ? 0.0 : 180.0)));
   }
 
-  private SwerveRequest driveCommand() {
+  private Command steer() {
     drivetrain.getCurrentCommand().cancel();
     double stickX = MathUtil.applyDeadband(-driverController.getLeftY(), joystickDeadband);
     double stickY = MathUtil.applyDeadband(-driverController.getLeftX(), joystickDeadband);
@@ -343,21 +333,19 @@ public class RobotContainer extends SubsystemBase {
     double stickRotation = MathUtil.applyDeadband(-driverController.getRightX(), joystickDeadband);
 
     /* Rotational veloity based on right stick */
-    return drive
+    FieldCentric request = drive
         .withVelocityX(stickX * MaxSpeed)
         .withVelocityY(stickY * MaxSpeed)
         .withRotationalRate(stickRotation * MaxAngularRate);
-  }
-
-  private Command turnToDegree(double degrees, boolean isColorRelative) {
-    FieldCentricFacingAngle request = fieldCentricFacingAngle 
-      .withTargetDirection(Rotation2d.fromDegrees(isColorRelative & !isBlue ? degrees + 180.0 : degrees));
 
     return drivetrain.applyRequest(() -> request);
   }
 
-  private Command turnToDegree(double degrees) {
-    return turnToDegree(degrees, false);
+  private SwerveRequest driveCommand() {
+    FieldCentricFacingAngle request = fieldCentricFacingAngle 
+      .withTargetDirection(Rotation2d.fromDegrees(desiredHeadingDeg));
+
+    return request;
   }
 
   /**
@@ -395,19 +383,24 @@ public class RobotContainer extends SubsystemBase {
     /* Cardinals */ 
     driverController
         .a()
-        .onTrue(turnToDegree(180.0, true));
+        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 180.0 : 0.0));
 
     driverController
         .b()
-        .onTrue(turnToDegree(270.0, true));
+        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 270.0 : 90.0));
 
     driverController
         .x()
-        .onTrue(turnToDegree(90.0, true));
+        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 90.0 : 270.0));
 
     driverController
         .y()
-        .onTrue(turnToDegree(0.0, true));
+        .onTrue(new InstantCommand(() -> this.desiredHeadingDeg = isBlue ? 0.0 : 180.0));
+
+    driverController
+        .axisMagnitudeGreaterThan(0, joystickDeadband)
+        .or(driverController.axisMagnitudeGreaterThan(1, joystickDeadband))
+        .whileTrue(steer());
 
     driverController.start().onTrue(new InstantCommand(() -> zeroRobot()));
 
